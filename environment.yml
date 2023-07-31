@@ -1,0 +1,13 @@
+# installation:
+# create: conda env create -f environment.yml
+# activate: conda activate v2dl5
+#
+name: v2dl5
+channels:
+  - conda-forge
+dependencies:
+  - gammapy
+  - ipython
+  - jupyter
+  - pydantic<2
+  - python=3.10
