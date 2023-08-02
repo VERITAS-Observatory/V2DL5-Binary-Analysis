@@ -21,6 +21,7 @@ Example:
 """
 
 import argparse
+import logging
 
 import v2dl5.target
 
@@ -74,9 +75,13 @@ def _parse():
 
 def main():
 
+    logger = logging.getLogger()
+    logging.basicConfig(level=logging.INFO)
+
     args = _parse()
 
-    target = v2dl5.target.Target(args.target, args.ra, args.dec)
+    target = v2dl5.target.Target(
+        name=args.target, ra=args.ra, dec=args.dec)
 
 #    runlist = RunList(args.run_list)
 
