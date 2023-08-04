@@ -4,7 +4,7 @@ from astropy.coordinates import SkyCoord, Angle, name_resolve
 from astroquery.simbad import Simbad
 
 
-class Target():
+def get_target(name=None, ra=None, dec=None):
     """
     Defines a SkyCoord object for the target.
     Reads target coordinates from Simbad if target name is given.
@@ -20,23 +20,19 @@ class Target():
 
     """
 
-    def __init__(self, name=None, ra=None, dec=None):
-        """
-        Initialize Target object.
-        """
+    _logger = logging.getLogger(__name__)
 
-        self._logger = logging.getLogger(__name__)
+    target = None
+    if name is None:
+        target = SkyCoord(ra=ra, dec=dec, unit="deg", frame="icrs")
+    else:
+        try:
+            target = SkyCoord.from_name(name)
+        except name_resolve.NameResolveError:
+            _logger.error(f"Target {name} not found in Simbad.")
+            raise
 
-        self.name = name
-        self.target = None
-        if name is None:
-            self.target = SkyCoord(ra=ra, dec=dec, unit="deg", frame="icrs")
-        else:
-            try:
-                self.target = SkyCoord.from_name(name)
-            except name_resolve.NameResolveError:
-                self._logger.error(f"Target {name} not found in Simbad.")
-                raise
+    _logger.info(f"Target name: {name}")
+    _logger.info(f"Target coordinates: {target}")
 
-        self._logger.info(f"Target name: {self.name}")
-        self._logger.info(f"Target coordinates: {self.target}")
+    return target

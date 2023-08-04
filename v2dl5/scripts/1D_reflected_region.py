@@ -23,6 +23,7 @@ Example:
 import argparse
 import logging
 
+import v2dl5.data
 import v2dl5.target
 
 
@@ -35,7 +36,7 @@ def _parse():
     parser.add_argument(
         "--run_list",
         type=str,
-        required=True,
+        required=False,
         help="List of run IDs to be processed.",
     )
     parser.add_argument(
@@ -80,8 +81,13 @@ def main():
 
     args = _parse()
 
-    target = v2dl5.target.Target(
-        name=args.target, ra=args.ra, dec=args.dec)
+    target = v2dl5.target.get_target(name=args.target, ra=args.ra, dec=args.dec)
+    
+    data = v2dl5.data.Data(
+        runlist=args.run_list,
+        ra = target.ra,
+        dec = target.dec
+    )
 
 #    runlist = RunList(args.run_list)
 
