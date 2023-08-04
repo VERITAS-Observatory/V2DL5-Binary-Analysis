@@ -63,9 +63,13 @@ class Data():
         """
         Return observations.
 
+        Reflected region analysis requires effective area and energy dispersion only.
+
         """
 
-        return self._data_store.get_observations(self.runs)
+        available_irf = ["aeff", "edisp"]
+
+        return self._data_store.get_observations(self.runs, required_irf=available_irf)
 
     def _from_runlist(self, runlist):
         """
@@ -105,12 +109,12 @@ class Data():
 
         """
 
-        # select observations from data store around viewcone
         observations = self._data_store.obs_table
         target = SkyCoord(ra=ra, dec=dec, unit="deg", frame="icrs")
         mask = target.separation(observations.pointing_radec) < viewcone * u.deg
         _runs = observations[mask]["OBS_ID"].data
 
         self._logger.info(f"Selecting {len(_runs)} runs from viewcone around {target}")
+        self._logger.info("WARNING - this is not tested")
         return _runs
 

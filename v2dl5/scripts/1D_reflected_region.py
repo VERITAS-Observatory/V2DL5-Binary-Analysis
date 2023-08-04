@@ -23,6 +23,7 @@ Example:
 import argparse
 import logging
 
+import v2dl5.analysis
 import v2dl5.data
 import v2dl5.target
 
@@ -82,21 +83,20 @@ def main():
     args = _parse()
 
     target = v2dl5.target.get_target(name=args.target, ra=args.ra, dec=args.dec)
-    
+
     data = v2dl5.data.Data(
         runlist=args.run_list,
         ra = target.ra,
         dec = target.dec
     )
 
-#    runlist = RunList(args.run_list)
-
-#    analysis = Analysis(
-#        configuration=args.config, 
-#        output_dir=args.output_dir,
-#        target=target,
-#        runlist=runlist)
-#    analysis.run()
+    analysis = v2dl5.analysis.Analysis(
+        configuration=args.config,
+        output_dir=args.output_dir,
+        target=target,
+        data=data,
+    )
+    analysis.run()
 
 if __name__ == "__main__":
     main()
