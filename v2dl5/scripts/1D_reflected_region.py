@@ -78,7 +78,7 @@ def _parse():
 def main():
 
     logger = logging.getLogger()
-    logging.basicConfig(level=logging.INFO)
+    logger.basicConfig(level=logging.INFO)
 
     args = _parse()
 
@@ -86,8 +86,8 @@ def main():
 
     data = v2dl5.data.Data(
         runlist=args.run_list,
-        ra = target.ra,
-        dec = target.dec
+        ra=target.ra,
+        dec=target.dec
     )
 
     analysis = v2dl5.analysis.Analysis(
@@ -97,6 +97,7 @@ def main():
         data=data,
     )
     analysis.run()
+
 
 if __name__ == "__main__":
     main()

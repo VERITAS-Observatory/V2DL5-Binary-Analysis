@@ -1,3 +1,7 @@
+"""
+Target definition.
+"""
+
 import logging
 
 from astropy.coordinates import SkyCoord, Angle, name_resolve
@@ -29,10 +33,10 @@ def get_target(name=None, ra=None, dec=None):
         try:
             target = SkyCoord.from_name(name)
         except name_resolve.NameResolveError:
-            _logger.error(f"Target {name} not found in Simbad.")
+            _logger.error("Target %s not found in Simbad.", name)
             raise
 
-    _logger.info(f"Target name: {name}")
-    _logger.info(f"Target coordinates: {target}")
+    _logger.info("Target name: %s", name)
+    _logger.info("Target coordinates: %s", target)
 
     return target

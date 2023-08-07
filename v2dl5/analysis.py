@@ -1,3 +1,7 @@
+""""
+Main analysis class.
+"""
+
 import logging
 
 import numpy as np

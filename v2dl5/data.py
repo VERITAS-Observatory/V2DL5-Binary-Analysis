@@ -1,3 +1,7 @@
+"""
+Data class holding data store and observations.
+"""
+
 import logging
 
 import numpy as np
@@ -30,10 +34,10 @@ class Data():
 
     def __init__(
             self,
-            runlist = None,
-            data_directory = "../gammapy",
-            ra = None,
-            dec = None,
+            runlist=None,
+            data_directory="../gammapy",
+            ra=None,
+            dec=None,
             viewcone=0.5):
         """
         Initialize Data object.
@@ -74,7 +78,7 @@ class Data():
     def _from_runlist(self, runlist):
         """
         Read runlist from file and select data
-        
+
         Parameters
         ----------
         runlist : str
@@ -88,16 +92,16 @@ class Data():
         try:
             _runs = np.loadtxt(runlist, dtype=int)
         except OSError:
-            self._logger.error(f"Run list {runlist} not found.")
+            self._logger.error("Run list %s not found.", runlist)
             raise
 
-        self._logger.info(f"Reading run list with {len(_runs)} runs from {runlist}")
+        self._logger.info("Reading run list with %d runs from %s", len(_runs), runlist)
         return _runs
 
     def _from_target(self, ra, dec, viewcone):
         """
         Select data based on target coordinates and viewcone.
-        
+
         Parameters
         ----------
         ra : float
@@ -114,7 +118,6 @@ class Data():
         mask = target.separation(observations.pointing_radec) < viewcone * u.deg
         _runs = observations[mask]["OBS_ID"].data
 
-        self._logger.info(f"Selecting {len(_runs)} runs from viewcone around {target}")
+        self._logger.info("Selecting %d runs from viewcone around %s", len(_runs), target)
         self._logger.info("WARNING - this is not tested")
         return _runs
-
