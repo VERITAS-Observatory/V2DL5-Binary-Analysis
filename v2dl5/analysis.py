@@ -30,6 +30,8 @@ from gammapy.modeling.models import (
     create_crab_spectral_model,
 )
 
+import v2dl5.plot as v2dl5_plot
+
 
 class Analysis:
     """
@@ -50,15 +52,14 @@ class Analysis:
 
     def __init__(
             self,
-            configuration=None,
-            output_dir=None,
+            args_dict=None,
             target=None,
             data=None):
 
         self._logger = logging.getLogger(__name__)
 
-        self._configuration = configuration
-        self._output_dir = output_dir
+        self.args_dict = args_dict
+        self._output_dir = args_dict.get('output_dir', None)
         self._target = target
         self._data = data
 
@@ -67,6 +68,7 @@ class Analysis:
         self.exclusion_mask = None
         self.target_exclusion_radius = 0.5 * u.deg
         self.datasets = None
+        self.flux_points = None
 
     def run(self):
         """
@@ -77,7 +79,27 @@ class Analysis:
         self._define_target_region()
         self._define_exclusion_regions()
         self._data_reduction()
-        self._spectral_fits(Datasets(self.datasets).stack_reduce())
+        if self.args_dict['datasets']['stack']:
+            _data_sets = Datasets(self.datasets).stack_reduce()
+        else:
+            _data_sets = self.datasets
+        self._spectral_fits(
+            datasets=_data_sets,
+            model=self.args_dict['fit']['model']
+        )
+        self._flux_points(_data_sets)
+
+    def plot(self):
+        """
+        Plot all results.
+
+        """
+
+        for dataset in self.datasets:
+            v2dl5_plot.plot_fit(dataset, self._output_dir)
+
+        v2dl5_plot.plot_flux_points(self.flux_points, self._output_dir)
+        v2dl5_plot.plot_sed(self.flux_points, self.models, self._output_dir)
 
     def _define_target_region(self):
         """
@@ -120,11 +142,11 @@ class Analysis:
         )
 
         self.exclusion_mask = ~geom.region_mask(self.exclusion_regions)
-        self._logger.info(f"Number of exclusion regions: {len(self.exclusion_regions)}")
+        self._logger.info("Number of exclusion regions: %d", len(self.exclusion_regions))
 
     def _data_reduction(self):
         """
-        Reduce data.
+        Reduce data using the reflected region maker.
 
         """
 
@@ -178,26 +200,27 @@ class Analysis:
                 ]
         )
 
-    def _spectral_fits(self, _datasets):
+    def _spectral_fits(self, datasets=None, model="pl"):
         """
         Perform spectral fits.
 
         """
 
-        _datasets.models = self._define_spectral_models()
+        datasets.models = self._define_spectral_models(model)
 
         _fit = Fit()
-        result_joint = _fit.run(datasets=[_datasets])
+        # result_joint = _fit.run(datasets=[datasets])
+        result_joint = _fit.run(datasets=datasets)
         print(result_joint)
         display(result_joint.models.to_parameters_table())
 
-    def _define_spectral_models(self, model):
+    def _define_spectral_models(self, model=None):
         """"
         Spectral models
 
         """
 
-        _spectral_model=None
+        _spectral_model = None
         if model == "pl":
             _spectral_model = PowerLawSpectralModel(
                 amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
@@ -215,3 +238,19 @@ class Analysis:
         return [
             SkyModel(spectral_model=_spectral_model, name=model),
         ]
+
+    def _flux_points(self, _datasets):
+        """
+        Calculate flux points.
+
+        """
+
+        e_min, e_max = 0.7, 30
+        energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
+
+        fpe = FluxPointsEstimator(
+            energy_edges=energy_edges, selection_optional="all"
+        )
+        self.flux_points = fpe.run(datasets=_datasets)
+
+        display(self.flux_points.to_table(sed_type="dnde", formatted=True))

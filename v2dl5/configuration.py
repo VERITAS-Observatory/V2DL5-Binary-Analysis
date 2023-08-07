@@ -21,9 +21,16 @@ def configuration(args):
     """
 
     # Read configuration from file
-    args_dict = _read_config(args.config)
+    args_dict = _default_config()
+
+    args_dict['target'] = args.target
+    args_dict['ra'] = args.ra
+    args_dict['dec'] = args.dec
+    args_dict['run_list'] = args.run_list
+    args_dict['output_dir'] = args.output_dir
 
     return args_dict
+
 
 def _read_config(config):
     """
@@ -40,6 +47,7 @@ def _read_config(config):
 
     print(args_dict)
     return args_dict
+
 
 def _default_config():
     """

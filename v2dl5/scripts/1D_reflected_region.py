@@ -99,6 +99,8 @@ def main():
     )
     analysis.run()
 
+    analysis.plot()
+
 
 if __name__ == "__main__":
     main()
