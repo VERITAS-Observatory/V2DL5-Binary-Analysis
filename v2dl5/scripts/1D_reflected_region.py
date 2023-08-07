@@ -24,6 +24,7 @@ import argparse
 import logging
 
 import v2dl5.analysis
+import v2dl5.configuration
 import v2dl5.data
 import v2dl5.target
 
@@ -78,21 +79,21 @@ def _parse():
 def main():
 
     logger = logging.getLogger()
-    logger.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.INFO)
 
-    args = _parse()
+    args_dict = v2dl5.configuration.configuration(args=_parse())
 
-    target = v2dl5.target.get_target(name=args.target, ra=args.ra, dec=args.dec)
+    target = v2dl5.target.get_target(
+        name=args_dict['target'], ra=args_dict['ra'], dec=args_dict['dec'])
 
     data = v2dl5.data.Data(
-        runlist=args.run_list,
+        runlist=args_dict['run_list'],
         ra=target.ra,
         dec=target.dec
     )
 
     analysis = v2dl5.analysis.Analysis(
-        configuration=args.config,
-        output_dir=args.output_dir,
+        args_dict=args_dict,
         target=target,
         data=data,
     )

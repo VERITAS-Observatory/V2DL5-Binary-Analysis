@@ -24,6 +24,7 @@ from gammapy.makers import (
 )
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
+    PowerLawSpectralModel,
     ExpCutoffPowerLawSpectralModel,
     SkyModel,
     create_crab_spectral_model,
@@ -76,6 +77,7 @@ class Analysis:
         self._define_target_region()
         self._define_exclusion_regions()
         self._data_reduction()
+        self._spectral_fits(Datasets(self.datasets).stack_reduce())
 
     def _define_target_region(self):
         """
@@ -87,6 +89,11 @@ class Analysis:
 
         on_region_radius = Angle("0.08944272 deg")
         self.on_region = CircleSkyRegion(center=self._target, radius=on_region_radius)
+        self._logger.info("Target region: ra=%.2f deg, dec=%.2f deg, radius=%.3f deg",
+                          self.on_region.center.ra.deg,
+                          self.on_region.center.dec.deg,
+                          self.on_region.radius.deg
+                          )
 
     def _define_exclusion_regions(self):
         """
@@ -136,6 +143,8 @@ class Analysis:
         )
         bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=self.exclusion_mask)
         safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+        self._logger.info("Mask applied: %s, aeff_percent = %d",
+                          safe_mask_masker.methods, safe_mask_masker.aeff_percent)
 
         self.datasets = Datasets()
 
@@ -168,3 +177,41 @@ class Analysis:
                 "alpha", "excess", "sqrt_ts"
                 ]
         )
+
+    def _spectral_fits(self, _datasets):
+        """
+        Perform spectral fits.
+
+        """
+
+        _datasets.models = self._define_spectral_models()
+
+        _fit = Fit()
+        result_joint = _fit.run(datasets=[_datasets])
+        print(result_joint)
+        display(result_joint.models.to_parameters_table())
+
+    def _define_spectral_models(self, model):
+        """"
+        Spectral models
+
+        """
+
+        _spectral_model=None
+        if model == "pl":
+            _spectral_model = PowerLawSpectralModel(
+                amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+                index=2,
+                reference=1 * u.TeV,
+            )
+        elif model == "ecpl":
+            _spectral_model = ExpCutoffPowerLawSpectralModel(
+                amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
+                index=2,
+                lambda_=0.1 * u.Unit("TeV-1"),
+                reference=1 * u.TeV,
+            )
+
+        return [
+            SkyModel(spectral_model=_spectral_model, name=model),
+        ]

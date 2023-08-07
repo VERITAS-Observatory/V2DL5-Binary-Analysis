@@ -32,6 +32,7 @@ def get_target(name=None, ra=None, dec=None):
     else:
         try:
             target = SkyCoord.from_name(name)
+            _logger.info("Target %s found in Simbad.", name)
         except name_resolve.NameResolveError:
             _logger.error("Target %s not found in Simbad.", name)
             raise
