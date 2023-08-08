@@ -10,5 +10,6 @@ dependencies:
   - gammapy
   - ipython
   - jupyter
+  - pre-commit
   - pydantic<2
   - python=3.10

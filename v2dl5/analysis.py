@@ -4,31 +4,25 @@ Main analysis class.
 
 import logging
 
-import numpy as np
 import astropy.units as u
-from astropy.coordinates import Angle, SkyCoord
-from gammapy.maps import MapAxis, RegionGeom, WcsGeom
-from IPython.display import display
-from regions import CircleSkyRegion
-from gammapy.datasets import (
-    Datasets,
-    FluxPointsDataset,
-    SpectrumDataset,
-    SpectrumDatasetOnOff,
-)
+import numpy as np
+from astropy.coordinates import Angle
+from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
+from gammapy.maps import MapAxis, RegionGeom, WcsGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
-    PowerLawSpectralModel,
     ExpCutoffPowerLawSpectralModel,
+    PowerLawSpectralModel,
     SkyModel,
-    create_crab_spectral_model,
 )
+from IPython.display import display
+from regions import CircleSkyRegion
 
 import v2dl5.plot as v2dl5_plot
 
@@ -50,16 +44,11 @@ class Analysis:
 
     """
 
-    def __init__(
-            self,
-            args_dict=None,
-            target=None,
-            data=None):
-
+    def __init__(self, args_dict=None, target=None, data=None):
         self._logger = logging.getLogger(__name__)
 
         self.args_dict = args_dict
-        self._output_dir = args_dict.get('output_dir', None)
+        self._output_dir = args_dict.get("output_dir", None)
         self._target = target
         self._data = data
 
@@ -79,14 +68,11 @@ class Analysis:
         self._define_target_region()
         self._define_exclusion_regions()
         self._data_reduction()
-        if self.args_dict['datasets']['stack']:
+        if self.args_dict["datasets"]["stack"]:
             _data_sets = Datasets(self.datasets).stack_reduce()
         else:
             _data_sets = self.datasets
-        self._spectral_fits(
-            datasets=_data_sets,
-            model=self.args_dict['fit']['model']
-        )
+        self._spectral_fits(datasets=_data_sets, model=self.args_dict["fit"]["model"])
         self._flux_points(_data_sets)
 
     def plot(self):
@@ -111,11 +97,12 @@ class Analysis:
 
         on_region_radius = Angle("0.08944272 deg")
         self.on_region = CircleSkyRegion(center=self._target, radius=on_region_radius)
-        self._logger.info("Target region: ra=%.2f deg, dec=%.2f deg, radius=%.3f deg",
-                          self.on_region.center.ra.deg,
-                          self.on_region.center.dec.deg,
-                          self.on_region.radius.deg
-                          )
+        self._logger.info(
+            "Target region: ra=%.2f deg, dec=%.2f deg, radius=%.3f deg",
+            self.on_region.center.ra.deg,
+            self.on_region.center.dec.deg,
+            self.on_region.radius.deg,
+        )
 
     def _define_exclusion_regions(self):
         """
@@ -125,10 +112,7 @@ class Analysis:
 
         # on region
         self.exclusion_regions.append(
-            CircleSkyRegion(
-                center=self._target,
-                radius=self.target_exclusion_radius
-            )
+            CircleSkyRegion(center=self._target, radius=self.target_exclusion_radius)
         )
 
         # bright stars
@@ -136,9 +120,7 @@ class Analysis:
 
         # exclusion mask
         geom = WcsGeom.create(
-            npix=(150, 150), binsz=0.05, 
-            skydir=self._target.galactic, proj="TAN",
-            frame="icrs"
+            npix=(150, 150), binsz=0.05, skydir=self._target.galactic, proj="TAN", frame="icrs"
         )
 
         self.exclusion_mask = ~geom.region_mask(self.exclusion_regions)
@@ -165,8 +147,11 @@ class Analysis:
         )
         bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=self.exclusion_mask)
         safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
-        self._logger.info("Mask applied: %s, aeff_percent = %d",
-                          safe_mask_masker.methods, safe_mask_masker.aeff_percent)
+        self._logger.info(
+            "Mask applied: %s, aeff_percent = %d",
+            safe_mask_masker.methods,
+            safe_mask_masker.aeff_percent,
+        )
 
         self.datasets = Datasets()
 
@@ -190,14 +175,21 @@ class Analysis:
         """
 
         for col in info_table.colnames:
-            if info_table[col].dtype.kind == 'f':
-                info_table[col].format = '{:.2f}'
+            if info_table[col].dtype.kind == "f":
+                info_table[col].format = "{:.2f}"
 
         print(
             info_table[
-                "name", "livetime", "ontime", "counts", "counts_off", "background",
-                "alpha", "excess", "sqrt_ts"
-                ]
+                "name",
+                "livetime",
+                "ontime",
+                "counts",
+                "counts_off",
+                "background",
+                "alpha",
+                "excess",
+                "sqrt_ts",
+            ]
         )
 
     def _spectral_fits(self, datasets=None, model="pl"):
@@ -215,7 +207,7 @@ class Analysis:
         display(result_joint.models.to_parameters_table())
 
     def _define_spectral_models(self, model=None):
-        """"
+        """ "
         Spectral models
 
         """
@@ -248,9 +240,7 @@ class Analysis:
         e_min, e_max = 0.7, 30
         energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
 
-        fpe = FluxPointsEstimator(
-            energy_edges=energy_edges, selection_optional="all"
-        )
+        fpe = FluxPointsEstimator(energy_edges=energy_edges, selection_optional="all")
         self.flux_points = fpe.run(datasets=_datasets)
 
         display(self.flux_points.to_table(sed_type="dnde", formatted=True))

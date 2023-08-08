@@ -6,8 +6,6 @@ import logging
 
 import matplotlib.pyplot as plt
 
-from gammapy.datasets import Datasets
-
 
 def plot_fit(dataset, output_dir=None):
     """

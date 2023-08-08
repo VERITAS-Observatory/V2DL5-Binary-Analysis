@@ -30,7 +30,6 @@ import v2dl5.target
 
 
 def _parse():
-
     parser = argparse.ArgumentParser(
         description="Perform 1D reflected region analysis for a given run list."
     )
@@ -77,20 +76,15 @@ def _parse():
 
 
 def main():
-
-    logger = logging.getLogger()
     logging.basicConfig(level=logging.INFO)
 
     args_dict = v2dl5.configuration.configuration(args=_parse())
 
     target = v2dl5.target.get_target(
-        name=args_dict['target'], ra=args_dict['ra'], dec=args_dict['dec'])
-
-    data = v2dl5.data.Data(
-        runlist=args_dict['run_list'],
-        ra=target.ra,
-        dec=target.dec
+        name=args_dict["target"], ra=args_dict["ra"], dec=args_dict["dec"]
     )
+
+    data = v2dl5.data.Data(runlist=args_dict["run_list"], ra=target.ra, dec=target.dec)
 
     analysis = v2dl5.analysis.Analysis(
         args_dict=args_dict,

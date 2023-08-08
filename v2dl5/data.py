@@ -10,7 +10,7 @@ from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
 
 
-class Data():
+class Data:
     """
     Data class holding data store and observations
 
@@ -32,13 +32,7 @@ class Data():
 
     """
 
-    def __init__(
-            self,
-            runlist=None,
-            data_directory="../gammapy",
-            ra=None,
-            dec=None,
-            viewcone=0.5):
+    def __init__(self, runlist=None, data_directory="../gammapy", ra=None, dec=None, viewcone=0.5):
         """
         Initialize Data object.
 

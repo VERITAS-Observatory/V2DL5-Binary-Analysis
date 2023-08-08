@@ -4,8 +4,7 @@ Target definition.
 
 import logging
 
-from astropy.coordinates import SkyCoord, Angle, name_resolve
-from astroquery.simbad import Simbad
+from astropy.coordinates import SkyCoord, name_resolve
 
 
 def get_target(name=None, ra=None, dec=None):
