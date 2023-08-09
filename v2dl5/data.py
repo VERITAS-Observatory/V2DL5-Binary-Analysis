@@ -89,7 +89,7 @@ class Data:
             self._logger.error("Run list %s not found.", runlist)
             raise
 
-        self._logger.info("Reading run list with %d runs from %s", len(_runs), runlist)
+        self._logger.info("Reading run list with %d observations from %s", len(_runs), runlist)
         return _runs
 
     def _from_target(self, ra, dec, viewcone):

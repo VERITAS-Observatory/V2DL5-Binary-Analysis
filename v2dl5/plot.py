@@ -6,7 +6,6 @@ import logging
 
 import matplotlib.pyplot as plt
 
-from gammapy.datasets import FluxPointsDataset
 
 def plot_fit(dataset, output_dir=None):
     """
@@ -17,8 +16,7 @@ def plot_fit(dataset, output_dir=None):
     ax_spectrum, _ = dataset.plot_fit()
     ax_spectrum.set_ylim(0.1, 40)
     dataset.plot_masks(ax=ax_spectrum)
-    _plot(plot_name=f"{dataset.name}_{dataset.models[0].name}_fit",
-          output_dir=output_dir)
+    _plot(plot_name=f"{dataset.name}_{dataset.models[0].name}_fit", output_dir=output_dir)
 
 
 def plot_flux_points(flux_point_dataset, output_dir=None):
@@ -45,6 +43,21 @@ def plot_sed(flux_point_dataset, output_dir):
     _plot(plot_name="spectrum", output_dir=output_dir)
     flux_point_dataset.plot_residuals(method="diff/model")
     _plot(plot_name="residuals", output_dir=output_dir)
+
+
+def plot_light_curve(light_curve, output_dir):
+    """
+    Plot light curve
+
+    """
+
+    fig, ax = plt.subplots(
+        figsize=(8, 6),
+        gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
+    )
+
+    light_curve.plot(ax=ax, marker="o", label="per observation")
+    _plot(plot_name="light_curve_per_obs", output_dir=output_dir)
 
 
 def _plot(plot_name=None, output_dir=None):
