@@ -7,7 +7,7 @@ import logging
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, SpectrumDataset, FluxPointsDataset
+from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
@@ -88,11 +88,8 @@ class Analysis:
 
         v2dl5_plot.plot_flux_points(self.flux_points, self._output_dir)
         v2dl5_plot.plot_sed(
-            FluxPointsDataset(
-                data=self.flux_points,
-                models=self.spectral_model.copy()
-            ),
-            self._output_dir
+            FluxPointsDataset(data=self.flux_points, models=self.spectral_model.copy()),
+            self._output_dir,
         )
         return
 
@@ -102,14 +99,10 @@ class Analysis:
 
         """
 
-        print("Model: ", self.spectral_model)
-        print("Fluxpoints: ", self.flux_points)
         if self.flux_points is not None:
-            FluxPointsDataset(
-                data=self.flux_points,
-                models=[self.spectral_model]
-            ).write("flux_points.fits", overwrite=True)
-
+            _ofile = f"{self._output_dir}/flux_points.fits.gz"
+            self._logger.info("Writing flux points to %s/", _ofile)
+            self.flux_points.write(_ofile, overwrite=True)
 
     def _define_target_region(self):
         """
