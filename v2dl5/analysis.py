@@ -7,7 +7,7 @@ import logging
 import astropy.units as u
 import numpy as np
 from astropy.coordinates import Angle
-from gammapy.datasets import Datasets, SpectrumDataset
+from gammapy.datasets import Datasets, SpectrumDataset, FluxPointsDataset
 from gammapy.estimators import FluxPointsEstimator
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
@@ -57,6 +57,7 @@ class Analysis:
         self.exclusion_mask = None
         self.target_exclusion_radius = 0.5 * u.deg
         self.datasets = None
+        self.spectral_model = None
         self.flux_points = None
 
     def run(self):
@@ -72,7 +73,8 @@ class Analysis:
             _data_sets = Datasets(self.datasets).stack_reduce()
         else:
             _data_sets = self.datasets
-        self._spectral_fits(datasets=_data_sets, model=self.args_dict["fit"]["model"])
+        self._define_spectral_models(model=self.args_dict["fit"]["model"])
+        self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
 
     def plot(self):
@@ -85,7 +87,29 @@ class Analysis:
             v2dl5_plot.plot_fit(dataset, self._output_dir)
 
         v2dl5_plot.plot_flux_points(self.flux_points, self._output_dir)
-        v2dl5_plot.plot_sed(self.flux_points, self.models, self._output_dir)
+        v2dl5_plot.plot_sed(
+            FluxPointsDataset(
+                data=self.flux_points,
+                models=self.spectral_model.copy()
+            ),
+            self._output_dir
+        )
+        return
+
+    def write(self):
+        """
+        Write all results.
+
+        """
+
+        print("Model: ", self.spectral_model)
+        print("Fluxpoints: ", self.flux_points)
+        if self.flux_points is not None:
+            FluxPointsDataset(
+                data=self.flux_points,
+                models=[self.spectral_model]
+            ).write("flux_points.fits", overwrite=True)
+
 
     def _define_target_region(self):
         """
@@ -192,16 +216,15 @@ class Analysis:
             ]
         )
 
-    def _spectral_fits(self, datasets=None, model="pl"):
+    def _spectral_fits(self, datasets=None):
         """
         Perform spectral fits.
 
         """
 
-        datasets.models = self._define_spectral_models(model)
+        datasets.models = self.spectral_model
 
         _fit = Fit()
-        # result_joint = _fit.run(datasets=[datasets])
         result_joint = _fit.run(datasets=datasets)
         print(result_joint)
         display(result_joint.models.to_parameters_table())
@@ -227,20 +250,22 @@ class Analysis:
                 reference=1 * u.TeV,
             )
 
-        return [
-            SkyModel(spectral_model=_spectral_model, name=model),
-        ]
+        self.spectral_model = SkyModel(spectral_model=_spectral_model, name=model)
 
-    def _flux_points(self, _datasets):
+        return [self.spectral_model]
+
+    def _flux_points(self, datasets):
         """
         Calculate flux points.
 
         """
 
-        e_min, e_max = 0.7, 30
+        e_min, e_max = 0.2, 30
         energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
 
+        self._logger.info("Estimating flux points")
         fpe = FluxPointsEstimator(energy_edges=energy_edges, selection_optional="all")
-        self.flux_points = fpe.run(datasets=_datasets)
+        self.flux_points = fpe.run(datasets=datasets)
 
         display(self.flux_points.to_table(sed_type="dnde", formatted=True))
+        display(self.flux_points.to_table(sed_type="e2dnde", formatted=True))

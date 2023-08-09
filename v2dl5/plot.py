@@ -6,6 +6,7 @@ import logging
 
 import matplotlib.pyplot as plt
 
+from gammapy.datasets import FluxPointsDataset
 
 def plot_fit(dataset, output_dir=None):
     """
@@ -16,26 +17,45 @@ def plot_fit(dataset, output_dir=None):
     ax_spectrum, _ = dataset.plot_fit()
     ax_spectrum.set_ylim(0.1, 40)
     dataset.plot_masks(ax=ax_spectrum)
-    if output_dir is not None:
-        _ofile = f"{output_dir}/{dataset.name}_{dataset.models[0].name}_fit.png"
-        logging.info("Writing %s fit plot to %s", dataset.name, _ofile)
-        plt.savefig(_ofile)
-    else:
-        plt.show()
+    _plot(plot_name=f"{dataset.name}_{dataset.models[0].name}_fit",
+          output_dir=output_dir)
 
 
-def plot_flux_points(flux_points, output_dir=None):
+def plot_flux_points(flux_point_dataset, output_dir=None):
     """
     Plot flux points
 
     """
 
-    fig, ax = plt.subplots()
-    flux_points.plot(ax=ax, sed_type="e2dnde", color="darkorange")
-    flux_points.plot_ts_profiles(ax=ax, sed_type="e2dnde")
+    _, ax = plt.subplots()
+    flux_point_dataset.plot(ax=ax, sed_type="dnde", color="darkorange")
+    flux_point_dataset.plot_ts_profiles(ax=ax, sed_type="dnde")
+    _plot(plot_name="flux_points", output_dir=output_dir)
+
+
+def plot_sed(flux_point_dataset, output_dir):
+    """
+    Plot spectral energy distribution
+
+    """
+
+    kwargs_model = {"color": "grey", "ls": "--", "sed_type": "dnde"}
+    kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
+    flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
+    _plot(plot_name="spectrum", output_dir=output_dir)
+    flux_point_dataset.plot_residuals(method="diff/model")
+    _plot(plot_name="residuals", output_dir=output_dir)
+
+
+def _plot(plot_name=None, output_dir=None):
+    """
+    Plotting helper function
+
+    """
     if output_dir is not None:
-        _ofile = f"{output_dir}/flux_points.png"
-        logging.info("Writing flux points fit plot to %s", _ofile)
+        _ofile = f"{output_dir}/{plot_name}.png"
+        logging.info("Plotting %s", _ofile)
         plt.savefig(_ofile)
     else:
         plt.show()
+    plt.clf()

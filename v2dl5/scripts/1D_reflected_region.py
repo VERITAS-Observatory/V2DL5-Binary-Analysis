@@ -92,6 +92,7 @@ def main():
         data=data,
     )
     analysis.run()
+    analysis.write()
 
     analysis.plot()
 
