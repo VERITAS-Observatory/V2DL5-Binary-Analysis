@@ -25,6 +25,7 @@ from IPython.display import display
 from regions import CircleSkyRegion
 
 import v2dl5.plot as v2dl5_plot
+import v2dl5.time as v2dl5_time
 
 
 class Analysis:
@@ -59,7 +60,8 @@ class Analysis:
         self.datasets = None
         self.spectral_model = None
         self.flux_points = None
-        self.lc_1d_per_obs = None
+        self.lightcurve_per_obs = None
+        self.lightcurve_per_night = None
 
     def run(self):
         """
@@ -77,7 +79,8 @@ class Analysis:
         self._define_spectral_models(model=self.args_dict["fit"]["model"])
         self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
-        self.lc_1d_per_obs = self._light_curve(_data_sets, None)
+        self.lightcurve_per_obs = self._light_curve(_data_sets, None)
+        self.lightcurve_per_night = self._nightly_light_curve(_data_sets)
 
     def plot(self):
         """
@@ -93,7 +96,8 @@ class Analysis:
             FluxPointsDataset(data=self.flux_points, models=self.spectral_model.copy()),
             self._output_dir,
         )
-        v2dl5_plot.plot_light_curve(self.lc_1d_per_obs, self._output_dir)
+        v2dl5_plot.plot_light_curve(self.lightcurve_per_obs, "per observation", self._output_dir)
+        v2dl5_plot.plot_light_curve(self.lightcurve_per_night, "per night", self._output_dir)
 
     def write(self):
         """
@@ -269,14 +273,49 @@ class Analysis:
         """
         Calculate light curve.
 
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+        time_intervals : `~astropy.time.Time`
+            Time intervals
+
+        Returns
+        -------
+        _light_curve : `~gammapy.estimators.LightCurve`
+            Light curve
+
         """
 
-        self._logger.info("Estimating light curve")
+        self._logger.info(f"Estimating light curve {time_intervals}")
 
-        lc_maker_1d = LightCurveEstimator(energy_edges=[1, 100] * u.TeV, reoptimize=False)
-        if time_intervals is None:
-            _light_curve = lc_maker_1d.run(datasets)
+        lc_maker_1d = LightCurveEstimator(
+            energy_edges=[1, 100] * u.TeV,
+            time_intervals=time_intervals,
+            reoptimize=False,
+            selection_optional="all",
+        )
+        _light_curve = lc_maker_1d.run(datasets)
 
         display(_light_curve.to_table(sed_type="flux", format="lightcurve"))
 
         return _light_curve
+
+    def _nightly_light_curve(self, _data_sets):
+        """
+        Combine observations per night and calculate light curve.
+
+        Parameters
+        ----------
+        _data_sets : Datasets
+            Datasets
+
+        """
+
+        self._logger.info("Estimating daily light curve")
+
+        time_intervals = v2dl5_time.get_list_of_nights(_data_sets, time_zone=-7.0)
+
+        print(time_intervals, type(time_intervals))
+
+        return self._light_curve(_data_sets, time_intervals=time_intervals)

@@ -43,6 +43,7 @@ class Data:
 
         self._logger = logging.getLogger(__name__)
 
+        self._logger.info(f"Initializing data object from {data_directory}.")
         self._data_store = DataStore.from_dir(data_directory)
         if runlist is None:
             self.runs = self._from_target(ra, dec, viewcone)

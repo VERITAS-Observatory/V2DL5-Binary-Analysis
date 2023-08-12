@@ -56,7 +56,7 @@ def _default_config():
 
     return {
         "observations": {
-            "datastore": "../gammapy",
+            "datastore": "../../../VTS/DL3/v490/point-like/",
             "obs_cone": {
                 "frame": "icrs",
                 "lon": "83.628700 deg",

@@ -45,19 +45,19 @@ def plot_sed(flux_point_dataset, output_dir):
     _plot(plot_name="residuals", output_dir=output_dir)
 
 
-def plot_light_curve(light_curve, output_dir):
+def plot_light_curve(light_curve, plot_name, output_dir):
     """
     Plot light curve
 
     """
 
-    fig, ax = plt.subplots(
+    _, ax = plt.subplots(
         figsize=(8, 6),
         gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
     )
 
-    light_curve.plot(ax=ax, marker="o", label="per observation")
-    _plot(plot_name="light_curve_per_obs", output_dir=output_dir)
+    light_curve.plot(ax=ax, marker="o", label=plot_name)
+    _plot(plot_name="light_curve_" + plot_name.replace(" ", "_"), output_dir=output_dir)
 
 
 def _plot(plot_name=None, output_dir=None):

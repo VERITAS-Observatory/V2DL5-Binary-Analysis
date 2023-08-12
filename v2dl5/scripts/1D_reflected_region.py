@@ -93,7 +93,6 @@ def main():
     )
     analysis.run()
     analysis.write()
-
     analysis.plot()
 
 
