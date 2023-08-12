@@ -6,8 +6,10 @@ name: v2dl5
 channels:
   - conda-forge
 dependencies:
+  - astroquery
   - gammapy
   - ipython
   - jupyter
+  - pre-commit
   - pydantic<2
   - python=3.10

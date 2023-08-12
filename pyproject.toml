@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "v2dl5"
+description = "High-level analysis for VERITAS with gammapy"
+readme = "README.md"
+license = { file="LICENSE" }
+version = "0.1.0"
+authors = [
+  { name="Gernot Maier", email="gernot.maier@desy.de" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD-3-Clause",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "astropy",
+    "astroquery",
+    "gammapy",
+    "pydantic<2",
+]
+
+[project.urls]
+"repository" = "https://github.com/GernotMaier/V2DL5"
+"bug tracker" = "https://github.com/GernotMaier/V2DL5/issues"
+
+[tool.setuptools.packages.find]
