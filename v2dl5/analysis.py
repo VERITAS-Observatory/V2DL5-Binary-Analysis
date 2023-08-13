@@ -6,7 +6,6 @@ import logging
 
 import astropy.units as u
 import numpy as np
-from astropy.coordinates import Angle
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator, LightCurveEstimator
 from gammapy.makers import (
@@ -14,7 +13,7 @@ from gammapy.makers import (
     SafeMaskMaker,
     SpectrumDatasetMaker,
 )
-from gammapy.maps import MapAxis, RegionGeom, WcsGeom
+from gammapy.maps import MapAxis, RegionGeom
 from gammapy.modeling import Fit
 from gammapy.modeling.models import (
     ExpCutoffPowerLawSpectralModel,
@@ -22,7 +21,6 @@ from gammapy.modeling.models import (
     SkyModel,
 )
 from IPython.display import display
-from regions import CircleSkyRegion
 
 import v2dl5.plot as v2dl5_plot
 import v2dl5.time as v2dl5_time
@@ -38,25 +36,21 @@ class Analysis:
         Analysis configuration
     output_dir : str
         Output directory
-    target : SkyCoord
-        Target coordinates
+    sky_regions: SkyRegions
+        Sky regions
     data : Data
         Datastore object
 
     """
 
-    def __init__(self, args_dict=None, target=None, data=None):
+    def __init__(self, args_dict=None, sky_regions=None, data=None):
         self._logger = logging.getLogger(__name__)
 
         self.args_dict = args_dict
         self._output_dir = args_dict.get("output_dir", None)
-        self._target = target
+        self.sky_regions = sky_regions
         self._data = data
 
-        self.on_region = None
-        self.exclusion_regions = []
-        self.exclusion_mask = None
-        self.target_exclusion_radius = 0.5 * u.deg
         self.datasets = None
         self.spectral_model = None
         self.flux_points = None
@@ -69,8 +63,6 @@ class Analysis:
 
         """
 
-        self._define_target_region()
-        self._define_exclusion_regions()
         self._data_reduction()
         if self.args_dict["datasets"]["stack"]:
             _data_sets = Datasets(self.datasets).stack_reduce()
@@ -110,66 +102,27 @@ class Analysis:
             self._logger.info("Writing flux points to %s", _ofile)
             self.flux_points.write(_ofile, overwrite=True)
 
-    def _define_target_region(self):
-        """
-        Define target region.
-
-        TODO - get on radius from fits file.
-
-        """
-
-        on_region_radius = Angle("0.08944272 deg")
-        self.on_region = CircleSkyRegion(center=self._target, radius=on_region_radius)
-        self._logger.info(
-            "Target region: ra=%.2f deg, dec=%.2f deg, radius=%.3f deg",
-            self.on_region.center.ra.deg,
-            self.on_region.center.dec.deg,
-            self.on_region.radius.deg,
-        )
-
-    def _define_exclusion_regions(self):
-        """
-        Define exclusion regions.
-
-        """
-
-        # on region
-        self.exclusion_regions.append(
-            CircleSkyRegion(center=self._target, radius=self.target_exclusion_radius)
-        )
-
-        # bright stars
-        # TODO
-
-        # exclusion mask
-        geom = WcsGeom.create(
-            npix=(150, 150), binsz=0.05, skydir=self._target.galactic, proj="TAN", frame="icrs"
-        )
-
-        self.exclusion_mask = ~geom.region_mask(self.exclusion_regions)
-        self._logger.info("Number of exclusion regions: %d", len(self.exclusion_regions))
-
     def _data_reduction(self):
         """
         Reduce data using the reflected region maker.
 
         """
 
-        energy_axis = MapAxis.from_energy_bounds(
-            0.1, 40, nbin=10, per_decade=True, unit="TeV", name="energy"
-        )
-        energy_axis_true = MapAxis.from_energy_bounds(
-            0.05, 100, nbin=20, per_decade=True, unit="TeV", name="energy_true"
-        )
+        energy_axis = self._get_energy_axis(name="energy")
+        energy_axis_true = self._get_energy_axis(name="energy_true")
 
-        geom = RegionGeom.create(region=self.on_region, axes=[energy_axis])
+        geom = RegionGeom.create(region=self.sky_regions.on_region, axes=[energy_axis])
+
         dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
 
         dataset_maker = SpectrumDatasetMaker(
             containment_correction=False, selection=["counts", "exposure", "edisp"]
         )
-        bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=self.exclusion_mask)
-        safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+        bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=self.sky_regions.exclusion_mask)
+        safe_mask_masker = SafeMaskMaker(
+            methods=self.args_dict["datasets"]["safe_mask"]["methods"],
+            aeff_percent=self.args_dict["datasets"]["safe_mask"]["parameters"]["aeff_percent"],
+        )
         self._logger.info(
             "Mask applied: %s, aeff_percent = %d",
             safe_mask_masker.methods,
@@ -259,8 +212,14 @@ class Analysis:
 
         """
 
-        e_min, e_max = 0.2, 30
-        energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
+        energy_edges = (
+            np.geomspace(
+                u.Quantity(self.args_dict["flux_points"]["energy"]["min"]).value,
+                u.Quantity(self.args_dict["flux_points"]["energy"]["max"]).value,
+                self.args_dict["flux_points"]["energy"]["nbins"],
+            )
+            * u.TeV
+        )
 
         self._logger.info("Estimating flux points")
         fpe = FluxPointsEstimator(energy_edges=energy_edges, selection_optional="all")
@@ -290,7 +249,11 @@ class Analysis:
         self._logger.info(f"Estimating light curve {time_intervals}")
 
         lc_maker_1d = LightCurveEstimator(
-            energy_edges=[1, 100] * u.TeV,
+            energy_edges=[
+                u.Quantity(self.args_dict["light_curve"]["energy"]["min"]).to("TeV").value,
+                u.Quantity(self.args_dict["light_curve"]["energy"]["max"]).to("TeV").value,
+            ]
+            * u.TeV,
             time_intervals=time_intervals,
             reoptimize=False,
             selection_optional="all",
@@ -314,8 +277,27 @@ class Analysis:
 
         self._logger.info("Estimating daily light curve")
 
-        time_intervals = v2dl5_time.get_list_of_nights(_data_sets, time_zone=-7.0)
+        time_intervals = v2dl5_time.get_list_of_nights(
+            _data_sets, time_zone=self.args_dict["light_curve"]["time_zone"]
+        )
 
         print(time_intervals, type(time_intervals))
 
         return self._light_curve(_data_sets, time_intervals=time_intervals)
+
+    def _get_energy_axis(self, name="energy"):
+        """
+        Get energy axis.
+
+        """
+
+        _axes_dict = self.args_dict["datasets"]["geom"]["axes"][name]
+
+        return MapAxis.from_energy_bounds(
+            u.Quantity(_axes_dict["min"]).to("TeV").value,
+            u.Quantity(_axes_dict["max"]).to("TeV").value,
+            nbin=_axes_dict["nbins"],
+            per_decade=True,
+            unit="TeV",
+            name=name,
+        )

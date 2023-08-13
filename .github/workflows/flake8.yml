@@ -1,0 +1,26 @@
+---
+name: flake8 linter
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+
+jobs:
+  flake8-lint:
+    runs-on: ubuntu-latest
+    name: linter
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Set up Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: flake8 Lint
+        uses: py-actions/flake8@v2
+        with:
+          max-line-length: "100"
