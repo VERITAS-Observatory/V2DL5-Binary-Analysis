@@ -5,7 +5,11 @@ Includes reading of configuration from file and default parameters.
 
 """
 
+import logging
+
 import yaml
+
+_logger = logging.getLogger(__name__)
 
 
 def configuration(args):
@@ -19,26 +23,34 @@ def configuration(args):
 
     """
 
-    # Read configuration from file
     args_dict = _default_config()
+    if args.config is not None:
+        args_dict.update(_read_config_from_file(args.config))
 
-    args_dict["target"] = args.target
-    args_dict["ra"] = args.ra
-    args_dict["dec"] = args.dec
+    #    args_dict["target"] = args.target
+    #    args_dict["ra"] = args.ra
+    #    args_dict["dec"] = args.dec
     args_dict["run_list"] = args.run_list
     args_dict["output_dir"] = args.output_dir
 
     return args_dict
 
 
-def _read_config(config):
+def _read_config_from_file(config):
     """
     Read configuration from yaml file.
 
+    Parameters
+    ----------
+    config : str
+        Path to configuration file.
+
     """
 
+    _logger.info(f"Reading configuration from {config}")
+
     args_dict = {}
-    with open(config, "r") as stream:
+    with open(config, "r", encoding="utf-8") as stream:
         try:
             args_dict = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
@@ -57,6 +69,7 @@ def _default_config():
     return {
         "observations": {
             "datastore": "../../../VTS/DL3/v490/point-like/",
+            "target": None,
             "obs_cone": {
                 "frame": "icrs",
                 "lon": "83.628700 deg",

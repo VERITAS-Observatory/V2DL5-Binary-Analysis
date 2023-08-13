@@ -23,6 +23,8 @@ Example:
 import argparse
 import logging
 
+from astropy import units as u
+
 import v2dl5.analysis
 import v2dl5.configuration
 import v2dl5.data
@@ -80,15 +82,18 @@ def main():
 
     args_dict = v2dl5.configuration.configuration(args=_parse())
 
-    target = v2dl5.target.get_target(
-        name=args_dict["target"], ra=args_dict["ra"], dec=args_dict["dec"]
-    )
+    sky_regions = v2dl5.target.SkyRegions(args_dict=args_dict)
 
-    data = v2dl5.data.Data(runlist=args_dict["run_list"], ra=target.ra, dec=target.dec)
+    data = v2dl5.data.Data(
+        runlist=args_dict["run_list"],
+        data_directory=args_dict["observations"]["datastore"],
+        target=sky_regions.target,
+        viewcone=args_dict["observations"]["obs_cone"].get("viewcone", 0.5 * u.deg),
+    )
 
     analysis = v2dl5.analysis.Analysis(
         args_dict=args_dict,
-        target=target,
+        sky_regions=sky_regions,
         data=data,
     )
     analysis.run()

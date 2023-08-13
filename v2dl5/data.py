@@ -6,7 +6,6 @@ import logging
 
 import numpy as np
 from astropy import units as u
-from astropy.coordinates import SkyCoord
 from gammapy.data import DataStore
 
 
@@ -22,17 +21,15 @@ class Data:
     runlist : str
         Path to run list.
     data_directory : str
-        Path to data directory.
-    ra : float
-        Target right ascension (deg).
-    dec : float
-        Target declination (deg).
+        Path to data directory (holding hdu-index.fits.gz and obs-index.fits.gz).
+    target : SkyCoord
+        Target coordinates.
     viewcone : float
         Viewcone radius (deg).
 
     """
 
-    def __init__(self, runlist=None, data_directory="../gammapy", ra=None, dec=None, viewcone=0.5):
+    def __init__(self, runlist=None, data_directory=None, target=None, viewcone=0.5 * u.deg):
         """
         Initialize Data object.
 
@@ -43,10 +40,10 @@ class Data:
 
         self._logger = logging.getLogger(__name__)
 
-        self._logger.info(f"Initializing data object from {data_directory}.")
+        self._logger.info(f"Initializing data object from {data_directory}")
         self._data_store = DataStore.from_dir(data_directory)
         if runlist is None:
-            self.runs = self._from_target(ra, dec, viewcone)
+            self.runs = self._from_target(target, viewcone)
         else:
             self.runs = self._from_runlist(runlist)
 
@@ -58,15 +55,22 @@ class Data:
 
         return self._data_store
 
-    def get_observations(self):
+    def get_observations(self, reflected_region=True):
         """
         Return observations.
 
         Reflected region analysis requires effective area and energy dispersion only.
 
+        Parameters
+        ----------
+        reflected_region : bool
+            Reflected region analysis.
+
         """
 
-        available_irf = ["aeff", "edisp"]
+        available_irf = None
+        if reflected_region:
+            available_irf = ["aeff", "edisp"]
 
         return self._data_store.get_observations(self.runs, required_irf=available_irf)
 
@@ -93,23 +97,20 @@ class Data:
         self._logger.info("Reading run list with %d observations from %s", len(_runs), runlist)
         return _runs
 
-    def _from_target(self, ra, dec, viewcone):
+    def _from_target(self, target, viewcone):
         """
         Select data based on target coordinates and viewcone.
 
         Parameters
         ----------
-        ra : float
-            Target right ascension (deg).
-        dec : float
-            Target declination (deg).
+        target : SkyCoord
+            Target coordinates.
         viewcone : float
             Viewcone radius (deg).
 
         """
 
         observations = self._data_store.obs_table
-        target = SkyCoord(ra=ra, dec=dec, unit="deg", frame="icrs")
         mask = target.separation(observations.pointing_radec) < viewcone * u.deg
         _runs = observations[mask]["OBS_ID"].data
 
