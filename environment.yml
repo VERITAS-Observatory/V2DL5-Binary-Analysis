@@ -12,4 +12,5 @@ dependencies:
   - jupyter
   - pre-commit
   - pydantic<2
+  - pyflakes
   - python=3.10
