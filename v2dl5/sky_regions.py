@@ -1,5 +1,5 @@
 """
-Target definition.
+Sky regions definition.
 """
 
 import logging

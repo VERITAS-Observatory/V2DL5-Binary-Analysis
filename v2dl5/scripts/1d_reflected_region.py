@@ -28,7 +28,7 @@ from astropy import units as u
 import v2dl5.analysis
 import v2dl5.configuration
 import v2dl5.data
-import v2dl5.target
+import v2dl5.sky_regions
 
 
 def _parse():
@@ -82,7 +82,7 @@ def main():
 
     args_dict = v2dl5.configuration.configuration(args=_parse())
 
-    sky_regions = v2dl5.target.SkyRegions(args_dict=args_dict)
+    sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
 
     data = v2dl5.data.Data(
         runlist=args_dict["run_list"],
