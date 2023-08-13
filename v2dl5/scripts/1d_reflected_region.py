@@ -97,8 +97,8 @@ def main():
         data=data,
     )
     analysis.run()
-    analysis.write()
     analysis.plot()
+    analysis.write()
 
 
 if __name__ == "__main__":

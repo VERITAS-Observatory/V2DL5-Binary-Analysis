@@ -108,21 +108,21 @@ class Analysis:
 
         """
 
-        energy_axis = MapAxis.from_energy_bounds(
-            0.1, 40, nbin=10, per_decade=True, unit="TeV", name="energy"
-        )
-        energy_axis_true = MapAxis.from_energy_bounds(
-            0.05, 100, nbin=20, per_decade=True, unit="TeV", name="energy_true"
-        )
+        energy_axis = self._get_energy_axis(name="energy")
+        energy_axis_true = self._get_energy_axis(name="energy_true")
 
         geom = RegionGeom.create(region=self.sky_regions.on_region, axes=[energy_axis])
+
         dataset_empty = SpectrumDataset.create(geom=geom, energy_axis_true=energy_axis_true)
 
         dataset_maker = SpectrumDatasetMaker(
             containment_correction=False, selection=["counts", "exposure", "edisp"]
         )
         bkg_maker = ReflectedRegionsBackgroundMaker(exclusion_mask=self.sky_regions.exclusion_mask)
-        safe_mask_masker = SafeMaskMaker(methods=["aeff-max"], aeff_percent=10)
+        safe_mask_masker = SafeMaskMaker(
+            methods=self.args_dict["datasets"]["safe_mask"]["methods"],
+            aeff_percent=self.args_dict["datasets"]["safe_mask"]["parameters"]["aeff_percent"],
+        )
         self._logger.info(
             "Mask applied: %s, aeff_percent = %d",
             safe_mask_masker.methods,
@@ -272,3 +272,20 @@ class Analysis:
         print(time_intervals, type(time_intervals))
 
         return self._light_curve(_data_sets, time_intervals=time_intervals)
+
+    def _get_energy_axis(self, name="energy"):
+        """
+        Get energy axis.
+
+        """
+
+        _axes_dict = self.args_dict["datasets"]["geom"]["axes"][name]
+
+        return MapAxis.from_energy_bounds(
+            u.Quantity(_axes_dict["min"]).to("TeV").value,
+            u.Quantity(_axes_dict["max"]).to("TeV").value,
+            nbin=_axes_dict["nbins"],
+            per_decade=True,
+            unit="TeV",
+            name=name,
+        )

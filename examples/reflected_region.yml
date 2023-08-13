@@ -20,8 +20,8 @@ datasets:
     stack: false
     geom:
         axes:
-            energy: {min: 0.05 TeV, max: 30 TeV, nbins: 20}
-            energy_true: {min: 0.05 TeV, max: 50 TeV, nbins: 40}
+            energy: {min: 0.1 TeV, max: 40 TeV, nbins: 10}
+            energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
     on_region:
       frame: icrs
       lon: 83.633 deg
@@ -31,8 +31,8 @@ datasets:
       radius: 0.5 deg
     containment_correction: false
     safe_mask:
-       methods: ['aeff-default', 'aeff-max']
-       parameters: {aeff_percent: 0.1}
+       methods: ['aeff-max']
+       parameters: {aeff_percent: 10.}
     background:
         method: reflected
 fit:
