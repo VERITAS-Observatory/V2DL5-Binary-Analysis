@@ -212,8 +212,14 @@ class Analysis:
 
         """
 
-        e_min, e_max = 0.2, 30
-        energy_edges = np.geomspace(e_min, e_max, 11) * u.TeV
+        energy_edges = (
+            np.geomspace(
+                u.Quantity(self.args_dict["flux_points"]["energy"]["min"]).value,
+                u.Quantity(self.args_dict["flux_points"]["energy"]["max"]).value,
+                self.args_dict["flux_points"]["energy"]["nbins"],
+            )
+            * u.TeV
+        )
 
         self._logger.info("Estimating flux points")
         fpe = FluxPointsEstimator(energy_edges=energy_edges, selection_optional="all")
@@ -243,7 +249,11 @@ class Analysis:
         self._logger.info(f"Estimating light curve {time_intervals}")
 
         lc_maker_1d = LightCurveEstimator(
-            energy_edges=[1, 100] * u.TeV,
+            energy_edges=[
+                u.Quantity(self.args_dict["light_curve"]["energy"]["min"]).to("TeV").value,
+                u.Quantity(self.args_dict["light_curve"]["energy"]["max"]).to("TeV").value,
+            ]
+            * u.TeV,
             time_intervals=time_intervals,
             reoptimize=False,
             selection_optional="all",
@@ -267,7 +277,9 @@ class Analysis:
 
         self._logger.info("Estimating daily light curve")
 
-        time_intervals = v2dl5_time.get_list_of_nights(_data_sets, time_zone=-7.0)
+        time_intervals = v2dl5_time.get_list_of_nights(
+            _data_sets, time_zone=self.args_dict["light_curve"]["time_zone"]
+        )
 
         print(time_intervals, type(time_intervals))
 

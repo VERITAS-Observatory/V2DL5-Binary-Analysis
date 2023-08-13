@@ -93,6 +93,9 @@ def _default_config():
                 "lat": "22.014 deg",
                 "radius": "0.08944272 deg",
             },
+            "exclusion_region": {
+                "radius": "0.5 deg",
+            },
             "containment_correction": False,
             "safe_mask": {
                 "methods": ["aeff-default", "aeff-max"],
@@ -101,8 +104,9 @@ def _default_config():
             "background": {"method": "reflected"},
         },
         "fit": {"fit_range": {"min": "0.1 TeV", "max": "20 TeV"}, "model": "pl"},
-        "flux_points": {
-            "energy": {"min": "0.1 TeV", "max": "20 TeV", "nbins": 10},
-            "source": "crab",
+        "flux_points": {"energy": {"min": "0.1 TeV", "max": "20 TeV", "nbins": 10}, "source": None},
+        "light_curve": {
+            "energy": {"min": "0.1 TeV", "max": "100 TeV"},
+            "time_zone": -7,
         },
     }
