@@ -28,7 +28,10 @@ datasets:
       lat: 22.014 deg
       radius: 0.08944272 deg
     exclusion_region:
-      radius: 0.5 deg
+      on_radius: 0.5 deg
+      magnitude_B: 7
+      star_exclusion_radius: 0.25 deg
+      fov: 2.5 deg
     containment_correction: false
     safe_mask:
        methods: ['aeff-max']

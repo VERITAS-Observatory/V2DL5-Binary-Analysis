@@ -94,7 +94,7 @@ def _default_config():
                 "radius": "0.08944272 deg",
             },
             "exclusion_region": {
-                "radius": "0.5 deg",
+                "on_radius": "0.5 deg",
             },
             "containment_correction": False,
             "safe_mask": {

@@ -6,6 +6,7 @@ import logging
 
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord, name_resolve
+from astroquery.simbad import Simbad
 from gammapy.maps import WcsGeom
 from regions import CircleSkyRegion
 
@@ -33,7 +34,12 @@ class SkyRegions:
 
         self.exclusion_mask = self.get_exclusion_mask(
             on_region_dict=args_dict["datasets"]["on_region"],
-            on_region_exclusion_radius=args_dict["datasets"]["exclusion_region"]["radius"],
+            on_region_exclusion_radius=args_dict["datasets"]["exclusion_region"]["on_radius"],
+            magnitude=args_dict["datasets"]["exclusion_region"]["magnitude_B"],
+            star_exclusion_radius=args_dict["datasets"]["exclusion_region"][
+                "star_exclusion_radius"
+            ],
+            fov=args_dict["datasets"]["exclusion_region"]["fov"],
         )
 
     def get_target(self, sky_coord=None, info=True):
@@ -107,7 +113,14 @@ class SkyRegions:
 
         return on_region
 
-    def get_exclusion_mask(self, on_region_dict=None, on_region_exclusion_radius=None):
+    def get_exclusion_mask(
+        self,
+        on_region_dict=None,
+        on_region_exclusion_radius=None,
+        magnitude=None,
+        star_exclusion_radius=None,
+        fov=None,
+    ):
         """
         Defines a mask for the exclusion regions.
 
@@ -131,7 +144,18 @@ class SkyRegions:
             self._logger.info(f"On region exclusion: {exclusion_regions[-1]}")
 
         # bright stars
-        # TODO
+        simbad_query = Simbad()
+        simbad_query.reset_votable_fields()
+        simbad_query.add_votable_fields("ra", "dec", "flux(B)", "flux(V)")
+        #        stars = simbad_query.query_region(self.target, radius=Angle(fov))
+
+        stars = simbad_query.query_catalogue(catalog="BrightStarCatalogue")
+
+        print("AAA", stars)
+        ff = stars["FLUX_B"]
+        print(ff, type(ff))
+        stars = stars[stars["FLUX_B"] < magnitude]
+        self._logger.info(f"Number of stars bright than magnitude {magnitude}: {len(stars)}")
 
         # exclusion mask
         geom = WcsGeom.create(
