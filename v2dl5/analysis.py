@@ -6,6 +6,7 @@ import logging
 
 import astropy.units as u
 import numpy as np
+import yaml
 from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator, LightCurveEstimator
 from gammapy.makers import (
@@ -97,10 +98,56 @@ class Analysis:
 
         """
 
-        if self.flux_points is not None:
-            _ofile = f"{self._output_dir}/flux_points.fits.gz"
-            self._logger.info("Writing flux points to %s", _ofile)
-            self.flux_points.write(_ofile, overwrite=True)
+        for dataset in self.datasets:
+            self._write_datasets(dataset, f"{dataset.name}.fits.gz")
+        self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
+        self._write_datasets(self.lightcurve_per_obs, "lightcurve_per_obs.ecsv", "lightcurve")
+        self._write_datasets(self.lightcurve_per_night, "lightcurve_per_night.ecsv", "lightcurve")
+        if self.spectral_model:
+            self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
+
+    def _write_datasets(self, datasets, filename, format=None):
+        """
+        Write datasets to disk.
+
+        Parameters
+        ----------
+        datasets : Datasets
+            Datasets
+        filename : str
+            Filename
+        format: str
+            Format specification (gammapy)
+
+        """
+
+        if datasets is None:
+            return
+
+        _ofile = f"{self._output_dir}/{filename}"
+        self._logger.info("Writing datasets to %s", _ofile)
+        if format is not None:
+            datasets.write(_ofile, overwrite=True, format=format)
+        else:
+            datasets.write(_ofile, overwrite=True)
+
+    def _write_yaml(self, data_dict, filename):
+        """
+        Write model to disk.
+
+        Parameters
+        ----------
+        data_dict : dict
+            Data dictionary
+        filename : str
+            Filename
+
+        """
+
+        _ofile = f"{self._output_dir}/{filename}"
+        self._logger.info("Writing dataset to %s", _ofile)
+        with open(_ofile, "w") as outfile:
+            yaml.dump(data_dict, outfile, default_flow_style=False)
 
     def _data_reduction(self):
         """
