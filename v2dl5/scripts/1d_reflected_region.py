@@ -90,7 +90,6 @@ def main():
         target=sky_regions.target,
         viewcone=args_dict["observations"]["obs_cone"].get("viewcone", 0.5 * u.deg),
     )
-    return
 
     analysis = v2dl5.analysis.Analysis(
         args_dict=args_dict,

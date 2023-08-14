@@ -106,7 +106,7 @@ class Analysis:
         if self.spectral_model:
             self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
 
-    def _write_datasets(self, datasets, filename, format=None):
+    def _write_datasets(self, datasets, filename, file_format=None):
         """
         Write datasets to disk.
 
@@ -116,7 +116,7 @@ class Analysis:
             Datasets
         filename : str
             Filename
-        format: str
+        file_format: str
             Format specification (gammapy)
 
         """
@@ -126,8 +126,8 @@ class Analysis:
 
         _ofile = f"{self._output_dir}/{filename}"
         self._logger.info("Writing datasets to %s", _ofile)
-        if format is not None:
-            datasets.write(_ofile, overwrite=True, format=format)
+        if file_format is not None:
+            datasets.write(_ofile, overwrite=True, format=file_format)
         else:
             datasets.write(_ofile, overwrite=True)
 
@@ -146,7 +146,7 @@ class Analysis:
 
         _ofile = f"{self._output_dir}/{filename}"
         self._logger.info("Writing dataset to %s", _ofile)
-        with open(_ofile, "w") as outfile:
+        with open(_ofile, "w", encoding="utf-8") as outfile:
             yaml.dump(data_dict, outfile, default_flow_style=False)
 
     def _data_reduction(self):

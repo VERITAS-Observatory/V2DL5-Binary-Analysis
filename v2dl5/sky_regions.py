@@ -6,7 +6,8 @@ import logging
 
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord, name_resolve
-from astroquery.simbad import Simbad
+from astropy.io import fits
+from astropy.table import Table
 from gammapy.maps import WcsGeom
 from regions import CircleSkyRegion
 
@@ -29,18 +30,8 @@ class SkyRegions:
         self._logger = logging.getLogger(__name__)
 
         self.target = self.get_target(sky_coord=args_dict["observations"]["obs_cone"])
-
         self.on_region = self.get_on_region(on_region_dict=args_dict["datasets"]["on_region"])
-
-        self.exclusion_mask = self.get_exclusion_mask(
-            on_region_dict=args_dict["datasets"]["on_region"],
-            on_region_exclusion_radius=args_dict["datasets"]["exclusion_region"]["on_radius"],
-            magnitude=args_dict["datasets"]["exclusion_region"]["magnitude_B"],
-            star_exclusion_radius=args_dict["datasets"]["exclusion_region"][
-                "star_exclusion_radius"
-            ],
-            fov=args_dict["datasets"]["exclusion_region"]["fov"],
-        )
+        self.exclusion_mask = self.get_exclusion_mask(args_dict)
 
     def get_target(self, sky_coord=None, info=True):
         """
@@ -113,27 +104,22 @@ class SkyRegions:
 
         return on_region
 
-    def get_exclusion_mask(
-        self,
-        on_region_dict=None,
-        on_region_exclusion_radius=None,
-        magnitude=None,
-        star_exclusion_radius=None,
-        fov=None,
-    ):
+    def get_exclusion_mask(self, args_dict):
         """
         Defines a mask for the exclusion regions.
 
         Parameters
         ----------
-        on_region : dict
-            on_region dictionary.
+        args_dict: dict
+            Dictionary of configuration arguments.
 
         """
 
         exclusion_regions = []
 
         # on region
+        on_region_dict = args_dict["datasets"]["on_region"]
+        on_region_exclusion_radius = args_dict["datasets"]["exclusion_region"]["on_radius"]
         if on_region_dict is not None and on_region_exclusion_radius is not None:
             exclusion_regions.append(
                 CircleSkyRegion(
@@ -143,19 +129,12 @@ class SkyRegions:
             )
             self._logger.info(f"On region exclusion: {exclusion_regions[-1]}")
 
-        # bright stars
-        simbad_query = Simbad()
-        simbad_query.reset_votable_fields()
-        simbad_query.add_votable_fields("ra", "dec", "flux(B)", "flux(V)")
-        #        stars = simbad_query.query_region(self.target, radius=Angle(fov))
-
-        stars = simbad_query.query_catalogue(catalog="BrightStarCatalogue")
-
-        print("AAA", stars)
-        ff = stars["FLUX_B"]
-        print(ff, type(ff))
-        stars = stars[stars["FLUX_B"] < magnitude]
-        self._logger.info(f"Number of stars bright than magnitude {magnitude}: {len(stars)}")
+        # bright star exclusion
+        exclusion_regions.extend(
+            self._read_bright_star_catalogue(
+                exclusion_region_dict=args_dict["datasets"]["exclusion_region"]
+            )
+        )
 
         # exclusion mask
         geom = WcsGeom.create(
@@ -164,3 +143,56 @@ class SkyRegions:
 
         self._logger.info("Number of exclusion regions: %d", len(exclusion_regions))
         return ~geom.region_mask(exclusion_regions)
+
+    def _read_bright_star_catalogue(self, exclusion_region_dict=None):
+        """
+        Read bright star catalogue from file.
+
+        Parameters
+        ----------
+        exclusion_region_dict: dict
+            Dictionary of configuration arguments.
+
+        Returns
+        -------
+        List of CircleSkyRegion
+            List exclusion regions due to bright stars.
+
+        """
+
+        _exclusion_regions = []
+        if exclusion_region_dict["star_file"] is None:
+            return _exclusion_regions
+
+        self._logger.info(
+            "Reading bright star catalogue from %s", exclusion_region_dict["star_file"]
+        )
+        hip = fits.open(exclusion_region_dict["star_file"])
+        catalogue = Table(hip[1].data)
+        catalogue = catalogue[
+            catalogue["Vmag"] + catalogue["B-V"] < exclusion_region_dict["magnitude_B"]
+        ]
+
+        angular_separation = self.target.separation(
+            SkyCoord(catalogue["_RA_icrs"], catalogue["_DE_icrs"], unit=u.deg)
+        )
+        catalogue["angular_separation"] = angular_separation
+
+        catalogue = catalogue[
+            catalogue["angular_separation"] < u.Quantity(exclusion_region_dict["fov"])
+        ]
+
+        self._logger.info(
+            f"Number of stars in the catalogue passing cuts on magnitude and FOV: {len(catalogue)}"
+        )
+        print(catalogue.pprint_all())
+
+        for row in catalogue:
+            _exclusion_regions.append(
+                CircleSkyRegion(
+                    center=SkyCoord(row["_RA_icrs"], row["_DE_icrs"], unit=u.deg),
+                    radius=Angle(exclusion_region_dict["star_exclusion_radius"]),
+                )
+            )
+
+        return _exclusion_regions

@@ -47,7 +47,7 @@ def _read_config_from_file(config):
 
     """
 
-    _logger.info(f"Reading configuration from {config}")
+    _logger.info("Reading configuration from %s", config)
 
     args_dict = {}
     with open(config, "r", encoding="utf-8") as stream:
@@ -95,6 +95,10 @@ def _default_config():
             },
             "exclusion_region": {
                 "on_radius": "0.5 deg",
+                "magnitude_B": 7.0,
+                "star_exclusion_radius": "0.3 deg",
+                "fov": "5 deg",
+                "star_file": "./data/hip_mag9.fits.gz",
             },
             "containment_correction": False,
             "safe_mask": {
