@@ -28,7 +28,11 @@ datasets:
       lat: 22.014 deg
       radius: 0.08944272 deg
     exclusion_region:
-      radius: 0.5 deg
+      on_radius: 0.5 deg
+      magnitude_B: 7
+      star_exclusion_radius: 0.30 deg
+      fov: 4.5 deg
+      star_file: ./data/hip_mag9.fits.gz
     containment_correction: false
     safe_mask:
        methods: ['aeff-max']
