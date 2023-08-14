@@ -117,3 +117,27 @@ class Data:
         self._logger.info("Selecting %d runs from viewcone around %s", len(_runs), target)
         self._logger.info("WARNING - this is not tested")
         return _runs
+
+    def get_on_region_radius(self):
+        """
+        Return on region radius.
+
+        Simplest case. Ignores possible energy and offset dependence.
+
+        """
+
+        observations = self.get_observations()
+        try:
+            rad_max = set(obs.rad_max.data[0][0] for obs in observations)
+        except IndexError:
+            self._logger.error("Rad max not found in observations.")
+            raise
+
+        if len(rad_max) > 1:
+            self._logger.error("Rad max is not the same for all observations.")
+            raise ValueError
+
+        on_region = rad_max.pop() * u.deg
+        self._logger.info(f"On region size: {on_region}")
+
+        return on_region
