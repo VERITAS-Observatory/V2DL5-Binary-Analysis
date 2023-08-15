@@ -28,4 +28,8 @@ dependencies = [
 "repository" = "https://github.com/GernotMaier/V2DL5"
 "bug tracker" = "https://github.com/GernotMaier/V2DL5/issues"
 
+[tool.isort]
+profile = "black"
+filter_files = true
+
 [tool.setuptools.packages.find]
