@@ -95,14 +95,14 @@ class SkyRegions:
 
         """
 
-        on_region = CircleSkyRegion(
+        self.on_region = CircleSkyRegion(
             center=self.get_target(sky_coord=on_region_dict, info=False),
             radius=Angle(on_region_dict.get("radius", 0.5 * u.deg)),
         )
 
-        self._logger.info(f"On region: {on_region}")
+        self._logger.info(f"On region: {self.on_region}")
 
-        return on_region
+        return self.on_region
 
     def get_exclusion_mask(self, args_dict):
         """
