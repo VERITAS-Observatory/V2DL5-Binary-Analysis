@@ -1,6 +1,7 @@
 # V2DL5 - high-level analysis for VERITAS with gammapy
 
- [![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
+[![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
+[![GitHub Super-Linter](https://github.com/GernotMaier/V2DL5/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
 This is a collection of simple scripts for the high-level analysis of VERITAS data with gammapy.
 
