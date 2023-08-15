@@ -33,10 +33,9 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_YAML: true
           VALIDATE_PYTHON_FLAKE8: true
-          VALIDATE_PYTHON_BLACK: true
-          VALIDATE_PYTHON_PYLINT: false
           VALIDATE_MARKDOWN: true
           VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_PYTHON_BLACK: true
           PYTHON_BLACK_CONFIG_FILE: pyproject.toml
 
 
