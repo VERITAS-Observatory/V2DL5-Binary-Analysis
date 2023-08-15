@@ -8,11 +8,11 @@
 observations:
     datastore: ../../../VTS/DL3/v490/point-like/
     obs_cone:
-      target: Crab
-      frame: icrs
-      lon: 83.628700 deg
-      lat: 22.014700 deg
-      radius: 5 deg
+        target: Crab
+        frame: icrs
+        lon: 83.628700 deg
+        lat: 22.014700 deg
+        radius: 5 deg
     required_irf: ['aeff', 'edisp']
 
 datasets:
@@ -23,20 +23,20 @@ datasets:
             energy: {min: 0.1 TeV, max: 40 TeV, nbins: 10}
             energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
     on_region:
-      frame: icrs
-      lon: 83.633 deg
-      lat: 22.014 deg
-      radius: 0.08944272 deg
+        frame: icrs
+        lon: 83.633 deg
+        lat: 22.014 deg
+        radius: 0.08944272 deg
     exclusion_region:
-      on_radius: 0.5 deg
-      magnitude_B: 7
-      star_exclusion_radius: 0.30 deg
-      fov: 4.5 deg
-      star_file: ./data/hip_mag9.fits.gz
+        on_radius: 0.5 deg
+        magnitude_B: 7
+        star_exclusion_radius: 0.30 deg
+        fov: 4.5 deg
+        star_file: ./data/hip_mag9.fits.gz
     containment_correction: false
     safe_mask:
-       methods: ['aeff-max']
-       parameters: {aeff_percent: 10.}
+        methods: ['aeff-max']
+        parameters: {aeff_percent: 10.}
     background:
         method: reflected
 fit:
