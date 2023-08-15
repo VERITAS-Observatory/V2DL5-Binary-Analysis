@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+title: >-
+  V2DL5 - high-level analysis for VERITAS with gammapy
+message: Please cite this software using these metadata.
+type: software
+authors:
+  - given-names: Gernot
+    family-names: Maier
+    affiliation: DESY
+    orcid: 'https://orcid.org/0000-0001-9868-4700'
+repository-code: `https://github.com/GernotMaier/V2DL5`
+doi: null
+license: BSD-3-Clause
