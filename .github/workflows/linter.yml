@@ -36,8 +36,8 @@ jobs:
           VALIDATE_MARKDOWN: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_PYTHON_BLACK: true
+          LINTER_RULES_PATH: ./
           PYTHON_BLACK_CONFIG_FILE: pyproject.toml
-
 
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
