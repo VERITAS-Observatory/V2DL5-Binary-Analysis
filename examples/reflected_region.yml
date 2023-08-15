@@ -26,7 +26,6 @@ datasets:
         frame: icrs
         lon: 83.633 deg
         lat: 22.014 deg
-        radius: 0.08944272 deg
     exclusion_region:
         on_radius: 0.5 deg
         magnitude_B: 7

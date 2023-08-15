@@ -91,6 +91,9 @@ def main():
         viewcone=args_dict["observations"]["obs_cone"].get("viewcone", 0.5 * u.deg),
     )
 
+    args_dict["datasets"]["on_region"]["radius"] = data.get_on_region_radius()
+    sky_regions.get_on_region(args_dict["datasets"]["on_region"])
+
     analysis = v2dl5.analysis.Analysis(
         args_dict=args_dict,
         sky_regions=sky_regions,
