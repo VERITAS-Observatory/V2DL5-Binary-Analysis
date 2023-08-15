@@ -18,11 +18,12 @@ This repository proivdes scripts to generate DL5 science data products.
 
 To install the required python packages, run:
 
-```
+```bash
 conda env create -f environment.yml
 ```
 
 Activate the environment to start the analysis:
-```
+
+```bash
 conda activate v2dl5
 ```
