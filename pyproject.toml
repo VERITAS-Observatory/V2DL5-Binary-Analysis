@@ -1,9 +1,16 @@
 [build-system]
-requires = ["setuptools>=65"]
+requires = ["setuptools>=65", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages=["v2dl5"]
+
+[tool.setuptools_scm]
+write_to = "v2dl5/_version.py"
 
 [project]
 name = "v2dl5"
+dynamic = ["version"]
 description = "High-level analysis for VERITAS with gammapy"
 readme = "README.md"
 license = { file="LICENSE" }
@@ -12,9 +19,11 @@ authors = [
   { name="Gernot Maier", email="gernot.maier@desy.de" },
 ]
 classifiers = [
+    "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: BSD-3-Clause",
+    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Astronomy",
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -28,12 +37,12 @@ dependencies = [
 "repository" = "https://github.com/GernotMaier/V2DL5"
 "bug tracker" = "https://github.com/GernotMaier/V2DL5/issues"
 
+[project.scripts]
+v2dl5-1d-reflected-region = "v2dl5.scripts.1d_reflected_region:main"
+
 [tool.black]
 line_length = 100
 
 [tool.isort]
 profile = "black"
 filter_files = true
-
-
-[tool.setuptools.packages.find]
