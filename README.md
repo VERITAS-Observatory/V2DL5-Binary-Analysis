@@ -1,5 +1,8 @@
 # V2DL5 - high-level analysis for VERITAS with gammapy
 
+
+
+[![DOI](https://zenodo.org/badge/673002313.svg)](https://zenodo.org/badge/latestdoi/673002313)
 [![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
 [![GitHub Super-Linter](https://github.com/GernotMaier/V2DL5/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
