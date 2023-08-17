@@ -14,7 +14,6 @@ dynamic = ["version"]
 description = "High-level analysis for VERITAS with gammapy"
 readme = "README.md"
 license = { file="LICENSE" }
-version = "0.1.0"
 authors = [
   { name="Gernot Maier", email="gernot.maier@desy.de" },
 ]
@@ -30,6 +29,7 @@ dependencies = [
     "astropy",
     "astroquery",
     "gammapy",
+    "Ipython",
     "pydantic<2",
 ]
 
@@ -38,7 +38,7 @@ dependencies = [
 "bug tracker" = "https://github.com/GernotMaier/V2DL5/issues"
 
 [project.scripts]
-v2dl5-1d-reflected-region = "v2dl5.scripts.1d_reflected_region:main"
+v2dl5-reflected-region-analysis = "v2dl5.scripts.reflected_region_analysis:main"
 
 [tool.black]
 line_length = 100

@@ -6,3 +6,5 @@ __pycache__/
 .DS_Store
 
 v2dl5.egg-info
+
+v2dl5/_version.py
