@@ -1,12 +1,8 @@
 ---
 # Configuration for a reflected region analysis
-# Provides:
-# - significances (TS) (overall; per run)
-# - fluxes above given energy threshold
-# - energy spectra
 
 observations:
-    datastore: ../../../VTS/DL3/v490/point-like/
+    datastore: ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/
     obs_cone:
         target: Crab
         frame: icrs
@@ -24,8 +20,8 @@ datasets:
             energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
     on_region:
         frame: icrs
-        lon: 83.633 deg
-        lat: 22.014 deg
+        lon: 83.628700 deg
+        lat: 22.014700 deg
     exclusion_region:
         on_radius: 0.5 deg
         magnitude_B: 7
