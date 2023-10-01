@@ -1,14 +1,12 @@
 # V2DL5 - high-level analysis for VERITAS with gammapy
 
-
-
 [![DOI](https://zenodo.org/badge/673002313.svg)](https://zenodo.org/badge/latestdoi/673002313)
 [![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
 [![GitHub Super-Linter](https://github.com/GernotMaier/V2DL5/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
 This is a collection of simple scripts for the high-level analysis of VERITAS data with gammapy.
 
-This includes for a given list of runs or for a cone search around a given direction or named source.
+Allows to run the analysis scripts for a given list of runs or for a cone search around a given direction or named source.
 
 - source detection analysis including integral flux (or flux upper limits), reflection region model
 - spectral analysis, reflected region model
