@@ -128,12 +128,12 @@ class Analysis:
         if datasets is None:
             return
 
-        _ofile = f"{self._output_dir}/data/{filename}"
-        self._logger.info("Writing datasets to %s", _ofile)
+        _out_file = f"{self._output_dir}/data/{filename}"
+        self._logger.info("Writing datasets to %s", _out_file)
         if file_format is not None:
-            datasets.write(_ofile, overwrite=True, format=file_format)
+            datasets.write(_out_file, overwrite=True, format=file_format)
         else:
-            datasets.write(_ofile, overwrite=True)
+            datasets.write(_out_file, overwrite=True)
 
     def _write_yaml(self, data_dict, filename):
         """
@@ -150,9 +150,9 @@ class Analysis:
 
         _data_dir = Path(f"{self._output_dir}/data")
         _data_dir.mkdir(parents=True, exist_ok=True)
-        _ofile = f"{_data_dir}/{filename}"
-        self._logger.info("Writing dataset to %s", _ofile)
-        with open(_ofile, "w", encoding="utf-8") as outfile:
+        _out_file = f"{_data_dir}/{filename}"
+        self._logger.info("Writing dataset to %s", _out_file)
+        with open(_out_file, "w", encoding="utf-8") as outfile:
             yaml.dump(data_dict, outfile, default_flow_style=False)
 
     def _data_reduction(self):
@@ -190,7 +190,10 @@ class Analysis:
             dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
             self.datasets.append(dataset_on_off)
 
+        print("Run-wise results:")
         self._print_results(self.datasets.info_table(cumulative=False))
+        print("Cumulative results:")
+        self._print_results(self.datasets.info_table(cumulative=True))
 
     def _print_results(self, info_table):
         """
@@ -220,10 +223,11 @@ class Analysis:
                 "sqrt_ts",
             ]
         )
+        print()
 
     def _spectral_fits(self, datasets=None):
         """
-        Perform spectral fits.
+        Spectral fitting.
 
         """
 
@@ -256,8 +260,6 @@ class Analysis:
             )
 
         self.spectral_model = SkyModel(spectral_model=_spectral_model, name=model)
-
-        return [self.spectral_model]
 
     def _flux_points(self, datasets):
         """
@@ -320,6 +322,7 @@ class Analysis:
     def _nightly_light_curve(self, _data_sets):
         """
         Combine observations per night and calculate light curve.
+        Not applicable for stacked analysis.
 
         Parameters
         ----------
@@ -327,6 +330,9 @@ class Analysis:
             Datasets
 
         """
+
+        if self.args_dict["datasets"]["stack"]:
+            return None
 
         self._logger.info("Estimating daily light curve")
 
