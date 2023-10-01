@@ -1,7 +1,7 @@
 """
 V2DL5 configuration
 
-Includes reading of configuration from file and default parameters.
+Read configuration from file (or us default parameters).
 
 """
 
@@ -27,9 +27,6 @@ def configuration(args):
     if args.config is not None:
         args_dict.update(_read_config_from_file(args.config))
 
-    #    args_dict["target"] = args.target
-    #    args_dict["ra"] = args.ra
-    #    args_dict["dec"] = args.dec
     args_dict["run_list"] = args.run_list
     args_dict["output_dir"] = args.output_dir
 

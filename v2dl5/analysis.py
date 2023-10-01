@@ -3,6 +3,7 @@ Main analysis class.
 """
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
@@ -55,8 +56,8 @@ class Analysis:
         self.datasets = None
         self.spectral_model = None
         self.flux_points = None
-        self.lightcurve_per_obs = None
-        self.lightcurve_per_night = None
+        self.light_curve_per_obs = None
+        self.light_curve_per_night = None
 
     def run(self):
         """
@@ -72,8 +73,8 @@ class Analysis:
         self._define_spectral_models(model=self.args_dict["fit"]["model"])
         self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
-        self.lightcurve_per_obs = self._light_curve(_data_sets, None)
-        self.lightcurve_per_night = self._nightly_light_curve(_data_sets)
+        self.light_curve_per_obs = self._light_curve(_data_sets, None)
+        self.light_curve_per_night = self._nightly_light_curve(_data_sets)
 
     def plot(self):
         """
@@ -81,16 +82,19 @@ class Analysis:
 
         """
 
-        for dataset in self.datasets:
-            v2dl5_plot.plot_fit(dataset, self._output_dir)
+        _plot_dir = Path(f"{self._output_dir}/plots")
+        _plot_dir.mkdir(parents=True, exist_ok=True)
 
-        v2dl5_plot.plot_flux_points(self.flux_points, self._output_dir)
+        for dataset in self.datasets:
+            v2dl5_plot.plot_fit(dataset, _plot_dir)
+
+        v2dl5_plot.plot_flux_points(self.flux_points, _plot_dir)
         v2dl5_plot.plot_sed(
             FluxPointsDataset(data=self.flux_points, models=self.spectral_model.copy()),
-            self._output_dir,
+            _plot_dir,
         )
-        v2dl5_plot.plot_light_curve(self.lightcurve_per_obs, "per observation", self._output_dir)
-        v2dl5_plot.plot_light_curve(self.lightcurve_per_night, "per night", self._output_dir)
+        v2dl5_plot.plot_light_curve(self.light_curve_per_obs, "per observation", _plot_dir)
+        v2dl5_plot.plot_light_curve(self.light_curve_per_night, "per night", _plot_dir)
 
     def write(self):
         """
@@ -101,8 +105,8 @@ class Analysis:
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
         self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
-        self._write_datasets(self.lightcurve_per_obs, "lightcurve_per_obs.ecsv", "lightcurve")
-        self._write_datasets(self.lightcurve_per_night, "lightcurve_per_night.ecsv", "lightcurve")
+        self._write_datasets(self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve")
+        self._write_datasets(self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve")
         if self.spectral_model:
             self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
 
@@ -124,7 +128,7 @@ class Analysis:
         if datasets is None:
             return
 
-        _ofile = f"{self._output_dir}/{filename}"
+        _ofile = f"{self._output_dir}/data/{filename}"
         self._logger.info("Writing datasets to %s", _ofile)
         if file_format is not None:
             datasets.write(_ofile, overwrite=True, format=file_format)
@@ -144,7 +148,9 @@ class Analysis:
 
         """
 
-        _ofile = f"{self._output_dir}/{filename}"
+        _data_dir = Path(f"{self._output_dir}/data")
+        _data_dir.mkdir(parents=True, exist_ok=True)
+        _ofile = f"{_data_dir}/{filename}"
         self._logger.info("Writing dataset to %s", _ofile)
         with open(_ofile, "w", encoding="utf-8") as outfile:
             yaml.dump(data_dict, outfile, default_flow_style=False)

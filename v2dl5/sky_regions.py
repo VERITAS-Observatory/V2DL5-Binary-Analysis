@@ -30,10 +30,10 @@ class SkyRegions:
         self._logger = logging.getLogger(__name__)
 
         self.target = self.get_target(sky_coord=args_dict["observations"]["obs_cone"])
-        self.on_region = self.get_on_region(on_region_dict=args_dict["datasets"]["on_region"])
+        self.on_region = self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
         self.exclusion_mask = self.get_exclusion_mask(args_dict)
 
-    def get_target(self, sky_coord=None, info=True):
+    def get_target(self, sky_coord=None, print_target_info=True):
         """
         Defines a SkyCoord object for the target.
         Reads target coordinates from Simbad if target name is given.
@@ -43,7 +43,7 @@ class SkyRegions:
         sky_coord : dict
             sky_coord dictionary.
 
-        info: bool
+        print_target_info: bool
             Print info about target.
 
         """
@@ -64,22 +64,22 @@ class SkyRegions:
                 )
             else:
                 raise ValueError("Unsupported coordinate frame")
-            self._logger.info(f"Target coordinates given: {target}")
+            self._logger.debug(f"Target coordinates from configuration: {target}")
         else:
             try:
                 target = SkyCoord.from_name(sky_coord["target"])
-                self._logger.info("Target %s found in Simbad.", sky_coord["target"])
+                self._logger.debug("Target %s found in Simbad.", sky_coord["target"])
             except name_resolve.NameResolveError:
                 self._logger.error('Target "%s" not found in Simbad.', sky_coord["target"])
                 raise
 
-        if info:
+        if print_target_info:
             self._logger.info("Target name: %s", sky_coord.get("target", "target name not given"))
             self._logger.info("Target coordinates: %s", target)
 
         return target
 
-    def get_on_region(self, on_region_dict=None):
+    def define_on_region(self, on_region_dict=None):
         """
         Defines a CircleSkyRegion object for the on region.
 
@@ -96,7 +96,7 @@ class SkyRegions:
         """
 
         self.on_region = CircleSkyRegion(
-            center=self.get_target(sky_coord=on_region_dict, info=False),
+            center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
             radius=Angle(on_region_dict.get("radius", 0.5 * u.deg)),
         )
 
@@ -123,7 +123,7 @@ class SkyRegions:
         if on_region_dict is not None and on_region_exclusion_radius is not None:
             exclusion_regions.append(
                 CircleSkyRegion(
-                    center=self.get_target(sky_coord=on_region_dict, info=False),
+                    center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
                     radius=Angle(on_region_exclusion_radius),
                 )
             )
@@ -183,7 +183,7 @@ class SkyRegions:
         ]
 
         self._logger.info(
-            f"Number of stars in the catalogue passing cuts on magnitude and FOV: {len(catalogue)}"
+            "Number of stars in the catalogue passing cuts on magnitude and FOV: %d", len(catalogue)
         )
         print(catalogue.pprint_all())
 
@@ -196,3 +196,19 @@ class SkyRegions:
             )
 
         return _exclusion_regions
+
+    def update_on_region_radius(self, args_dict, on_region_radius):
+        """
+        Update on region radius read from data files.
+
+        Parameters
+        ----------
+        args_dict: dict
+            Dictionary of configuration arguments.
+        on_region_radius: Angle
+            on region radius.
+
+        """
+
+        args_dict["datasets"]["on_region"]["radius"] = on_region_radius
+        self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
