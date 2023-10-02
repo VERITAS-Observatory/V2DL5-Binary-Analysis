@@ -24,12 +24,14 @@ class Data:
         Path to data directory (holding hdu-index.fits.gz and obs-index.fits.gz).
     target : SkyCoord
         Target coordinates.
-    obs_cone : float
+    obs_cone_radius : float
         observation cone radius (deg).
 
     """
 
-    def __init__(self, run_list=None, data_directory=None, target=None, obs_cone=0.5 * u.deg):
+    def __init__(
+        self, run_list=None, data_directory=None, target=None, obs_cone_radius=0.5 * u.deg
+    ):
         """
         Initialize Data object.
 
@@ -43,7 +45,7 @@ class Data:
         self._logger.info("Initializing data object from %s", data_directory)
         self._data_store = DataStore.from_dir(data_directory)
         if run_list is None:
-            self.runs = self._from_target(target, obs_cone)
+            self.runs = self._from_target(target, obs_cone_radius)
         else:
             self.runs = self._from_run_list(run_list)
 
@@ -97,7 +99,7 @@ class Data:
         self._logger.info("Reading run list with %d observations from %s", len(_runs), run_list)
         return _runs
 
-    def _from_target(self, target, obs_cone):
+    def _from_target(self, target, obs_cone_radius):
         """
         Select data based on target coordinates and observation cone.
 
@@ -105,13 +107,13 @@ class Data:
         ----------
         target : SkyCoord
             Target coordinates.
-        obs_cone : float
+        obs_cone_radius : float
             observation cone radius (deg).
 
         """
 
         observations = self._data_store.obs_table
-        mask = target.separation(observations.pointing_radec) < obs_cone * u.deg
+        mask = target.separation(observations.pointing_radec) < obs_cone_radius * u.deg
         _runs = observations[mask]["OBS_ID"].data
 
         self._logger.info("Selecting %d runs from observation cone around %s", len(_runs), target)

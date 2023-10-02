@@ -68,7 +68,7 @@ def main():
         run_list=args_dict["run_list"],
         data_directory=args_dict["observations"]["datastore"],
         target=sky_regions.target,
-        obs_cone=args_dict["observations"]["obs_cone"].get("obs_cone", 0.5 * u.deg),
+        obs_cone_radius=args_dict["observations"].get("obs_cone_radius", 5.0 * u.deg),
     )
     sky_regions.update_on_region_radius(
         args_dict=args_dict, on_region_radius=data.get_on_region_radius()

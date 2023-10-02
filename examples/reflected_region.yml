@@ -3,12 +3,7 @@
 
 observations:
     datastore: ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/
-    obs_cone:
-        target: Crab
-        frame: icrs
-        lon: 83.628700 deg
-        lat: 22.014700 deg
-        radius: 5 deg
+    obs_cone_radius: 5 deg
     required_irf: ['aeff', 'edisp']
 
 datasets:
@@ -19,6 +14,7 @@ datasets:
             energy: {min: 0.1 TeV, max: 40 TeV, nbins: 10}
             energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
     on_region:
+        target: Crab
         frame: icrs
         lon: 83.628700 deg
         lat: 22.014700 deg

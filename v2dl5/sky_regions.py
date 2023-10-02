@@ -29,14 +29,16 @@ class SkyRegions:
     def __init__(self, args_dict=None):
         self._logger = logging.getLogger(__name__)
 
-        self.target = self.get_target(sky_coord=args_dict["observations"]["obs_cone"])
+        # TODO use target coordinates from on_region
+        self.target = self.get_target(sky_coord=args_dict["datasets"]["on_region"])
         self.on_region = self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
         self.exclusion_mask = self.get_exclusion_mask(args_dict)
 
     def get_target(self, sky_coord=None, print_target_info=True):
         """
         Defines a SkyCoord object for the target.
-        Reads target coordinates from Simbad if target name is given.
+        Reads target coordinates from Simbad if target name is given
+        (use coordinates, if given)
 
         Parameters
         ----------
@@ -49,17 +51,19 @@ class SkyRegions:
         """
 
         target = None
-        if sky_coord.get("target", None) is None:
+        lon = sky_coord.get("lon", None)
+        lat = sky_coord.get("lat", None)
+        if lon is not None and lat is not None:
             if sky_coord.get("frame", None) == "icrs":
                 target = SkyCoord(
-                    ra=sky_coord.get("lon", None),
-                    dec=sky_coord.get("lat", None),
+                    ra=lon,
+                    dec=lat,
                     frame=sky_coord.get("frame", None),
                 )
             elif sky_coord.get("frame", None) == "galactic":
                 target = SkyCoord(
-                    l=sky_coord.get("lon", None),
-                    b=sky_coord.get("lat", None),
+                    l=lon,
+                    b=lat,
                     frame=sky_coord.get("frame", None),
                 )
             else:
