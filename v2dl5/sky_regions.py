@@ -29,7 +29,6 @@ class SkyRegions:
     def __init__(self, args_dict=None):
         self._logger = logging.getLogger(__name__)
 
-        # TODO use target coordinates from on_region
         self.target = self.get_target(sky_coord=args_dict["datasets"]["on_region"])
         self.on_region = self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
         self.exclusion_mask = self.get_exclusion_mask(args_dict)
