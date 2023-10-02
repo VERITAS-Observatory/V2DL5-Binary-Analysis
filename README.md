@@ -6,7 +6,7 @@
 
 This is a collection of simple scripts for the high-level analysis of VERITAS data with gammapy.
 
-Allows to run the analysis scripts for a given list of runs or for a cone search around a given direction or named source.
+Allows to run analysis scripts for a given list of runs or for a cone search around the given on\_region direction.
 
 - source detection analysis including integral flux (or flux upper limits), reflection region model
 - spectral analysis, reflected region model
