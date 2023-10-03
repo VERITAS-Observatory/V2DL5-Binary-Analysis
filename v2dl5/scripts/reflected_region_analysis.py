@@ -16,8 +16,6 @@ Example:
 import argparse
 import logging
 
-from astropy import units as u
-
 import v2dl5.analysis
 import v2dl5.configuration
 import v2dl5.data
@@ -64,12 +62,7 @@ def main():
     args_dict = v2dl5.configuration.configuration(args=_parse())
 
     sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
-    data = v2dl5.data.Data(
-        run_list=args_dict["run_list"],
-        data_directory=args_dict["observations"]["datastore"],
-        target=sky_regions.target,
-        obs_cone_radius=args_dict["observations"].get("obs_cone_radius", 5.0 * u.deg),
-    )
+    data = v2dl5.data.Data(args_dict=args_dict, target=sky_regions.target)
     sky_regions.update_regions(
         args_dict=args_dict,
         on_region_radius=data.get_on_region_radius(),
