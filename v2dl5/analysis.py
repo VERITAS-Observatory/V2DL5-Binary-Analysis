@@ -8,7 +8,7 @@ from pathlib import Path
 import astropy.units as u
 import numpy as np
 import yaml
-from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
+from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator, LightCurveEstimator
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
@@ -45,13 +45,13 @@ class Analysis:
 
     """
 
-    def __init__(self, args_dict=None, sky_regions=None, data=None):
+    def __init__(self, args_dict=None, sky_regions=None, v2dl5_data=None):
         self._logger = logging.getLogger(__name__)
 
         self.args_dict = args_dict
         self._output_dir = args_dict.get("output_dir", None)
         self.sky_regions = sky_regions
-        self._data = data
+        self.v2dl5_data = v2dl5_data
 
         self.datasets = None
         self.spectral_model = None
@@ -83,18 +83,22 @@ class Analysis:
         """
 
         _plot_dir = Path(f"{self._output_dir}/plots")
-        _plot_dir.mkdir(parents=True, exist_ok=True)
 
-        for dataset in self.datasets:
-            v2dl5_plot.plot_fit(dataset, _plot_dir)
-
-        v2dl5_plot.plot_flux_points(self.flux_points, _plot_dir)
-        v2dl5_plot.plot_sed(
-            FluxPointsDataset(data=self.flux_points, models=self.spectral_model.copy()),
-            _plot_dir,
+        plotter = v2dl5_plot.Plot(
+            v2dl5_data=self.v2dl5_data,
+            data_set=self.datasets,
+            on_region=self.sky_regions.on_region,
+            output_dir=_plot_dir,
         )
-        v2dl5_plot.plot_light_curve(self.light_curve_per_obs, "per observation", _plot_dir)
-        v2dl5_plot.plot_light_curve(self.light_curve_per_night, "per night", _plot_dir)
+        plotter.plot_maps(exclusion_mask=self.sky_regions.exclusion_mask)
+        plotter.plot_spectra(
+            flux_points=self.flux_points,
+            model=self.spectral_model,
+        )
+        plotter.plot_light_curves(
+            light_curve_per_obs=self.light_curve_per_obs,
+            light_curve_per_night=self.light_curve_per_night,
+        )
 
     def write(self):
         """
@@ -184,7 +188,7 @@ class Analysis:
 
         self.datasets = Datasets()
 
-        for obs_id, observation in zip(self._data.runs, self._data.get_observations()):
+        for obs_id, observation in zip(self.v2dl5_data.runs, self.v2dl5_data.get_observations()):
             dataset = dataset_maker.run(dataset_empty.copy(name=str(obs_id)), observation)
             dataset_on_off = bkg_maker.run(dataset, observation)
             dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)

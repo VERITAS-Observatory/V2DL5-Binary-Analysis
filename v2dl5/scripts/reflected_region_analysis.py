@@ -62,17 +62,17 @@ def main():
     args_dict = v2dl5.configuration.configuration(args=_parse())
 
     sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
-    data = v2dl5.data.Data(args_dict=args_dict, target=sky_regions.target)
+    v2dl5_data = v2dl5.data.Data(args_dict=args_dict, target=sky_regions.target)
     sky_regions.update_regions(
         args_dict=args_dict,
-        on_region_radius=data.get_on_region_radius(),
-        max_wobble_distance=data.get_max_wobble_distance(),
+        on_region_radius=v2dl5_data.get_on_region_radius(),
+        max_wobble_distance=v2dl5_data.get_max_wobble_distance(),
     )
 
     analysis = v2dl5.analysis.Analysis(
         args_dict=args_dict,
         sky_regions=sky_regions,
-        data=data,
+        v2dl5_data=v2dl5_data,
     )
     analysis.run()
     analysis.plot()

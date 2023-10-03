@@ -29,9 +29,7 @@ class Data:
 
     """
 
-    def __init__(
-        self, run_list=None, data_directory=None, target=None, obs_cone_radius=0.5 * u.deg
-    ):
+    def __init__(self, args_dict, target=None):
         """
         Initialize Data object.
 
@@ -42,13 +40,17 @@ class Data:
 
         self._logger = logging.getLogger(__name__)
 
-        self._logger.info("Initializing data object from %s", data_directory)
-        self._data_store = DataStore.from_dir(data_directory)
+        self._logger.info(
+            "Initializing data object from %s", args_dict["observations"]["datastore"]
+        )
+        self._data_store = DataStore.from_dir(args_dict["observations"]["datastore"])
         self.target = target
-        if run_list is None:
-            self.runs = self._from_target(obs_cone_radius)
+        if args_dict.get("run_list") is None:
+            self.runs = self._from_target(
+                args_dict["observations"].get("obs_cone_radius", 5.0 * u.deg)
+            )
         else:
-            self.runs = self._from_run_list(run_list)
+            self.runs = self._from_run_list(args_dict.get("run_list"))
 
     def get_data_store(self):
         """
