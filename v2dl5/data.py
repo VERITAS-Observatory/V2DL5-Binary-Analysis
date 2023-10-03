@@ -73,11 +73,8 @@ class Data:
 
         """
 
-        available_irf = None
-        if reflected_region:
-            available_irf = ["aeff", "edisp"]
-
-        return self._data_store.get_observations(self.runs, required_irf=available_irf)
+        required_irf = "point-like"
+        return self._data_store.get_observations(self.runs, required_irf=required_irf)
 
     def _from_run_list(self, run_list):
         """
