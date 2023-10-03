@@ -6,6 +6,7 @@ Plotting
 import logging
 
 import matplotlib.pyplot as plt
+from astropy import units as u
 from gammapy.datasets import FluxPointsDataset
 from gammapy.makers.utils import make_theta_squared_table
 from gammapy.maps import MapAxis
@@ -61,6 +62,83 @@ class Plot:
         self.plot_light_curve(light_curve_per_obs, "per observation")
         self.plot_light_curve(light_curve_per_night, "per night")
 
+    def plot_event_histograms(self):
+        """
+        Plot event histograms per observation
+
+        """
+
+        for obs in self.v2dl5_data.get_observations():
+            obs.events.select_offset([0, 2.5] * u.deg).peek()
+            try:
+                self._plot(
+                    plot_name=f"events_obs_{obs.obs_id}",
+                    output_dir=self.output_dir / "events",
+                )
+            except TypeError:
+                pass
+
+    def plot_source_statistics(self):
+        """
+        Plot significance vs observation time
+
+        """
+
+        info_table = self.data_set.info_table(cumulative=True)
+        _, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
+        ax_excess.plot(
+            info_table["livetime"].to("h"),
+            info_table["excess"],
+            marker="o",
+            ls="none",
+        )
+
+        ax_excess.set_title("Excess")
+        ax_excess.set_xlabel("Livetime [h]")
+        ax_excess.set_ylabel("Excess events")
+
+        ax_sqrt_ts.plot(
+            info_table["livetime"].to("h"),
+            info_table["sqrt_ts"],
+            marker="o",
+            ls="none",
+        )
+
+        ax_sqrt_ts.set_title("Sqrt(TS)")
+        ax_sqrt_ts.set_xlabel("Livetime [h]")
+        ax_sqrt_ts.set_ylabel("Sqrt(TS)")
+        try:
+            self._plot(
+                plot_name="source_statistics",
+                output_dir=self.output_dir,
+            )
+        except TypeError:
+            pass
+
+    def plot_irfs(self):
+        """
+        Plot instrument response functions per observation
+
+        """
+
+        for obs in self.v2dl5_data.get_observations():
+            obs.aeff.peek()
+            try:
+                self._plot(
+                    plot_name=f"aeff_obs_{obs.obs_id}",
+                    output_dir=self.output_dir / "irfs",
+                )
+            except TypeError:
+                pass
+            obs.edisp.peek()
+            try:
+                self._plot(
+                    plot_name=f"edisp_obs_{obs.obs_id}",
+                    output_dir=self.output_dir / "irfs",
+                )
+            except TypeError:
+                pass
+
     def plot_fit(self, data_set):
         """
         Plot fit results and residuals
@@ -73,7 +151,7 @@ class Plot:
         try:
             self._plot(
                 plot_name=f"{data_set.name}_{data_set.models[0].name}_fit",
-                output_dir=self.output_dir,
+                output_dir=self.output_dir / "fit",
             )
         except TypeError:
             pass

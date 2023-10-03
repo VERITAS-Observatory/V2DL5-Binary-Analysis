@@ -90,7 +90,10 @@ class Analysis:
             on_region=self.sky_regions.on_region,
             output_dir=_plot_dir,
         )
+        plotter.plot_event_histograms()
+        plotter.plot_irfs()
         plotter.plot_maps(exclusion_mask=self.sky_regions.exclusion_mask)
+        plotter.plot_source_statistics()
         plotter.plot_spectra(
             flux_points=self.flux_points,
             model=self.spectral_model,
