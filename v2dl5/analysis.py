@@ -3,11 +3,12 @@ Main analysis class.
 """
 
 import logging
+from pathlib import Path
 
 import astropy.units as u
 import numpy as np
 import yaml
-from gammapy.datasets import Datasets, FluxPointsDataset, SpectrumDataset
+from gammapy.datasets import Datasets, SpectrumDataset
 from gammapy.estimators import FluxPointsEstimator, LightCurveEstimator
 from gammapy.makers import (
     ReflectedRegionsBackgroundMaker,
@@ -44,19 +45,19 @@ class Analysis:
 
     """
 
-    def __init__(self, args_dict=None, sky_regions=None, data=None):
+    def __init__(self, args_dict=None, sky_regions=None, v2dl5_data=None):
         self._logger = logging.getLogger(__name__)
 
         self.args_dict = args_dict
         self._output_dir = args_dict.get("output_dir", None)
         self.sky_regions = sky_regions
-        self._data = data
+        self.v2dl5_data = v2dl5_data
 
         self.datasets = None
         self.spectral_model = None
         self.flux_points = None
-        self.lightcurve_per_obs = None
-        self.lightcurve_per_night = None
+        self.light_curve_per_obs = None
+        self.light_curve_per_night = None
 
     def run(self):
         """
@@ -72,8 +73,8 @@ class Analysis:
         self._define_spectral_models(model=self.args_dict["fit"]["model"])
         self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
-        self.lightcurve_per_obs = self._light_curve(_data_sets, None)
-        self.lightcurve_per_night = self._nightly_light_curve(_data_sets)
+        self.light_curve_per_obs = self._light_curve(_data_sets, None)
+        self.light_curve_per_night = self._nightly_light_curve(_data_sets)
 
     def plot(self):
         """
@@ -81,16 +82,26 @@ class Analysis:
 
         """
 
-        for dataset in self.datasets:
-            v2dl5_plot.plot_fit(dataset, self._output_dir)
+        _plot_dir = Path(f"{self._output_dir}/plots")
 
-        v2dl5_plot.plot_flux_points(self.flux_points, self._output_dir)
-        v2dl5_plot.plot_sed(
-            FluxPointsDataset(data=self.flux_points, models=self.spectral_model.copy()),
-            self._output_dir,
+        plotter = v2dl5_plot.Plot(
+            v2dl5_data=self.v2dl5_data,
+            data_set=self.datasets,
+            on_region=self.sky_regions.on_region,
+            output_dir=_plot_dir,
         )
-        v2dl5_plot.plot_light_curve(self.lightcurve_per_obs, "per observation", self._output_dir)
-        v2dl5_plot.plot_light_curve(self.lightcurve_per_night, "per night", self._output_dir)
+        plotter.plot_event_histograms()
+        plotter.plot_irfs()
+        plotter.plot_maps(exclusion_mask=self.sky_regions.exclusion_mask)
+        plotter.plot_source_statistics()
+        plotter.plot_spectra(
+            flux_points=self.flux_points,
+            model=self.spectral_model,
+        )
+        plotter.plot_light_curves(
+            light_curve_per_obs=self.light_curve_per_obs,
+            light_curve_per_night=self.light_curve_per_night,
+        )
 
     def write(self):
         """
@@ -101,8 +112,8 @@ class Analysis:
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
         self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
-        self._write_datasets(self.lightcurve_per_obs, "lightcurve_per_obs.ecsv", "lightcurve")
-        self._write_datasets(self.lightcurve_per_night, "lightcurve_per_night.ecsv", "lightcurve")
+        self._write_datasets(self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve")
+        self._write_datasets(self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve")
         if self.spectral_model:
             self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
 
@@ -124,12 +135,12 @@ class Analysis:
         if datasets is None:
             return
 
-        _ofile = f"{self._output_dir}/{filename}"
-        self._logger.info("Writing datasets to %s", _ofile)
+        _out_file = f"{self._output_dir}/data/{filename}"
+        self._logger.info("Writing datasets to %s", _out_file)
         if file_format is not None:
-            datasets.write(_ofile, overwrite=True, format=file_format)
+            datasets.write(_out_file, overwrite=True, format=file_format)
         else:
-            datasets.write(_ofile, overwrite=True)
+            datasets.write(_out_file, overwrite=True)
 
     def _write_yaml(self, data_dict, filename):
         """
@@ -144,9 +155,11 @@ class Analysis:
 
         """
 
-        _ofile = f"{self._output_dir}/{filename}"
-        self._logger.info("Writing dataset to %s", _ofile)
-        with open(_ofile, "w", encoding="utf-8") as outfile:
+        _data_dir = Path(f"{self._output_dir}/data")
+        _data_dir.mkdir(parents=True, exist_ok=True)
+        _out_file = f"{_data_dir}/{filename}"
+        self._logger.info("Writing dataset to %s", _out_file)
+        with open(_out_file, "w", encoding="utf-8") as outfile:
             yaml.dump(data_dict, outfile, default_flow_style=False)
 
     def _data_reduction(self):
@@ -178,13 +191,16 @@ class Analysis:
 
         self.datasets = Datasets()
 
-        for obs_id, observation in zip(self._data.runs, self._data.get_observations()):
+        for obs_id, observation in zip(self.v2dl5_data.runs, self.v2dl5_data.get_observations()):
             dataset = dataset_maker.run(dataset_empty.copy(name=str(obs_id)), observation)
             dataset_on_off = bkg_maker.run(dataset, observation)
             dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
             self.datasets.append(dataset_on_off)
 
+        print("Run-wise results:")
         self._print_results(self.datasets.info_table(cumulative=False))
+        print("Cumulative results:")
+        self._print_results(self.datasets.info_table(cumulative=True))
 
     def _print_results(self, info_table):
         """
@@ -214,10 +230,11 @@ class Analysis:
                 "sqrt_ts",
             ]
         )
+        print()
 
     def _spectral_fits(self, datasets=None):
         """
-        Perform spectral fits.
+        Spectral fitting.
 
         """
 
@@ -250,8 +267,6 @@ class Analysis:
             )
 
         self.spectral_model = SkyModel(spectral_model=_spectral_model, name=model)
-
-        return [self.spectral_model]
 
     def _flux_points(self, datasets):
         """
@@ -314,6 +329,7 @@ class Analysis:
     def _nightly_light_curve(self, _data_sets):
         """
         Combine observations per night and calculate light curve.
+        Not applicable for stacked analysis.
 
         Parameters
         ----------
@@ -321,6 +337,9 @@ class Analysis:
             Datasets
 
         """
+
+        if self.args_dict["datasets"]["stack"]:
+            return None
 
         self._logger.info("Estimating daily light curve")
 

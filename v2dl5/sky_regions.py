@@ -29,57 +29,60 @@ class SkyRegions:
     def __init__(self, args_dict=None):
         self._logger = logging.getLogger(__name__)
 
-        self.target = self.get_target(sky_coord=args_dict["observations"]["obs_cone"])
-        self.on_region = self.get_on_region(on_region_dict=args_dict["datasets"]["on_region"])
-        self.exclusion_mask = self.get_exclusion_mask(args_dict)
+        self.target = self.get_target(sky_coord=args_dict["datasets"]["on_region"])
+        self.on_region = self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
+        self.exclusion_mask = None
 
-    def get_target(self, sky_coord=None, info=True):
+    def get_target(self, sky_coord=None, print_target_info=True):
         """
         Defines a SkyCoord object for the target.
-        Reads target coordinates from Simbad if target name is given.
+        Reads target coordinates from Simbad if target name is given
+        (use coordinates, if given)
 
         Parameters
         ----------
         sky_coord : dict
             sky_coord dictionary.
 
-        info: bool
+        print_target_info: bool
             Print info about target.
 
         """
 
         target = None
-        if sky_coord.get("target", None) is None:
+        lon = sky_coord.get("lon", None)
+        lat = sky_coord.get("lat", None)
+        if lon is not None and lat is not None:
             if sky_coord.get("frame", None) == "icrs":
                 target = SkyCoord(
-                    ra=sky_coord.get("lon", None),
-                    dec=sky_coord.get("lat", None),
+                    ra=lon,
+                    dec=lat,
                     frame=sky_coord.get("frame", None),
                 )
             elif sky_coord.get("frame", None) == "galactic":
                 target = SkyCoord(
-                    l=sky_coord.get("lon", None),
-                    b=sky_coord.get("lat", None),
+                    l=lon,
+                    b=lat,
                     frame=sky_coord.get("frame", None),
                 )
             else:
                 raise ValueError("Unsupported coordinate frame")
-            self._logger.info(f"Target coordinates given: {target}")
+            self._logger.debug(f"Target coordinates from configuration: {target}")
         else:
             try:
                 target = SkyCoord.from_name(sky_coord["target"])
-                self._logger.info("Target %s found in Simbad.", sky_coord["target"])
+                self._logger.debug("Target %s found in Simbad.", sky_coord["target"])
             except name_resolve.NameResolveError:
                 self._logger.error('Target "%s" not found in Simbad.', sky_coord["target"])
                 raise
 
-        if info:
+        if print_target_info:
             self._logger.info("Target name: %s", sky_coord.get("target", "target name not given"))
             self._logger.info("Target coordinates: %s", target)
 
         return target
 
-    def get_on_region(self, on_region_dict=None):
+    def define_on_region(self, on_region_dict=None):
         """
         Defines a CircleSkyRegion object for the on region.
 
@@ -96,7 +99,7 @@ class SkyRegions:
         """
 
         self.on_region = CircleSkyRegion(
-            center=self.get_target(sky_coord=on_region_dict, info=False),
+            center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
             radius=Angle(on_region_dict.get("radius", 0.5 * u.deg)),
         )
 
@@ -104,7 +107,7 @@ class SkyRegions:
 
         return self.on_region
 
-    def get_exclusion_mask(self, args_dict):
+    def get_exclusion_mask(self, args_dict, max_wobble_distance=None):
         """
         Defines a mask for the exclusion regions.
 
@@ -112,6 +115,8 @@ class SkyRegions:
         ----------
         args_dict: dict
             Dictionary of configuration arguments.
+        max_wobble_distance: Angle
+            maximum wobble distance (with FOV radius added).
 
         """
 
@@ -123,7 +128,7 @@ class SkyRegions:
         if on_region_dict is not None and on_region_exclusion_radius is not None:
             exclusion_regions.append(
                 CircleSkyRegion(
-                    center=self.get_target(sky_coord=on_region_dict, info=False),
+                    center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
                     radius=Angle(on_region_exclusion_radius),
                 )
             )
@@ -132,7 +137,8 @@ class SkyRegions:
         # bright star exclusion
         exclusion_regions.extend(
             self._read_bright_star_catalogue(
-                exclusion_region_dict=args_dict["datasets"]["exclusion_region"]
+                exclusion_region_dict=args_dict["datasets"]["exclusion_region"],
+                max_wobble_distance=max_wobble_distance,
             )
         )
 
@@ -144,7 +150,7 @@ class SkyRegions:
         self._logger.info("Number of exclusion regions: %d", len(exclusion_regions))
         return ~geom.region_mask(exclusion_regions)
 
-    def _read_bright_star_catalogue(self, exclusion_region_dict=None):
+    def _read_bright_star_catalogue(self, exclusion_region_dict=None, max_wobble_distance=None):
         """
         Read bright star catalogue from file.
 
@@ -152,6 +158,8 @@ class SkyRegions:
         ----------
         exclusion_region_dict: dict
             Dictionary of configuration arguments.
+        max_wobble_distance: Angle
+            maximum wobble distance (with FOV radius added).
 
         Returns
         -------
@@ -173,17 +181,14 @@ class SkyRegions:
             catalogue["Vmag"] + catalogue["B-V"] < exclusion_region_dict["magnitude_B"]
         ]
 
-        angular_separation = self.target.separation(
+        catalogue["angular_separation"] = self.target.separation(
             SkyCoord(catalogue["_RA_icrs"], catalogue["_DE_icrs"], unit=u.deg)
         )
-        catalogue["angular_separation"] = angular_separation
 
-        catalogue = catalogue[
-            catalogue["angular_separation"] < u.Quantity(exclusion_region_dict["fov"])
-        ]
+        catalogue = catalogue[catalogue["angular_separation"] < u.Quantity(max_wobble_distance)]
 
         self._logger.info(
-            f"Number of stars in the catalogue passing cuts on magnitude and FOV: {len(catalogue)}"
+            "Number of stars in the catalogue passing cuts on magnitude and FOV: %d", len(catalogue)
         )
         print(catalogue.pprint_all())
 
@@ -196,3 +201,23 @@ class SkyRegions:
             )
 
         return _exclusion_regions
+
+    def update_regions(self, args_dict, on_region_radius=None, max_wobble_distance=None):
+        """
+        Update on and exclusion region definitions
+
+        Parameters
+        ----------
+        args_dict: dict
+            Dictionary of configuration arguments.
+        on_region_radius: Angle
+            on region radius.
+        max_wobble_distance: Angle
+            maximum wobble distance (with FOV radius added).
+
+        """
+
+        args_dict["datasets"]["on_region"]["radius"] = on_region_radius
+        self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
+
+        self.exclusion_mask = self.get_exclusion_mask(args_dict, max_wobble_distance)

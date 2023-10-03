@@ -14,38 +14,43 @@ class Data:
     Data class holding data store and observations
 
     Allows to select data from run list or based on
-    target coordinates (and viewcone).
+    target coordinates (and observation cone).
 
     Parameters
     ----------
-    runlist : str
+    run_list : str
         Path to run list.
     data_directory : str
         Path to data directory (holding hdu-index.fits.gz and obs-index.fits.gz).
     target : SkyCoord
         Target coordinates.
-    viewcone : float
-        Viewcone radius (deg).
+    obs_cone_radius : float
+        observation cone radius (deg).
 
     """
 
-    def __init__(self, runlist=None, data_directory=None, target=None, viewcone=0.5 * u.deg):
+    def __init__(self, args_dict, target=None):
         """
         Initialize Data object.
 
-        Uses runlist if not set to None, otherwise selects data
-        according to target coordinates and viewcone.
+        Uses run_list if not set to None, otherwise selects data
+        according to target coordinates and observation cone.
 
         """
 
         self._logger = logging.getLogger(__name__)
 
-        self._logger.info("Initializing data object from %s", data_directory)
-        self._data_store = DataStore.from_dir(data_directory)
-        if runlist is None:
-            self.runs = self._from_target(target, viewcone)
+        self._logger.info(
+            "Initializing data object from %s", args_dict["observations"]["datastore"]
+        )
+        self._data_store = DataStore.from_dir(args_dict["observations"]["datastore"])
+        self.target = target
+        if args_dict.get("run_list") is None:
+            self.runs = self._from_target(
+                args_dict["observations"].get("obs_cone_radius", 5.0 * u.deg)
+            )
         else:
-            self.runs = self._from_runlist(runlist)
+            self.runs = self._from_run_list(args_dict.get("run_list"))
 
     def get_data_store(self):
         """
@@ -74,48 +79,48 @@ class Data:
 
         return self._data_store.get_observations(self.runs, required_irf=available_irf)
 
-    def _from_runlist(self, runlist):
+    def _from_run_list(self, run_list):
         """
-        Read runlist from file and select data
+        Read run_list from file and select data
 
         Parameters
         ----------
-        runlist : str
+        run_list : str
             Path to run list.
 
         """
 
-        if runlist is None:
+        if run_list is None:
             return None
 
         try:
-            _runs = np.loadtxt(runlist, dtype=int)
+            _runs = np.loadtxt(run_list, dtype=int)
         except OSError:
-            self._logger.error("Run list %s not found.", runlist)
+            self._logger.error("Run list %s not found.", run_list)
             raise
 
-        self._logger.info("Reading run list with %d observations from %s", len(_runs), runlist)
+        self._logger.info("Reading run list with %d observations from %s", len(_runs), run_list)
         return _runs
 
-    def _from_target(self, target, viewcone):
+    def _from_target(self, obs_cone_radius):
         """
-        Select data based on target coordinates and viewcone.
+        Select data based on target coordinates and observation cone.
 
         Parameters
         ----------
-        target : SkyCoord
-            Target coordinates.
-        viewcone : float
-            Viewcone radius (deg).
+        obs_cone_radius : float
+            observation cone radius (deg).
 
         """
 
         observations = self._data_store.obs_table
-        mask = target.separation(observations.pointing_radec) < viewcone * u.deg
+        mask = self.target.separation(observations.pointing_radec) < obs_cone_radius * u.deg
         _runs = observations[mask]["OBS_ID"].data
 
-        self._logger.info("Selecting %d runs from viewcone around %s", len(_runs), target)
-        self._logger.info("WARNING - this is not tested")
+        self._logger.info(
+            "Selecting %d runs from observation cone around %s", len(_runs), self.target
+        )
+        self._logger.warning("THIS IS NOT TESTED")
         return _runs
 
     def get_on_region_radius(self):
@@ -141,3 +146,29 @@ class Data:
         self._logger.info(f"On region size: {on_region}")
 
         return on_region
+
+    def get_max_wobble_distance(self, fov=3.5 * u.deg):
+        """
+        Return maximum distance from target position.
+        Add if necessary the telescope field of view.
+
+        Parameters
+        ----------
+        fov : astropy.units.Quantity
+            Telescope field of view.
+
+        Returns
+        -------
+        max_offset : astropy.units.Quantity
+            Maximum offset.
+
+        """
+
+        woff = np.array(
+            [
+                self.target.separation(obs.pointing.get_icrs()).degree
+                for obs in self.get_observations()
+            ]
+        )
+
+        return np.max(woff) * u.deg + fov / 2.0
