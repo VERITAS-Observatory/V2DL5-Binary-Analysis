@@ -1,5 +1,6 @@
 """
 Definition of time bins
+
 """
 
 from astropy.time import Time
@@ -24,10 +25,9 @@ def get_list_of_nights(data_set, time_zone=-7.0):
 
     """
 
-    time_list = _get_starting_tims(data_set)
+    time_list = _get_starting_times(data_set)
 
     # Reduce the list to intervals
-    #    _mjd = set([(int)(time_obj.mjd) for time_obj in time_list])
     _mjd = {(int)(time_obj.mjd) for time_obj in time_list}
 
     time_intervals = []
@@ -38,7 +38,7 @@ def get_list_of_nights(data_set, time_zone=-7.0):
     return time_intervals
 
 
-def _get_starting_tims(data_set):
+def _get_starting_times(data_set):
     """
     Get the starting times of the observations.
 
