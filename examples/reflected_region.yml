@@ -3,7 +3,9 @@
 
 observations:
     datastore: ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/
-    obs_cone_radius: 5 deg
+    # search for observations around the on_region direction
+    # within a maximum offset of obs_cone_radius
+    obs_cone_radius: 1.5 deg
     required_irf: ['aeff', 'edisp']
 
 datasets:
@@ -22,7 +24,7 @@ datasets:
         on_radius: 0.5 deg
         magnitude_B: 7
         star_exclusion_radius: 0.30 deg
-        fov: 4.5 deg
+        fov: 3.5 deg
         star_file: ./data/hip_mag9.fits.gz
     containment_correction: false
     safe_mask:

@@ -44,8 +44,9 @@ class Data:
 
         self._logger.info("Initializing data object from %s", data_directory)
         self._data_store = DataStore.from_dir(data_directory)
+        self.target = target
         if run_list is None:
-            self.runs = self._from_target(target, obs_cone_radius)
+            self.runs = self._from_target(obs_cone_radius)
         else:
             self.runs = self._from_run_list(run_list)
 
@@ -99,24 +100,24 @@ class Data:
         self._logger.info("Reading run list with %d observations from %s", len(_runs), run_list)
         return _runs
 
-    def _from_target(self, target, obs_cone_radius):
+    def _from_target(self, obs_cone_radius):
         """
         Select data based on target coordinates and observation cone.
 
         Parameters
         ----------
-        target : SkyCoord
-            Target coordinates.
         obs_cone_radius : float
             observation cone radius (deg).
 
         """
 
         observations = self._data_store.obs_table
-        mask = target.separation(observations.pointing_radec) < obs_cone_radius * u.deg
+        mask = self.target.separation(observations.pointing_radec) < obs_cone_radius * u.deg
         _runs = observations[mask]["OBS_ID"].data
 
-        self._logger.info("Selecting %d runs from observation cone around %s", len(_runs), target)
+        self._logger.info(
+            "Selecting %d runs from observation cone around %s", len(_runs), self.target
+        )
         self._logger.warning("THIS IS NOT TESTED")
         return _runs
 
@@ -143,3 +144,29 @@ class Data:
         self._logger.info(f"On region size: {on_region}")
 
         return on_region
+
+    def get_max_wobble_distance(self, fov=3.5 * u.deg):
+        """
+        Return maximum distance from target position.
+        Add if necessary the telescope field of view.
+
+        Parameters
+        ----------
+        fov : astropy.units.Quantity
+            Telescope field of view.
+
+        Returns
+        -------
+        max_offset : astropy.units.Quantity
+            Maximum offset.
+
+        """
+
+        woff = np.array(
+            [
+                self.target.separation(obs.pointing.get_icrs()).degree
+                for obs in self.get_observations()
+            ]
+        )
+
+        return np.max(woff) * u.deg + fov / 2.0

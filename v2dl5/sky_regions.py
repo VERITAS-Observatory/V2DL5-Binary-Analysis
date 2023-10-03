@@ -31,7 +31,7 @@ class SkyRegions:
 
         self.target = self.get_target(sky_coord=args_dict["datasets"]["on_region"])
         self.on_region = self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
-        self.exclusion_mask = self.get_exclusion_mask(args_dict)
+        self.exclusion_mask = None
 
     def get_target(self, sky_coord=None, print_target_info=True):
         """
@@ -107,7 +107,7 @@ class SkyRegions:
 
         return self.on_region
 
-    def get_exclusion_mask(self, args_dict):
+    def get_exclusion_mask(self, args_dict, max_wobble_distance=None):
         """
         Defines a mask for the exclusion regions.
 
@@ -115,6 +115,8 @@ class SkyRegions:
         ----------
         args_dict: dict
             Dictionary of configuration arguments.
+        max_wobble_distance: Angle
+            maximum wobble distance (with FOV radius added).
 
         """
 
@@ -135,7 +137,8 @@ class SkyRegions:
         # bright star exclusion
         exclusion_regions.extend(
             self._read_bright_star_catalogue(
-                exclusion_region_dict=args_dict["datasets"]["exclusion_region"]
+                exclusion_region_dict=args_dict["datasets"]["exclusion_region"],
+                max_wobble_distance=max_wobble_distance,
             )
         )
 
@@ -147,7 +150,7 @@ class SkyRegions:
         self._logger.info("Number of exclusion regions: %d", len(exclusion_regions))
         return ~geom.region_mask(exclusion_regions)
 
-    def _read_bright_star_catalogue(self, exclusion_region_dict=None):
+    def _read_bright_star_catalogue(self, exclusion_region_dict=None, max_wobble_distance=None):
         """
         Read bright star catalogue from file.
 
@@ -155,6 +158,8 @@ class SkyRegions:
         ----------
         exclusion_region_dict: dict
             Dictionary of configuration arguments.
+        max_wobble_distance: Angle
+            maximum wobble distance (with FOV radius added).
 
         Returns
         -------
@@ -176,14 +181,11 @@ class SkyRegions:
             catalogue["Vmag"] + catalogue["B-V"] < exclusion_region_dict["magnitude_B"]
         ]
 
-        angular_separation = self.target.separation(
+        catalogue["angular_separation"] = self.target.separation(
             SkyCoord(catalogue["_RA_icrs"], catalogue["_DE_icrs"], unit=u.deg)
         )
-        catalogue["angular_separation"] = angular_separation
 
-        catalogue = catalogue[
-            catalogue["angular_separation"] < u.Quantity(exclusion_region_dict["fov"])
-        ]
+        catalogue = catalogue[catalogue["angular_separation"] < u.Quantity(max_wobble_distance)]
 
         self._logger.info(
             "Number of stars in the catalogue passing cuts on magnitude and FOV: %d", len(catalogue)
@@ -200,9 +202,9 @@ class SkyRegions:
 
         return _exclusion_regions
 
-    def update_on_region_radius(self, args_dict, on_region_radius):
+    def update_regions(self, args_dict, on_region_radius=None, max_wobble_distance=None):
         """
-        Update on region radius read from data files.
+        Update on and exclusion region definitions
 
         Parameters
         ----------
@@ -210,8 +212,12 @@ class SkyRegions:
             Dictionary of configuration arguments.
         on_region_radius: Angle
             on region radius.
+        max_wobble_distance: Angle
+            maximum wobble distance (with FOV radius added).
 
         """
 
         args_dict["datasets"]["on_region"]["radius"] = on_region_radius
         self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
+
+        self.exclusion_mask = self.get_exclusion_mask(args_dict, max_wobble_distance)

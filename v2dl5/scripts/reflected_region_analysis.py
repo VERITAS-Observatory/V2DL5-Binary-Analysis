@@ -70,8 +70,10 @@ def main():
         target=sky_regions.target,
         obs_cone_radius=args_dict["observations"].get("obs_cone_radius", 5.0 * u.deg),
     )
-    sky_regions.update_on_region_radius(
-        args_dict=args_dict, on_region_radius=data.get_on_region_radius()
+    sky_regions.update_regions(
+        args_dict=args_dict,
+        on_region_radius=data.get_on_region_radius(),
+        max_wobble_distance=data.get_max_wobble_distance(),
     )
 
     analysis = v2dl5.analysis.Analysis(
