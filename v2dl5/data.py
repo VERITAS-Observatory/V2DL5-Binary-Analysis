@@ -51,6 +51,7 @@ class Data:
             )
         else:
             self.runs = self._from_run_list(args_dict.get("run_list"))
+        self._update_gti(args_dict.get("bti", None))
 
     def get_data_store(self):
         """
@@ -169,3 +170,37 @@ class Data:
         )
 
         return np.max(woff) * u.deg + fov / 2.0
+
+    def _update_gti(self, bti):
+        """
+        Update good time intervals by removing bad time intervals.
+
+        """
+        if bti is None:
+            return
+
+        return
+
+
+#
+#        for bti_obs_id in bti:
+#            try:
+#                _obs = self.get_observations([str(bti_obs_id)])[0]
+#                print("AAA", bti_obs_id, _obs)
+#                print("GTI", _obs.gti)
+#                print("GTI", _obs.gti.table)
+#                print("GTI", _obs.gti.time_intervals)
+#                time_filter = [_obs.tstart, _obs.tstart+TimeDelta(300, format="sec")]
+#                print("TIME FILTER", time_filter)
+#                gti_filter = ObservationFilter(time_filter=time_filter)
+#                _new_gti = gti_filter.filter_gti(_obs.gti)
+#                print("NEW", _new_gti.table)
+#                _obs.gti.stack(_new_gti)
+#                print("GTI NEW", _obs.gti.table)
+#            except IndexError:
+#                pass
+#
+#        print("UUU", bti)
+#        import sys
+#        sys.exit()
+#
