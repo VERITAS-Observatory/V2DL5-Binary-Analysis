@@ -2,7 +2,7 @@ import logging
 
 import astropy.units as u
 import numpy as np
-from gammapy.data import GTI, Observation
+from gammapy.data import GTI
 
 logging.basicConfig(level=logging.INFO)
 
@@ -170,18 +170,3 @@ class BTI:
         print(updated_gti.time_delta)
 
         return updated_gti
-
-
-gti = GTI.read("../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/6/67123.fits.gz")
-obs = Observation.read("../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/6/67123.fits.gz")
-
-time_cuts = [(0, 2), (10, 30), (1380, 1500), (2000, 2100)]
-
-bti = BTI(obs)
-bti.update_gti(time_cuts, gti)
-
-print(gti)
-print(gti.table)
-print("Time intervals:", gti.time_intervals)
-print("Time reference:", gti.time_ref)
-print(gti.time_delta)
