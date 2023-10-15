@@ -1,0 +1,35 @@
+---
+name: Unittests
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+jobs:
+
+  unittests:
+
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.10
+
+      - name: Install mamba dependencies
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yml
+          create-args: python=3.10
+          init-shell: bash
+
+      - name: Unit tests
+        shell: bash -l {0}
+        run: pytest --durations=10 --color=yes --cov --cov-report=xml

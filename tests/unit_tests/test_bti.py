@@ -123,3 +123,35 @@ class Test_CreateOnTimeList:
         assert len(on_time_list) == bti_obj.max_time_interval() + 1
         assert on_time_list[:11] == [0] * 11
         assert all(x == 1 for x in on_time_list[11:69])
+
+
+class Test_ExtractGTIStartStopTimes:
+    # Create a list of on and off times in 1 s bin with no bad time intervals.
+    def test_no_bad_time_intervals(self, get_good_gti):
+        obs = Observation(gti=get_good_gti)
+        bti = []
+        bti_obj = BTI.BTI(obs)
+        on_time_list = bti_obj._create_on_time_list(bti)
+        start, stop = bti_obj._extract_gti_start_stop(on_time_list)
+        assert start == 0.0 * u.s
+        assert stop == 80 * u.s
+
+    # Create a list of on and off times in 1 s bin with multiple overlapping bad time intervals.
+    def test_multiple_overlapping_bad_time_intervals(self, get_good_gti):
+        obs = Observation(gti=get_good_gti)
+        bti = [(10, 20), (15, 40), (50, 60)]
+        bti_obj = BTI.BTI(obs=obs)
+        on_time_list = bti_obj._create_on_time_list(bti)
+        start, stop = bti_obj._extract_gti_start_stop(on_time_list)
+        assert start == [0.0 * u.s, 41.0 * u.s, 61.0 * u.s]
+        assert stop == [9 * u.s, 49 * u.s, 80 * u.s]
+
+
+class Test_MetTstart:
+    # Return start time in seconds since MET.
+    def test_return_start_time(self, get_good_gti):
+        obs = Observation(gti=get_good_gti)
+        bti = BTI.BTI(obs)
+        result = bti._met_tstart()
+        assert isinstance(result, u.Quantity)
+        assert result.value == 0.0
