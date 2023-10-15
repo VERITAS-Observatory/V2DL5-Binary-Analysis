@@ -13,4 +13,7 @@ dependencies:
   - pre-commit
   - pydantic<2
   - pyflakes
+  - pytest
+  - pytest-cov
+  - pytest-xdist
   - python=3.10

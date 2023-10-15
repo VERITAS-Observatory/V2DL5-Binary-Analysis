@@ -14,7 +14,7 @@ class BTI:
 
     """
 
-    def __init__(self, gti=None):
+    def __init__(self, obs=None):
         self._logger = logging.getLogger(__name__)
 
         self.gti = obs.gti
@@ -27,7 +27,7 @@ class BTI:
 
         """
 
-        duration = int(np.ceil(np.max(self.gti.met_stop) - np.min(self.gti.met_start)).value)
+        duration = int(round((np.max(self.gti.met_stop) - np.min(self.gti.met_start)).value))
         self._logger.info("Max time interval [s]: %d", duration)
 
         return duration
@@ -49,7 +49,7 @@ class BTI:
 
         """
 
-        on_time_s = [0] * self.max_time_interval()
+        on_time_s = [0] * (self.max_time_interval() + 1)
         print("length:", len(on_time_s))
 
         start_times = (self.gti.table["START"] - self.tstart).to_value("sec")
@@ -65,6 +65,7 @@ class BTI:
         print("length:", len(on_time_s))
 
         for start, end in bti:
+            start, end = max(start, 0), max(end, 0)
             if round(start) < len(on_time_s):
                 i_1 = round(start)
                 i_2 = round(end) if round(end) < len(on_time_s) else len(on_time_s) - 1
