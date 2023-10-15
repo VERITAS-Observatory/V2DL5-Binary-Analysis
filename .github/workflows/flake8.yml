@@ -24,4 +24,5 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           max-line-length: "100"
-          ignore: "E203"
+            #          ignore: "E203"
+          plugins: "flake8-black"
