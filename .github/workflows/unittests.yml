@@ -7,8 +7,8 @@ on:
     types: [opened, synchronize]
 
 jobs:
-
   unittests:
+    runs-on: ubuntu-latest
 
     defaults:
       run:
@@ -17,12 +17,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
-
+          python-version: "3.10"
       - name: Install mamba dependencies
         uses: mamba-org/setup-micromamba@v1
         with:
