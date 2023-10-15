@@ -196,12 +196,6 @@ class Analysis:
             dataset_on_off = bkg_maker.run(dataset, observation)
             dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
             self.datasets.append(dataset_on_off)
-            # TMP
-            print("TMP Printout GTI", obs_id, observation.gti)
-            print(observation.gti.table)
-            print(observation.gti.time_sum)
-            print(observation.gti.time_delta)
-            # TMP
 
         print("Run-wise results:")
         self._print_results(self.datasets.info_table(cumulative=False))

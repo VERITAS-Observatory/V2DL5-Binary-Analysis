@@ -48,3 +48,9 @@ bti:
     - run: 64080
       bti_start: 600
       bti_length: 360
+    - run: 69976
+      bti_start: 600
+      bti_length: 360
+    - run: 69976
+      bti_start: 1000
+      bti_length: 200

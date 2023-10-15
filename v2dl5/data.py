@@ -8,6 +8,8 @@ import numpy as np
 from astropy import units as u
 from gammapy.data import DataStore
 
+import v2dl5.bti as BTI
+
 
 class Data:
     """
@@ -175,32 +177,23 @@ class Data:
         """
         Update good time intervals by removing bad time intervals.
 
+        Parameters
+        ----------
+        bti : list of dict
+            List of bad time intervals
+            Given us {"run": run, "bti_start": start, "bti_length": length}
+
         """
-        if bti is None:
-            return
 
-        return
-
-
-#
-#        for bti_obs_id in bti:
-#            try:
-#                _obs = self.get_observations([str(bti_obs_id)])[0]
-#                print("AAA", bti_obs_id, _obs)
-#                print("GTI", _obs.gti)
-#                print("GTI", _obs.gti.table)
-#                print("GTI", _obs.gti.time_intervals)
-#                time_filter = [_obs.tstart, _obs.tstart+TimeDelta(300, format="sec")]
-#                print("TIME FILTER", time_filter)
-#                gti_filter = ObservationFilter(time_filter=time_filter)
-#                _new_gti = gti_filter.filter_gti(_obs.gti)
-#                print("NEW", _new_gti.table)
-#                _obs.gti.stack(_new_gti)
-#                print("GTI NEW", _obs.gti.table)
-#            except IndexError:
-#                pass
-#
-#        print("UUU", bti)
-#        import sys
-#        sys.exit()
-#
+        for obs in self.get_observations():
+            bti_pairs = [
+                (item["bti_start"], item["bti_start"] + item["bti_length"])
+                for item in bti
+                if item["run"] == obs.obs_id
+            ]
+            if len(bti_pairs) == 0:
+                self._logger.debug("No BTI found for {obs.obs_id}")
+                continue
+            self._logger.debug("Updating GTI for {obs.obs_id} with {bti_pairs}")
+            obs.gti.stack(other=BTI.BTI(obs).update_gti(bti_pairs))
+            obs.gti.union()
