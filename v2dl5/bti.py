@@ -50,7 +50,6 @@ class BTI:
         """
 
         on_time_s = [0] * (self.max_time_interval() + 1)
-        print("length:", len(on_time_s))
 
         start_times = (self.gti.table["START"] - self.tstart).to_value("sec")
         end_times = (self.gti.table["STOP"] - self.tstart).to_value("sec")
@@ -62,17 +61,12 @@ class BTI:
             i_2 = round(end)
             on_time_s[i_1 : i_2 + 1] = [1] * (i_2 - i_1 + 1)
 
-        print("length:", len(on_time_s))
-
         for start, end in bti:
             start, end = max(start, 0), max(end, 0)
             if round(start) < len(on_time_s):
                 i_1 = round(start)
                 i_2 = round(end) if round(end) < len(on_time_s) else len(on_time_s) - 1
                 on_time_s[i_1 : i_2 + 1] = [0] * (i_2 - i_1 + 1)
-
-        print(on_time_s)
-        print("length:", len(on_time_s))
 
         return on_time_s
 
@@ -134,7 +128,7 @@ class BTI:
 
         return (self.tstart - self.gti.time_ref).to_value("sec") * u.s
 
-    def update_gti(self, bti, gti):
+    def update_gti(self, bti):
         """
         Update good time intervals by removing bad time intervals.
 
@@ -143,8 +137,6 @@ class BTI:
         bti : list
             List of bad time intervals
             (given as a list of start and stop times relative to the observation start time).
-        gti : gammapy.data.GTI
-            Good time intervals to be updated.
 
         Returns
         -------
@@ -156,17 +148,11 @@ class BTI:
         self._logger.info(f"BTI: {bti}")
 
         if bti is None:
-            return gti
+            return self.gti
 
         on_time_s = self._create_on_time_list(bti)
         gti_start, gti_end = self._extract_gti_start_stop(on_time_s)
 
-        updated_gti = GTI.create(gti_start, gti_end, gti.time_ref)
-
-        print(updated_gti)
-        print(updated_gti.table)
-        print(updated_gti.time_intervals)
-        print(updated_gti.time_ref)
-        print(updated_gti.time_delta)
+        updated_gti = GTI.create(gti_start, gti_end, self.gti.time_ref)
 
         return updated_gti

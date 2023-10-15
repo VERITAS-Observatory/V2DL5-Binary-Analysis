@@ -1,6 +1,7 @@
 import logging
 
 import astropy.units as u
+import numpy as np
 import pytest
 from astropy.time import Time
 from gammapy.data import GTI, Observation
@@ -155,3 +156,26 @@ class Test_MetTstart:
         result = bti._met_tstart()
         assert isinstance(result, u.Quantity)
         assert result.value == 0.0
+
+
+class TestUpdateGti:
+    # Update GTI with a valid BTI and GTI object
+    def test_valid_bti_and_gti(self, get_good_gti):
+        obs = Observation(gti=get_good_gti)
+        bti = [(10, 20), (30, 40)]
+
+        bti_obj = BTI.BTI(obs)
+        updated_gti = bti_obj.update_gti(bti)
+
+        assert isinstance(updated_gti, GTI)
+        assert len(updated_gti.table) == 3
+        assert np.allclose(updated_gti.time_delta.value, np.array([9.0, 8.0, 39.0]), rtol=1.0e-6)
+
+    # Update GTI with no BTI object
+    def test_none_bti(self, get_good_gti):
+        obs = Observation(gti=get_good_gti)
+
+        bti_obj = BTI.BTI(obs)
+        updated_gti = bti_obj.update_gti(None)
+
+        assert updated_gti == get_good_gti
