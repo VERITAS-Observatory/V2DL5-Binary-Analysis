@@ -185,6 +185,9 @@ class Data:
 
         """
 
+        if bti is None:
+            return
+
         for obs in self.get_observations():
             bti_pairs = [
                 (item["bti_start"], item["bti_start"] + item["bti_length"])
