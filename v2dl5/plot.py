@@ -235,8 +235,7 @@ class Plot:
         except AttributeError:
             pass
 
-    @staticmethod
-    def _plot(plot_name=None, output_dir=None):
+    def _plot(self, plot_name=None, output_dir=None):
         """
         Plotting helper function
 
@@ -244,7 +243,7 @@ class Plot:
         if output_dir is not None:
             output_dir.mkdir(parents=True, exist_ok=True)
             _ofile = f"{output_dir}/{plot_name}.png"
-            logging.info("Plotting %s", _ofile)
+            self._logger.info("Plotting %s", _ofile)
             plt.savefig(_ofile)
         else:
             plt.show()
