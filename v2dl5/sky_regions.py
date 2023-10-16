@@ -3,6 +3,7 @@ Sky regions definition.
 """
 
 import logging
+import os
 
 from astropy import units as u
 from astropy.coordinates import Angle, SkyCoord, name_resolve
@@ -175,7 +176,7 @@ class SkyRegions:
         self._logger.info(
             "Reading bright star catalogue from %s", exclusion_region_dict["star_file"]
         )
-        hip = fits.open(exclusion_region_dict["star_file"])
+        hip = fits.open(os.path.expandvars(exclusion_region_dict["star_file"]))
         catalogue = Table(hip[1].data)
         catalogue = catalogue[
             catalogue["Vmag"] + catalogue["B-V"] < exclusion_region_dict["magnitude_B"]
