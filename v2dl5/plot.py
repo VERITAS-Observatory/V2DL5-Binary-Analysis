@@ -247,4 +247,4 @@ class Plot:
             plt.savefig(_ofile)
         else:
             plt.show()
-        plt.clf()
+        plt.close()
