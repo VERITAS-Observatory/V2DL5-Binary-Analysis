@@ -141,11 +141,14 @@ class Plot:
 
     def plot_fit(self, data_set):
         """
-        Plot fit results and residuals
+        Plot successful fit results and residuals.
 
         """
 
-        ax_spectrum, _ = data_set.plot_fit()
+        try:
+            ax_spectrum, _ = data_set.plot_fit()
+        except ValueError:
+            return
         ax_spectrum.set_ylim(0.1, 40)
         data_set.plot_masks(ax=ax_spectrum)
         try:
