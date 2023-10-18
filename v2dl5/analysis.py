@@ -112,12 +112,16 @@ class Analysis:
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
         self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
-        self._write_datasets(self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve")
-        self._write_datasets(self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve")
+        self._write_datasets(
+            self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve", "flux"
+        )
+        self._write_datasets(
+            self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve", "flux"
+        )
         if self.spectral_model:
             self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
 
-    def _write_datasets(self, datasets, filename, file_format=None):
+    def _write_datasets(self, datasets, filename, file_format=None, sed_type=None):
         """
         Write datasets to disk.
 
@@ -138,7 +142,10 @@ class Analysis:
         _out_file = f"{self._output_dir}/data/{filename}"
         self._logger.info("Writing datasets to %s", _out_file)
         if file_format is not None:
-            datasets.write(_out_file, overwrite=True, format=file_format)
+            if sed_type is not None:
+                datasets.write(_out_file, overwrite=True, format=file_format, sed_type=sed_type)
+            else:
+                datasets.write(_out_file, overwrite=True, format=file_format)
         else:
             datasets.write(_out_file, overwrite=True)
 
