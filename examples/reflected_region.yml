@@ -17,9 +17,9 @@ datasets:
             energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
     on_region:
         target: Crab
-        frame: icrs
-        lon: 83.628700 deg
-        lat: 22.014700 deg
+#        frame: icrs
+#        lon: 83.628700 deg
+#        lat: 22.014700 deg
     exclusion_region:
         on_radius: 0.5 deg
         magnitude_B: 7
@@ -35,6 +35,8 @@ datasets:
 fit:
     fit_range: {min: 0.1 TeV, max: 20 TeV}
     model: pl
+    index: 2.5
+    reference_energy: 1 TeV
 
 flux_points:
     energy: {min: 0.1 TeV, max: 20 TeV, nbins: 10}

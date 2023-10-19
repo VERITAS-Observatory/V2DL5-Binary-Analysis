@@ -55,6 +55,7 @@ class Analysis:
 
         self.datasets = None
         self.spectral_model = None
+        self.fit_results = None
         self.flux_points = None
         self.light_curve_per_obs = None
         self.light_curve_per_night = None
@@ -70,7 +71,7 @@ class Analysis:
             _data_sets = Datasets(self.datasets).stack_reduce()
         else:
             _data_sets = self.datasets
-        self._define_spectral_models(model=self.args_dict["fit"]["model"])
+        self._define_spectral_models(model=self.args_dict["fit"])
         self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
         self.light_curve_per_obs = self._light_curve(_data_sets, None)
@@ -94,10 +95,13 @@ class Analysis:
         plotter.plot_irfs()
         plotter.plot_maps(exclusion_mask=self.sky_regions.exclusion_mask)
         plotter.plot_source_statistics()
-        plotter.plot_spectra(
-            flux_points=self.flux_points,
-            model=self.spectral_model,
-        )
+        if self.fit_results.success:
+            plotter.plot_spectra(
+                flux_points=self.flux_points,
+                model=self.spectral_model,
+            )
+        else:
+            self._logger.warning("Skipping spectral plots because fit failed")
         plotter.plot_light_curves(
             light_curve_per_obs=self.light_curve_per_obs,
             light_curve_per_night=self.light_curve_per_night,
@@ -204,9 +208,9 @@ class Analysis:
             dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
             self.datasets.append(dataset_on_off)
 
-        print("Run-wise results:")
+        self._logger.info("Run-wise results:")
         self._print_results(self.datasets.info_table(cumulative=False))
-        print("Cumulative results:")
+        self._logger.info("Cumulative results:")
         self._print_results(self.datasets.info_table(cumulative=True))
 
     def _print_results(self, info_table):
@@ -248,32 +252,34 @@ class Analysis:
         datasets.models = self.spectral_model
 
         _fit = Fit()
-        result_joint = _fit.run(datasets=datasets)
-        print(result_joint)
-        display(result_joint.models.to_parameters_table())
+        self.fit_results = _fit.run(datasets=datasets)
+        self._logger.info(self.fit_results)
+        display(self.fit_results.models.to_parameters_table())
 
-    def _define_spectral_models(self, model=None):
-        """ "
+    def _define_spectral_models(self, model):
+        """
         Spectral models
 
         """
 
         _spectral_model = None
-        if model == "pl":
+        if model.get("model", "pl") == "pl":
             _spectral_model = PowerLawSpectralModel(
                 amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-                index=2,
-                reference=1 * u.TeV,
+                index=model.get("index", 2.0),
+                reference=u.Quantity(model.get("reference_energy", "1.0 TeV")),
             )
-        elif model == "ecpl":
+        elif model["model"] == "ecpl":
             _spectral_model = ExpCutoffPowerLawSpectralModel(
                 amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-                index=2,
-                lambda_=0.1 * u.Unit("TeV-1"),
-                reference=1 * u.TeV,
+                index=model.get("index", 2.0),
+                lambda_=u.Quantity(model.get("lambda", "0.1 TeV-1")),
+                reference=u.Quantity(model.get("reference_energy", "1.0 TeV")),
             )
 
-        self.spectral_model = SkyModel(spectral_model=_spectral_model, name=model)
+        self.spectral_model = SkyModel(
+            spectral_model=_spectral_model, name=model.get("model", "pl")
+        )
 
     def _flux_points(self, datasets):
         """
@@ -353,8 +359,6 @@ class Analysis:
         time_intervals = v2dl5_time.get_list_of_nights(
             _data_sets, time_zone=self.args_dict["light_curve"]["time_zone"]
         )
-
-        print(time_intervals, type(time_intervals))
 
         return self._light_curve(_data_sets, time_intervals=time_intervals)
 
