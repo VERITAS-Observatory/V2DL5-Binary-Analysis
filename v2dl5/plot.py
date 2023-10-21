@@ -33,6 +33,26 @@ class Plot:
         self.on_region = on_region
         self.output_dir = output_dir
 
+    def default_offsets(self):
+        """
+        List of default offsets
+
+        """
+
+        _offsets = [0.5, 0.7, 1.0, 1.25] * u.deg
+        self._logger.info(f"Default offsets for plotting: {_offsets}")
+        return _offsets
+
+    def default_energy_true(self):
+        """
+        List of default true energies
+
+        """
+
+        _energy_true = [0.2, 0.3, 1.0, 3.0, 10.0, 20.0] * u.TeV
+        self._logger.info(f"Default true energies for plotting: {_energy_true}")
+        return _energy_true
+
     def plot_maps(self, exclusion_mask=None):
         """
         Map and geometry related plots
@@ -125,22 +145,8 @@ class Plot:
         """
 
         for obs in self.v2dl5_data.get_observations():
-            obs.aeff.peek()
-            try:
-                self._plot(
-                    plot_name=f"aeff_obs_{obs.obs_id}",
-                    output_dir=self.output_dir / "irfs",
-                )
-            except TypeError:
-                pass
-            obs.edisp.peek()
-            try:
-                self._plot(
-                    plot_name=f"edisp_obs_{obs.obs_id}",
-                    output_dir=self.output_dir / "irfs",
-                )
-            except TypeError:
-                pass
+            self._plot_effective_area(obs)
+            self._plot_energy_dispersion(obs)
 
     def plot_fit(self, data_set):
         """
@@ -258,3 +264,48 @@ class Plot:
         else:
             plt.show()
         plt.clf()
+
+    def _plot_effective_area(self, obs):
+        """
+        Plot effective area
+
+        """
+
+        obs.aeff.peek()
+        try:
+            self._plot(
+                plot_name=f"aeff_obs_{obs.obs_id}",
+                output_dir=self.output_dir / "irfs",
+            )
+        except TypeError:
+            pass
+
+    def _plot_energy_dispersion(self, obs):
+        """
+        Plot energy dispersion
+
+        """
+
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+        obs.edisp.plot_bias(
+            ax=axes[0],
+            offset=self.default_offsets()[0],
+        )
+        _mig_ax = obs.edisp.plot_migration(
+            ax=axes[1],
+            offset=self.default_offsets()[0],
+            energy_true=self.default_energy_true(),
+        )
+        _mig_ax.legend(loc="upper right")
+        _edisp = obs.edisp.to_edisp_kernel(offset=self.default_offsets()[0])
+        _edisp.plot_matrix(ax=axes[2])
+
+        plt.tight_layout()
+
+        try:
+            self._plot(
+                plot_name=f"edisp_obs_{obs.obs_id}",
+                output_dir=self.output_dir / "irfs",
+            )
+        except TypeError:
+            pass
