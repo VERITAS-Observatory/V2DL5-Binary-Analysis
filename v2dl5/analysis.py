@@ -22,7 +22,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from IPython.display import display
 
 import v2dl5.plot as v2dl5_plot
 import v2dl5.time as v2dl5_time
@@ -254,7 +253,7 @@ class Analysis:
         _fit = Fit()
         self.fit_results = _fit.run(datasets=datasets)
         self._logger.info(self.fit_results)
-        display(self.fit_results.models.to_parameters_table())
+        self.fit_results.models.to_parameters_table().pprint()
 
     def _define_spectral_models(self, model):
         """
@@ -300,8 +299,10 @@ class Analysis:
         fpe = FluxPointsEstimator(energy_edges=energy_edges, selection_optional="all")
         self.flux_points = fpe.run(datasets=datasets)
 
-        display(self.flux_points.to_table(sed_type="dnde", formatted=True))
-        display(self.flux_points.to_table(sed_type="e2dnde", formatted=True))
+        self.flux_points.to_table(sed_type="dnde", formatted=True).pprint()
+        self.flux_points.to_table(sed_type="dnde", formatted=True).pprint_all()
+        self.flux_points.to_table(sed_type="e2dnde", formatted=True).pprint()
+        self.flux_points.to_table(sed_type="e2dnde", formatted=True).pprint_all()
 
     def _light_curve(self, datasets, time_intervals=None):
         """
@@ -331,11 +332,24 @@ class Analysis:
             * u.TeV,
             time_intervals=time_intervals,
             reoptimize=False,
-            selection_optional="all",
+            selection_optional=["all"],
         )
         _light_curve = lc_maker_1d.run(datasets)
 
-        display(_light_curve.to_table(sed_type="flux", format="lightcurve"))
+        _table = _light_curve.to_table(sed_type="flux", format="lightcurve")
+        print(
+            _table[
+                "time_min",
+                "time_max",
+                "e_min",
+                "e_max",
+                "flux",
+                "flux_err",
+                "flux_ul",
+                "sqrt_ts",
+            ]
+        )
+        _table.pprint_all()
 
         return _light_curve
 

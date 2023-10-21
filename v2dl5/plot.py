@@ -4,6 +4,7 @@ Plotting
 """
 
 import logging
+import warnings
 
 import matplotlib.pyplot as plt
 from astropy import units as u
@@ -14,6 +15,8 @@ from gammapy.visualization import (
     plot_spectrum_datasets_off_regions,
     plot_theta_squared_table,
 )
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class Plot:
@@ -180,8 +183,11 @@ class Plot:
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
         flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
         self._plot(plot_name="spectrum", output_dir=self.output_dir)
-        flux_point_dataset.plot_residuals(method="diff/model")
-        self._plot(plot_name="residuals", output_dir=self.output_dir)
+        try:
+            flux_point_dataset.plot_residuals(method="diff/model")
+            self._plot(plot_name="residuals", output_dir=self.output_dir)
+        except ValueError:
+            pass
 
     def plot_light_curve(self, light_curve, plot_name):
         """
@@ -196,6 +202,7 @@ class Plot:
 
         try:
             light_curve.plot(ax=ax, marker="o", label=plot_name, sed_type="flux")
+            ax.set_yscale("linear")
             self._plot(
                 plot_name="light_curve_" + plot_name.replace(" ", "_"), output_dir=self.output_dir
             )
