@@ -272,6 +272,7 @@ class Plot:
         """
 
         _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+        obs.aeff.plot(ax=axes[2])
         obs.aeff.plot_energy_dependence(ax=axes[0], offset=self.default_offsets())
         obs.aeff.plot_offset_dependence(ax=axes[1], energy=self.default_energy_true())
         plt.tight_layout()
