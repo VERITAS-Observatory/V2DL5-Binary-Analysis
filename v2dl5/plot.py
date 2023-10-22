@@ -39,7 +39,7 @@ class Plot:
 
         """
 
-        _offsets = [0.5, 0.7, 1.0, 1.25] * u.deg
+        _offsets = [0.5, 0.7, 1.0, 1.5] * u.deg
         self._logger.info(f"Default offsets for plotting: {_offsets}")
         return _offsets
 
@@ -271,7 +271,12 @@ class Plot:
 
         """
 
-        obs.aeff.peek()
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+        axes = self._set_axes_limits(axes)
+        obs.aeff.plot_energy_dependence(ax=axes[0], offset=self.default_offsets())
+        obs.aeff.plot_offset_dependence(ax=axes[1], energy=self.default_energy_true())
+        plt.tight_layout()
+
         try:
             self._plot(
                 plot_name=f"aeff_obs_{obs.obs_id}",
