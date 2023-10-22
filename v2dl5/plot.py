@@ -263,7 +263,7 @@ class Plot:
             plt.savefig(_ofile)
         else:
             plt.show()
-        plt.clf()
+        plt.close()
 
     def _plot_effective_area(self, obs):
         """
@@ -272,7 +272,6 @@ class Plot:
         """
 
         _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
-        axes = self._set_axes_limits(axes)
         obs.aeff.plot_energy_dependence(ax=axes[0], offset=self.default_offsets())
         obs.aeff.plot_offset_dependence(ax=axes[1], energy=self.default_energy_true())
         plt.tight_layout()
