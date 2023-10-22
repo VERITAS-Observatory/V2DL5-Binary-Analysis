@@ -63,21 +63,32 @@ class Data:
 
         return self._data_store
 
-    def get_observations(self, reflected_region=True):
+    def get_observations(self, reflected_region=True, skip_missing=False):
         """
-        Return observations.
-
-        Reflected region analysis requires effective area and energy dispersion only.
+        Return list of observations.
 
         Parameters
         ----------
         reflected_region : bool
             Reflected region analysis.
+        skip_missing : bool
+            Skip missing observations.
+
+        Returns
+        -------
+        observations : list of `~gammapy.data.Observation`
+            List of observations.
 
         """
 
-        required_irf = "point-like"
-        return self._data_store.get_observations(self.runs, required_irf=required_irf)
+        required_irf = "full-enclosure"
+        if reflected_region:
+            required_irf = "point-like"
+        return self._data_store.get_observations(
+            self.runs,
+            required_irf=required_irf,
+            skip_missing=skip_missing,
+        )
 
     def _from_run_list(self, run_list):
         """
@@ -94,12 +105,17 @@ class Data:
             return None
 
         try:
-            _runs = np.loadtxt(run_list, dtype=int)
+            _runs = np.loadtxt(run_list, dtype=int, usecols=0)
         except OSError:
             self._logger.error("Run list %s not found.", run_list)
             raise
 
+        _runs = [_runs] if _runs.ndim == 0 else np.ndarray.tolist(_runs)
+
         self._logger.info("Reading run list with %d observations from %s", len(_runs), run_list)
+        if len(_runs) == 0:
+            self._logger.error("Run list is empty.")
+            raise ValueError
         return _runs
 
     def _from_target(self, obs_cone_radius):
@@ -184,6 +200,9 @@ class Data:
             Given us {"run": run, "bti_start": start, "bti_length": length}
 
         """
+
+        if bti is None:
+            return
 
         for obs in self.get_observations():
             bti_pairs = [

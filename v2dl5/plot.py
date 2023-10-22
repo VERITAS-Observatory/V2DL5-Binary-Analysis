@@ -4,6 +4,7 @@ Plotting
 """
 
 import logging
+import warnings
 
 import matplotlib.pyplot as plt
 from astropy import units as u
@@ -14,6 +15,8 @@ from gammapy.visualization import (
     plot_spectrum_datasets_off_regions,
     plot_theta_squared_table,
 )
+
+warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class Plot:
@@ -29,6 +32,26 @@ class Plot:
         self.data_set = data_set
         self.on_region = on_region
         self.output_dir = output_dir
+
+    def default_offsets(self):
+        """
+        List of default offsets
+
+        """
+
+        _offsets = [0.5, 0.7, 1.0, 1.5] * u.deg
+        self._logger.info(f"Default offsets for plotting: {_offsets}")
+        return _offsets
+
+    def default_energy_true(self):
+        """
+        List of default true energies
+
+        """
+
+        _energy_true = [0.2, 0.3, 1.0, 3.0, 10.0, 20.0] * u.TeV
+        self._logger.info(f"Default true energies for plotting: {_energy_true}")
+        return _energy_true
 
     def plot_maps(self, exclusion_mask=None):
         """
@@ -122,30 +145,19 @@ class Plot:
         """
 
         for obs in self.v2dl5_data.get_observations():
-            obs.aeff.peek()
-            try:
-                self._plot(
-                    plot_name=f"aeff_obs_{obs.obs_id}",
-                    output_dir=self.output_dir / "irfs",
-                )
-            except TypeError:
-                pass
-            obs.edisp.peek()
-            try:
-                self._plot(
-                    plot_name=f"edisp_obs_{obs.obs_id}",
-                    output_dir=self.output_dir / "irfs",
-                )
-            except TypeError:
-                pass
+            self._plot_effective_area(obs)
+            self._plot_energy_dispersion(obs)
 
     def plot_fit(self, data_set):
         """
-        Plot fit results and residuals
+        Plot successful fit results and residuals.
 
         """
 
-        ax_spectrum, _ = data_set.plot_fit()
+        try:
+            ax_spectrum, _ = data_set.plot_fit()
+        except ValueError:
+            return
         ax_spectrum.set_ylim(0.1, 40)
         data_set.plot_masks(ax=ax_spectrum)
         try:
@@ -177,8 +189,11 @@ class Plot:
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
         flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
         self._plot(plot_name="spectrum", output_dir=self.output_dir)
-        flux_point_dataset.plot_residuals(method="diff/model")
-        self._plot(plot_name="residuals", output_dir=self.output_dir)
+        try:
+            flux_point_dataset.plot_residuals(method="diff/model")
+            self._plot(plot_name="residuals", output_dir=self.output_dir)
+        except ValueError:
+            pass
 
     def plot_light_curve(self, light_curve, plot_name):
         """
@@ -192,7 +207,8 @@ class Plot:
         )
 
         try:
-            light_curve.plot(ax=ax, marker="o", label=plot_name)
+            light_curve.plot(ax=ax, marker="o", label=plot_name, sed_type="flux")
+            ax.set_yscale("linear")
             self._plot(
                 plot_name="light_curve_" + plot_name.replace(" ", "_"), output_dir=self.output_dir
             )
@@ -248,3 +264,53 @@ class Plot:
         else:
             plt.show()
         plt.close()
+
+    def _plot_effective_area(self, obs):
+        """
+        Plot effective area
+
+        """
+
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+        obs.aeff.plot(ax=axes[2])
+        obs.aeff.plot_energy_dependence(ax=axes[0], offset=self.default_offsets())
+        obs.aeff.plot_offset_dependence(ax=axes[1], energy=self.default_energy_true())
+        plt.tight_layout()
+
+        try:
+            self._plot(
+                plot_name=f"aeff_obs_{obs.obs_id}",
+                output_dir=self.output_dir / "irfs",
+            )
+        except TypeError:
+            pass
+
+    def _plot_energy_dispersion(self, obs):
+        """
+        Plot energy dispersion
+
+        """
+
+        _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+        obs.edisp.plot_bias(
+            ax=axes[0],
+            offset=self.default_offsets()[0],
+        )
+        _mig_ax = obs.edisp.plot_migration(
+            ax=axes[1],
+            offset=self.default_offsets()[0],
+            energy_true=self.default_energy_true(),
+        )
+        _mig_ax.legend(loc="upper right")
+        _edisp = obs.edisp.to_edisp_kernel(offset=self.default_offsets()[0])
+        _edisp.plot_matrix(ax=axes[2])
+
+        plt.tight_layout()
+
+        try:
+            self._plot(
+                plot_name=f"edisp_obs_{obs.obs_id}",
+                output_dir=self.output_dir / "irfs",
+            )
+        except TypeError:
+            pass

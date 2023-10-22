@@ -51,9 +51,10 @@ def _read_config_from_file(config):
         try:
             args_dict = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
-            print(exc)
+            _logger.error(exc)
+            raise
 
-    print(args_dict)
+    _logger.info(args_dict)
     return args_dict
 
 

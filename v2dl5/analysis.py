@@ -22,7 +22,6 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
-from IPython.display import display
 
 import v2dl5.plot as v2dl5_plot
 import v2dl5.time as v2dl5_time
@@ -55,6 +54,7 @@ class Analysis:
 
         self.datasets = None
         self.spectral_model = None
+        self.fit_results = None
         self.flux_points = None
         self.light_curve_per_obs = None
         self.light_curve_per_night = None
@@ -70,7 +70,7 @@ class Analysis:
             _data_sets = Datasets(self.datasets).stack_reduce()
         else:
             _data_sets = self.datasets
-        self._define_spectral_models(model=self.args_dict["fit"]["model"])
+        self._define_spectral_models(model=self.args_dict["fit"])
         self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
         self.light_curve_per_obs = self._light_curve(_data_sets, None)
@@ -94,10 +94,13 @@ class Analysis:
         plotter.plot_irfs()
         plotter.plot_maps(exclusion_mask=self.sky_regions.exclusion_mask)
         plotter.plot_source_statistics()
-        plotter.plot_spectra(
-            flux_points=self.flux_points,
-            model=self.spectral_model,
-        )
+        if self.fit_results.success:
+            plotter.plot_spectra(
+                flux_points=self.flux_points,
+                model=self.spectral_model,
+            )
+        else:
+            self._logger.warning("Skipping spectral plots because fit failed")
         plotter.plot_light_curves(
             light_curve_per_obs=self.light_curve_per_obs,
             light_curve_per_night=self.light_curve_per_night,
@@ -112,12 +115,16 @@ class Analysis:
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
         self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
-        self._write_datasets(self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve")
-        self._write_datasets(self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve")
+        self._write_datasets(
+            self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve", "flux"
+        )
+        self._write_datasets(
+            self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve", "flux"
+        )
         if self.spectral_model:
             self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
 
-    def _write_datasets(self, datasets, filename, file_format=None):
+    def _write_datasets(self, datasets, filename, file_format=None, sed_type=None):
         """
         Write datasets to disk.
 
@@ -138,7 +145,10 @@ class Analysis:
         _out_file = f"{self._output_dir}/data/{filename}"
         self._logger.info("Writing datasets to %s", _out_file)
         if file_format is not None:
-            datasets.write(_out_file, overwrite=True, format=file_format)
+            if sed_type is not None:
+                datasets.write(_out_file, overwrite=True, format=file_format, sed_type=sed_type)
+            else:
+                datasets.write(_out_file, overwrite=True, format=file_format)
         else:
             datasets.write(_out_file, overwrite=True)
 
@@ -197,9 +207,9 @@ class Analysis:
             dataset_on_off = safe_mask_masker.run(dataset_on_off, observation)
             self.datasets.append(dataset_on_off)
 
-        print("Run-wise results:")
+        self._logger.info("Run-wise results:")
         self._print_results(self.datasets.info_table(cumulative=False))
-        print("Cumulative results:")
+        self._logger.info("Cumulative results:")
         self._print_results(self.datasets.info_table(cumulative=True))
 
     def _print_results(self, info_table):
@@ -241,32 +251,34 @@ class Analysis:
         datasets.models = self.spectral_model
 
         _fit = Fit()
-        result_joint = _fit.run(datasets=datasets)
-        print(result_joint)
-        display(result_joint.models.to_parameters_table())
+        self.fit_results = _fit.run(datasets=datasets)
+        self._logger.info(self.fit_results)
+        self.fit_results.models.to_parameters_table().pprint()
 
-    def _define_spectral_models(self, model=None):
-        """ "
+    def _define_spectral_models(self, model):
+        """
         Spectral models
 
         """
 
         _spectral_model = None
-        if model == "pl":
+        if model.get("model", "pl") == "pl":
             _spectral_model = PowerLawSpectralModel(
                 amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-                index=2,
-                reference=1 * u.TeV,
+                index=model.get("index", 2.0),
+                reference=u.Quantity(model.get("reference_energy", "1.0 TeV")),
             )
-        elif model == "ecpl":
+        elif model["model"] == "ecpl":
             _spectral_model = ExpCutoffPowerLawSpectralModel(
                 amplitude=1e-12 * u.Unit("cm-2 s-1 TeV-1"),
-                index=2,
-                lambda_=0.1 * u.Unit("TeV-1"),
-                reference=1 * u.TeV,
+                index=model.get("index", 2.0),
+                lambda_=u.Quantity(model.get("lambda", "0.1 TeV-1")),
+                reference=u.Quantity(model.get("reference_energy", "1.0 TeV")),
             )
 
-        self.spectral_model = SkyModel(spectral_model=_spectral_model, name=model)
+        self.spectral_model = SkyModel(
+            spectral_model=_spectral_model, name=model.get("model", "pl")
+        )
 
     def _flux_points(self, datasets):
         """
@@ -287,8 +299,10 @@ class Analysis:
         fpe = FluxPointsEstimator(energy_edges=energy_edges, selection_optional="all")
         self.flux_points = fpe.run(datasets=datasets)
 
-        display(self.flux_points.to_table(sed_type="dnde", formatted=True))
-        display(self.flux_points.to_table(sed_type="e2dnde", formatted=True))
+        self.flux_points.to_table(sed_type="dnde", formatted=True).pprint()
+        self.flux_points.to_table(sed_type="dnde", formatted=True).pprint_all()
+        self.flux_points.to_table(sed_type="e2dnde", formatted=True).pprint()
+        self.flux_points.to_table(sed_type="e2dnde", formatted=True).pprint_all()
 
     def _light_curve(self, datasets, time_intervals=None):
         """
@@ -318,11 +332,24 @@ class Analysis:
             * u.TeV,
             time_intervals=time_intervals,
             reoptimize=False,
-            selection_optional="all",
+            selection_optional=["all"],
         )
         _light_curve = lc_maker_1d.run(datasets)
 
-        display(_light_curve.to_table(sed_type="flux", format="lightcurve"))
+        _table = _light_curve.to_table(sed_type="flux", format="lightcurve")
+        print(
+            _table[
+                "time_min",
+                "time_max",
+                "e_min",
+                "e_max",
+                "flux",
+                "flux_err",
+                "flux_ul",
+                "sqrt_ts",
+            ]
+        )
+        _table.pprint_all()
 
         return _light_curve
 
@@ -346,8 +373,6 @@ class Analysis:
         time_intervals = v2dl5_time.get_list_of_nights(
             _data_sets, time_zone=self.args_dict["light_curve"]["time_zone"]
         )
-
-        print(time_intervals, type(time_intervals))
 
         return self._light_curve(_data_sets, time_intervals=time_intervals)
 

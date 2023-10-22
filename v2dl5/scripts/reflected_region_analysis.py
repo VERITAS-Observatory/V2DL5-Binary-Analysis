@@ -57,7 +57,7 @@ def main():
     Reflected region analysis main function.
 
     """
-    logging.basicConfig(level=logging.INFO)
+    logging.root.setLevel(logging.INFO)
 
     args_dict = v2dl5.configuration.configuration(args=_parse())
 
