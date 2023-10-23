@@ -3,10 +3,16 @@
 
 observations:
     datastore: ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/
-    # search for observations around the on_region direction
+    # search for observations around the target direction
     # within a maximum offset of obs_cone_radius
     obs_cone_radius: 1.5 deg
     required_irf: ['aeff', 'edisp']
+
+on_region:
+    target: "Crab"
+#    frame: icrs
+#    lon: 83.628700 deg
+#    lat: 22.014700 deg
 
 datasets:
     type: 1d
@@ -15,11 +21,6 @@ datasets:
         axes:
             energy: {min: 0.1 TeV, max: 100 TeV, nbins: 30}
             energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
-    on_region:
-        target: Crab
-#        frame: icrs
-#        lon: 83.628700 deg
-#        lat: 22.014700 deg
     exclusion_region:
         on_radius: 0.5 deg
         magnitude_B: 7
