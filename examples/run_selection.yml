@@ -16,6 +16,7 @@ dqm:
     - "good_run"
     - "minor_problems"
     - "needs_adjustments"
+    - "unknown"
 
   ontime_min: 3 min
 
