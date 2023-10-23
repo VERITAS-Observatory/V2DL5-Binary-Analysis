@@ -2,13 +2,13 @@
 # Configuration for runlist generator
 
 observations:
+  obs_cone_radius: 1.5 deg
 
-  search_region:
-    target: Crab
+on_region:
+  target: Crab
   #  frame: icrs
   #  lon: 83.628700 deg
   #  lat: 22.014700 deg
-    obs_cone_radius: 1.5 deg
 
 dqm:
 

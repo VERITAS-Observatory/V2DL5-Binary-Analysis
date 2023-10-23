@@ -186,7 +186,6 @@ class Data:
                 for obs in self.get_observations()
             ]
         )
-
         return np.max(woff) * u.deg + fov / 2.0
 
     def _update_gti(self, bti):

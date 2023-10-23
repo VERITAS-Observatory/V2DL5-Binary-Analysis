@@ -30,8 +30,8 @@ class SkyRegions:
     def __init__(self, args_dict=None):
         self._logger = logging.getLogger(__name__)
 
-        self.target = self.get_target(sky_coord=args_dict["datasets"]["on_region"])
-        self.on_region = self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
+        self.target = self.get_target(sky_coord=args_dict["on_region"])
+        self.on_region = self.define_on_region(on_region_dict=args_dict["on_region"])
         self.exclusion_mask = None
 
     def get_target(self, sky_coord=None, print_target_info=True):
@@ -124,7 +124,7 @@ class SkyRegions:
         exclusion_regions = []
 
         # on region
-        on_region_dict = args_dict["datasets"]["on_region"]
+        on_region_dict = args_dict["on_region"]
         on_region_exclusion_radius = args_dict["datasets"]["exclusion_region"]["on_radius"]
         if on_region_dict is not None and on_region_exclusion_radius is not None:
             exclusion_regions.append(
@@ -218,7 +218,7 @@ class SkyRegions:
 
         """
 
-        args_dict["datasets"]["on_region"]["radius"] = on_region_radius
-        self.define_on_region(on_region_dict=args_dict["datasets"]["on_region"])
+        args_dict["on_region"]["radius"] = on_region_radius
+        self.define_on_region(on_region_dict=args_dict["on_region"])
 
         self.exclusion_mask = self.get_exclusion_mask(args_dict, max_wobble_distance)

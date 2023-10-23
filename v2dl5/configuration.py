@@ -87,6 +87,13 @@ def _default_config_analysis():
             "obs_cone_radius": "5. deg",
             "required_irf": ["aeff", "edisp"],
         },
+        "on_region": {
+            "target": None,
+            "frame": "icrs",
+            "lon": "83.633 deg",
+            "lat": "22.014 deg",
+            "radius": "0.08944272 deg",
+        },
         "datasets": {
             "type": "1d",
             "stack": False,
@@ -95,13 +102,6 @@ def _default_config_analysis():
                     "energy": {"min": "0.05 TeV", "max": "30 TeV", "nbins": 20},
                     "energy_true": {"min": "0.05 TeV", "max": "50 TeV", "nbins": 40},
                 }
-            },
-            "on_region": {
-                "target": None,
-                "frame": "icrs",
-                "lon": "83.633 deg",
-                "lat": "22.014 deg",
-                "radius": "0.08944272 deg",
             },
             "exclusion_region": {
                 "on_radius": "0.5 deg",
