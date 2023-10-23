@@ -5,20 +5,20 @@ observations:
   obs_cone_radius: 1.5 deg
 
 on_region:
-  target: Crab
+  target: "LS I +61 303"
   #  frame: icrs
   #  lon: 83.628700 deg
   #  lat: 22.014700 deg
 
 dqm:
 
-  DQMSTAT:
-    - good_run
-    - minor_problems
-    - needs_adjustments
+  dqmstat:
+    - "good_run"
+    - "minor_problems"
+    - "needs_adjustments"
+
+  ontime_min: 3 min
 
 atmosphere:
 
-  WEATHER:
-    min: A
-    max: C
+  weather: ["A", "B", "C"]

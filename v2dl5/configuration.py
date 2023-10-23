@@ -138,9 +138,8 @@ def _default_config_dqm_run_list():
             "obs_cone_radius": "1.5 deg",
         },
         "dqm": {
-            "DQMSTAT": ["good_run", "minor_problem", "needs_adjustments"],
+            "dqmstat": ["good_run", "minor_problem", "needs_adjustments"],
+            "ontime_min": "5 min",
         },
-        "atmosphere": {
-            "weather": {"min", "A", "max", "C"},
-        },
+        "atmosphere": {"weather": ["A", "B"]},
     }
