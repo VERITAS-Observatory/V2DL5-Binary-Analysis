@@ -27,6 +27,7 @@ import logging
 
 import v2dl5.configuration
 import v2dl5.run_lists
+import v2dl5.sky_regions
 
 _logger = logging.getLogger(__name__)
 
@@ -69,7 +70,9 @@ def main():
 
     args_dict = v2dl5.configuration.configuration(args=_parse(), generate_dqm_run_list=True)
 
-    v2dl5.run_lists.generate_run_list(args_dict)
+    sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
+
+    v2dl5.run_lists.generate_run_list(args_dict=args_dict, target=sky_regions.target)
 
 
 if __name__ == "__main__":
