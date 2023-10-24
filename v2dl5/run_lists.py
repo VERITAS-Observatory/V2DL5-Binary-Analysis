@@ -235,6 +235,29 @@ def _dqm_report(obs_table):
         _print_min_max(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)")
         _print_min_max(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)")
 
+        _print_outlier(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)")
+        _print_outlier(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)")
+
+
+def _print_outlier(obs_table, mask, column, string, sigma=3):
+    """
+    Print OBS_ID with more than sigma deviation from mean
+
+    """
+
+    _obs_table_cleaned = obs_table[(obs_table[column] > -9998.0) & mask]
+
+    _mean = np.mean(_obs_table_cleaned[column])
+    _std = np.std(_obs_table_cleaned[column])
+    print(f"Mean {column} for {string}: {_mean:.2f} +- {_std:.2f}")
+
+    # get list of obs_ids with more than sigma deviation from mean
+    _outlier_list = [
+        row["OBS_ID"] for row in _obs_table_cleaned if abs(row[column] - _mean) > sigma * _std
+    ]
+    print(f"{column} for {string}:")
+    print(f"    Outliers: {_outlier_list}")
+
 
 def _print_min_max(obs_table, mask, column, string):
     """
