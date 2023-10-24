@@ -217,6 +217,7 @@ def _dqm_report(obs_table):
     obs_table[
         "OBS_ID",
         "RUNTYPE",
+        "DATACAT",
         "DQMSTAT",
         "WEATHER",
         "L3RATE",
@@ -257,6 +258,9 @@ def _print_outlier(obs_table, mask, column, string, sigma=3):
     ]
     print(f"{column} for {string}:")
     print(f"    Outliers: {_outlier_list}")
+    for _outlier in _outlier_list:
+        _tmp_obs = _obs_table_cleaned[_obs_table_cleaned["OBS_ID"] == _outlier]
+        _tmp_obs.pprint_all()
 
 
 def _print_min_max(obs_table, mask, column, string):
