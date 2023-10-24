@@ -139,6 +139,7 @@ def _default_config_dqm_run_list():
         },
         "dqm": {
             "dqmstat": ["good_run", "minor_problem", "needs_adjustments"],
+            "ntel_min": 4,
             "ontime_min": "5 min",
         },
         "atmosphere": {"weather": ["A", "B"]},

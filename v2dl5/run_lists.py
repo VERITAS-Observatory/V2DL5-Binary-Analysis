@@ -22,13 +22,31 @@ def generate_run_list(args_dict, target):
 
     _logger.info("Generate run list. from %s", args_dict["obs_table"])
 
-    obs_table = astropy.table.Table.read(args_dict["obs_table"])
+    obs_table = _read_observation_table(args_dict["obs_table"])
 
     obs_table = _apply_selection_cuts(obs_table, args_dict, target)
 
     _logger.info("Selected %d runs.", len(obs_table))
 
+    _dqm_report(obs_table)
+
     _write_run_list(obs_table, args_dict["output_dir"])
+
+
+def _read_observation_table(obs_table_file_name):
+    """
+    Read observation table from obs_index file.
+
+    Fill masked values for the following fields with default values:
+
+    - DQMSTAT: "unknown"
+
+    """
+
+    obs_table = astropy.table.Table.read(obs_table_file_name)
+    obs_table["DQMSTAT"].fill_value = "unknown"
+
+    return obs_table.filled()
 
 
 def _apply_selection_cuts(obs_table, args_dict, target):
@@ -48,8 +66,29 @@ def _apply_selection_cuts(obs_table, args_dict, target):
     _obs_table = _apply_cut_atmosphere(_obs_table, args_dict)
     _obs_table = _apply_cut_dqm(_obs_table, args_dict)
     _obs_table = _apply_cut_ontime_min(_obs_table, args_dict)
+    _obs_table = _apply_cut_ntel_min(_obs_table, args_dict)
 
     return _obs_table
+
+
+def _apply_cut_ntel_min(obs_table, args_dict):
+    """
+    Apply mininimum telescope cut cut.
+
+    """
+
+    try:
+        ntel_min = args_dict["dqm"]["ntel_min"]
+    except KeyError:
+        _logger.error("KeyError: dqm.ntel_min")
+        raise
+
+    mask = [row["N_TELS"] >= ntel_min for row in obs_table]
+    _logger.info(f"Remove {mask.count(False)} runs with ntel < {ntel_min}")
+    obs_table = obs_table[mask]
+    _logger.info(f"Minimum number of telescopes: {np.min(obs_table['N_TELS'])}")
+
+    return obs_table
 
 
 def _apply_cut_ontime_min(obs_table, args_dict):
@@ -153,8 +192,7 @@ def _write_run_list(obs_table, output_dir):
 
     _logger.info(f"Write run list to {output_dir}/run_list.txt")
 
-    # write a single column of the astropy table to a text file
-    column_data = obs_table["OBS_ID"]
+    column_data = obs_table[np.argsort(obs_table["OBS_ID"])]["OBS_ID"]
     ascii.write(
         column_data,
         f"{output_dir}/run_list.txt",
@@ -166,3 +204,68 @@ def _write_run_list(obs_table, output_dir):
     _logger.info(f"Write run table with selected runs to {output_dir}/run_list.fits.gz")
 
     obs_table.write(f"{output_dir}/run_list.fits.gz", overwrite=True)
+
+
+def _dqm_report(obs_table):
+    """
+    Print list of selected runs to screen
+
+    """
+
+    obs_table.sort("OBS_ID")
+
+    obs_table[
+        "OBS_ID",
+        "RUNTYPE",
+        "DQMSTAT",
+        "WEATHER",
+        "L3RATE",
+        "L3RATESD",
+        "FIRMEAN1",
+        "FIRSTD1",
+    ].pprint_all()
+
+    mask_V4, mask_V5, mask_V6, mask_V6_redHV = _epoch_masks(obs_table)
+
+    for epoch_mask, epoch in zip(
+        [mask_V4, mask_V5, mask_V6, mask_V6_redHV], ["V4", "V5", "V6", "V6_redHV"]
+    ):
+        _print_min_max(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)")
+        _print_min_max(obs_table, epoch_mask, "L3RATESD", f"{epoch} (Hz)")
+        _print_min_max(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)")
+        _print_min_max(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)")
+
+
+def _print_min_max(obs_table, mask, column, string):
+    """
+    Print min/max entry for a specific column
+
+    """
+
+    _obs_table_cleaned = obs_table[(obs_table[column] > -9998.0) & mask]
+    min_index = np.argmin(_obs_table_cleaned[column])
+    max_index = np.argmax(_obs_table_cleaned[column])
+
+    print(f"{column} for {string}:")
+    print(
+        f"    Max for obs_id {_obs_table_cleaned['OBS_ID'][max_index]}: "
+        f"{_obs_table_cleaned[column][max_index]:.2f}"
+    )
+    print(
+        f"    Min for obs_id {_obs_table_cleaned['OBS_ID'][min_index]}: "
+        f"{_obs_table_cleaned[column][min_index]:.2f}"
+    )
+
+
+def _epoch_masks(obs_table):
+    """
+    Return VERITAS Epochs as table mask
+
+    """
+
+    mask_V4 = [row["OBS_ID"] < 46642 for row in obs_table]
+    mask_V5 = [row["OBS_ID"] < 63372 and row["OBS_ID"] > 46642 for row in obs_table]
+    mask_V6 = [row["OBS_ID"] > 63372 and row["RUNTYPE"] == "observing" for row in obs_table]
+    mask_V6_redHV = [row["OBS_ID"] > 63372 and row["RUNTYPE"] == "obsLowHV" for row in obs_table]
+
+    return mask_V4, mask_V5, mask_V6, mask_V6_redHV

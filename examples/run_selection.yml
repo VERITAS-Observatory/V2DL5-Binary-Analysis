@@ -18,6 +18,8 @@ dqm:
     - "needs_adjustments"
     - "unknown"
 
+  ntel_min: 4
+
   ontime_min: 3 min
 
 atmosphere:
