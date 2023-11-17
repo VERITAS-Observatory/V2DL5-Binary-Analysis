@@ -1,0 +1,27 @@
+---
+# Configuration for runlist generator
+
+observations:
+  obs_cone_radius: 1.5 deg
+
+on_region:
+  target: "LS I +61 303"
+  #  frame: icrs
+  #  lon: 83.628700 deg
+  #  lat: 22.014700 deg
+
+dqm:
+
+  dqmstat:
+    - "good_run"
+    - "minor_problems"
+    - "needs_adjustments"
+    - "unknown"
+
+  ntel_min: 4
+
+  ontime_min: 3 min
+
+atmosphere:
+
+  weather: ["A", "B", "C"]
