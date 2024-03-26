@@ -1,9 +1,7 @@
 """
-V2DL5 configuration
+Tool configuration for source analysis and dqm run list generation.
 
 Read configuration from file (or us default parameters).
-
-Used for source analysis and dqm run list generation
 
 """
 
@@ -16,12 +14,19 @@ _logger = logging.getLogger(__name__)
 
 def configuration(args, generate_dqm_run_list=False):
     """
-    V2DL5 configuration.
+    Configuration.
 
     Parameters
     ----------
     args : dict
         Command line arguments.
+    generate_dqm_runlist : bool
+		Generate run list with DQM applied.
+        
+    Returns
+    -------
+    dict
+    	Dictionary with configuration parameters.
 
     """
 
@@ -41,12 +46,20 @@ def configuration(args, generate_dqm_run_list=False):
 def _default_config(generate_dqm_run_list=False):
     """
     Default configuration.
+    
+    Parameters
+    ----------
+    generate_dqm_runlist : bool
+		Generate run list with DQM applied.
+        
+    Returns
+    -------
+    dict
+    	Default configuration.
 
     """
-
     if generate_dqm_run_list:
         return _default_config_dqm_run_list()
-
     return _default_config_analysis()
 
 
@@ -58,26 +71,36 @@ def _read_config_from_file(config):
     ----------
     config : str
         Path to configuration file.
+        
+    Returns
+    -------
+    dict
+    	Dictionary with configuration parameters.
 
     """
 
     _logger.info("Reading configuration from %s", config)
 
     args_dict = {}
-    with open(config, "r", encoding="utf-8") as stream:
-        try:
+    try:
+    	with open(config, "r", encoding="utf-8") as stream:
             args_dict = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            _logger.error(exc)
-            raise
+    except (FileNotFoundError, yaml.YAMLError) as exc:
+        _logger.error(exc)
+        raise
 
-    _logger.info(args_dict)
+    _logger.info(f"Configuration from file: {args_dict}")
     return args_dict
 
 
 def _default_config_analysis():
     """
-    Default configuration.
+    Default analysis configuration.
+
+	Returns
+    -------
+    dict
+    	Default analysis configuration
 
     """
 
@@ -129,6 +152,11 @@ def _default_config_analysis():
 def _default_config_dqm_run_list():
     """
     Default configuration run list generation.
+    
+    Returns
+    -------
+    dict
+    	Default configuration for run list generation.
 
     """
 
