@@ -1,5 +1,5 @@
 # installation:
-# create: conda env create -f environment.yml
+# create: mamba env create -f environment.yml
 # activate: conda activate v2dl5
 #
 name: v2dl5
