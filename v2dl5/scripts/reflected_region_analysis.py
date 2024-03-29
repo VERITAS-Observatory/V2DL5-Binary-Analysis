@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """
-Perform reflected region analysis for a given run list.
+Reflected region analysis.
 
-Example:
+Example using a run list:
 
 .. code-block:: console
 
@@ -26,14 +26,19 @@ def _parse():
     """
     Parse command line arguments.
 
+    Returns
+    -------
+    dict
+        Command line parameters.
+
     """
-    parser = argparse.ArgumentParser(description="Perform reflected region analysis.")
+    parser = argparse.ArgumentParser(description="Reflected region analysis.")
 
     parser.add_argument(
         "--run_list",
         type=str,
         required=False,
-        help="List of run IDs to be processed.",
+        help="List of runs to be processed.",
     )
     parser.add_argument(
         "--output_dir",
@@ -47,14 +52,12 @@ def _parse():
         required=True,
         help="Path to configuration file.",
     )
-
-    # Get command line arguments
     return parser.parse_args()
 
 
 def main():
     """
-    Reflected region analysis main function.
+    Reflected region analysis.
 
     """
     logging.root.setLevel(logging.INFO)
