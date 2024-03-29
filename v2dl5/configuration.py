@@ -21,12 +21,12 @@ def configuration(args, generate_dqm_run_list=False):
     args : dict
         Command line arguments.
     generate_dqm_runlist : bool
-		Generate run list with DQM applied.
-        
+                Generate run list with DQM applied.
+
     Returns
     -------
     dict
-    	Dictionary with configuration parameters.
+        Dictionary with configuration parameters.
 
     """
 
@@ -46,16 +46,16 @@ def configuration(args, generate_dqm_run_list=False):
 def _default_config(generate_dqm_run_list=False):
     """
     Default configuration.
-    
+
     Parameters
     ----------
     generate_dqm_runlist : bool
-		Generate run list with DQM applied.
-        
+                Generate run list with DQM applied.
+
     Returns
     -------
     dict
-    	Default configuration.
+        Default configuration.
 
     """
     if generate_dqm_run_list:
@@ -71,11 +71,11 @@ def _read_config_from_file(config):
     ----------
     config : str
         Path to configuration file.
-        
+
     Returns
     -------
     dict
-    	Dictionary with configuration parameters.
+        Dictionary with configuration parameters.
 
     """
 
@@ -83,7 +83,7 @@ def _read_config_from_file(config):
 
     args_dict = {}
     try:
-    	with open(config, "r", encoding="utf-8") as stream:
+        with open(config, "r", encoding="utf-8") as stream:
             args_dict = yaml.safe_load(stream)
     except (FileNotFoundError, yaml.YAMLError) as exc:
         _logger.error(exc)
@@ -97,10 +97,10 @@ def _default_config_analysis():
     """
     Default analysis configuration.
 
-	Returns
+        Returns
     -------
     dict
-    	Default analysis configuration
+        Default analysis configuration
 
     """
 
@@ -152,11 +152,11 @@ def _default_config_analysis():
 def _default_config_dqm_run_list():
     """
     Default configuration run list generation.
-    
+
     Returns
     -------
     dict
-    	Default configuration for run list generation.
+        Default configuration for run list generation.
 
     """
 

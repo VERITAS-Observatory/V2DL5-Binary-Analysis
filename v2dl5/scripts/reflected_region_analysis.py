@@ -25,11 +25,11 @@ import v2dl5.sky_regions
 def _parse():
     """
     Parse command line arguments.
-    
+
     Returns
     -------
     dict
-    	Command line parameters.
+        Command line parameters.
 
     """
     parser = argparse.ArgumentParser(description="Reflected region analysis.")
