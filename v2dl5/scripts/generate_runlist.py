@@ -2,7 +2,7 @@
 """
 Generate a run list for a given sky region or a given target.
 
-Reads in a yaml file (see example `examples/run_selection.yaml`)
+Reads in a configuration yaml file (see example `examples/run_selection.yaml`)
 with criteria for selecting runs.
 
 Generates three output files:

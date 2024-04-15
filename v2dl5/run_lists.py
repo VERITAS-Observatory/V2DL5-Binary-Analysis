@@ -7,6 +7,7 @@ import logging
 
 import astropy.table
 import astropy.units as u
+import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
 from astropy.io import ascii
@@ -21,15 +22,10 @@ def generate_run_list(args_dict, target):
     """
 
     _logger.info("Generate run list. from %s", args_dict["obs_table"])
-
     obs_table = _read_observation_table(args_dict["obs_table"])
-
     obs_table = _apply_selection_cuts(obs_table, args_dict, target)
-
     _logger.info("Selected %d runs.", len(obs_table))
-
-    _dqm_report(obs_table)
-
+    _dqm_report(obs_table, args_dict["output_dir"])
     _write_run_list(obs_table, args_dict["output_dir"])
 
 
@@ -44,6 +40,7 @@ def _read_observation_table(obs_table_file_name):
     """
 
     obs_table = astropy.table.Table.read(obs_table_file_name)
+    # TODO - check if necessary
     obs_table["DQMSTAT"].fill_value = "unknown"
 
     return obs_table.filled()
@@ -73,7 +70,7 @@ def _apply_selection_cuts(obs_table, args_dict, target):
 
 def _apply_cut_ntel_min(obs_table, args_dict):
     """
-    Apply mininimum telescope cut cut.
+    Apply minimum telescope cut cut.
 
     """
 
@@ -206,7 +203,7 @@ def _write_run_list(obs_table, output_dir):
     obs_table.write(f"{output_dir}/run_list.fits.gz", overwrite=True)
 
 
-def _dqm_report(obs_table):
+def _dqm_report(obs_table, output_dir):
     """
     Print list of selected runs to screen
 
@@ -234,16 +231,17 @@ def _dqm_report(obs_table):
     for epoch_mask, epoch in zip(
         [mask_V4, mask_V5, mask_V6, mask_V6_redHV], ["V4", "V5", "V6", "V6_redHV"]
     ):
+        print("Outliers for epoch", epoch)
         _print_min_max(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)")
         _print_min_max(obs_table, epoch_mask, "L3RATESD", f"{epoch} (Hz)")
         _print_min_max(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)")
         _print_min_max(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)")
         _print_min_max(obs_table, epoch_mask, "FIRCORM1", f"{epoch} (deg)")
 
-        _print_outlier(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)")
-        _print_outlier(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)")
-        _print_outlier(obs_table, epoch_mask, "FIRCORM1", f"{epoch} (deg)")
-        _print_outlier(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)")
+        _print_outlier(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)", output_dir)
+        _print_outlier(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)", output_dir)
+        _print_outlier(obs_table, epoch_mask, "FIRCORM1", f"{epoch} (deg)", output_dir)
+        _print_outlier(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)", output_dir)
 
 
 def _reject_outliers(data, m=3.0):
@@ -255,34 +253,78 @@ def _reject_outliers(data, m=3.0):
     d = np.abs(data - np.median(data))
     mdev = np.median(d)
     s = d / mdev if mdev else np.zeros(len(d))
-    print("AAAA", mdev, data[s > m])
-    return data[s < m]
+    return data[s < m], data[s > m], np.median(data), mdev
 
 
-def _print_outlier(obs_table, mask, column, string, sigma=2):
+def _print_outlier(obs_table, mask, column, string, output_dir):
     """
     Print OBS_ID with more than sigma deviation from mean
 
     """
+    sigma = 2
 
     _obs_table_cleaned = obs_table[(obs_table[column] > -9998.0) & mask]
 
     _mean = np.mean(_obs_table_cleaned[column])
     _std = np.std(_obs_table_cleaned[column])
     _ff = np.ndarray.flatten(_obs_table_cleaned[column])
-    _rr = _reject_outliers(_ff)
-    print("BBBB", len(_ff), len(_rr))
+    _rr, _med_rejected, _median, _abs_deviation = _reject_outliers(_ff)
     print(f"Mean {column} for {string}: {_mean:.2f} +- {_std:.2f}")
+    print(f"Median {column} for {string}: {_median:.2f} +- {_abs_deviation:.2f}")
 
     # get list of obs_ids with more than sigma deviation from mean
     _outlier_list = [
         row["OBS_ID"] for row in _obs_table_cleaned if abs(row[column] - _mean) > sigma * _std
     ]
+    _outlier_list_med = [
+        row["OBS_ID"]
+        for row in _obs_table_cleaned
+        if abs(row[column] - _median) > 3.0 * _abs_deviation
+    ]
+
     print(f"{column} for {string}:")
-    print(f"    Outliers: {_outlier_list}")
-    for _outlier in _outlier_list:
-        _tmp_obs = _obs_table_cleaned[_obs_table_cleaned["OBS_ID"] == _outlier]
-        _tmp_obs.pprint_all()
+    print(f"    Outliers (mean,std): {_outlier_list}")
+    print(f"    Outliers (median,abs): {_outlier_list_med}")
+    _outlier_mask = np.in1d(
+        _obs_table_cleaned["OBS_ID"], list(set(_outlier_list) | set(_outlier_list_med))
+    )
+    _obs_table_cleaned[_outlier_mask].pprint_all()
+
+    _plot_outliers(
+        _obs_table_cleaned,
+        column,
+        string,
+        np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list),
+        np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_med),
+        _mean,
+        _std,
+        _median,
+        _abs_deviation,
+        output_dir,
+    )
+
+
+def _plot_outliers(
+    obs_table, column, string, mask_std, mask_med, mean, std, median, abs_deviation, output_dir
+):
+    """
+    Plot distribution of column values include outliers.
+    Indicate mean and std as background color (gray)
+
+    """
+
+    plt.axvspan(mean - std, mean + std, color="red", alpha=0.15)
+    plt.axvline(mean, color="red", linestyle="--", linewidth=2)
+    plt.axvspan(median - abs_deviation, median + abs_deviation, color="green", alpha=0.15)
+    plt.axvline(median, color="green", linestyle="--", linewidth=2)
+    plt.hist(obs_table[column], bins=20)
+    plt.hist(obs_table[column][mask_std], bins=20, color="red")
+    plt.hist(obs_table[column][mask_med], bins=20, color="green")
+    plt.title(f"{column} for {string}")
+    plt.xlabel(column)
+    plt.ylabel("Number of runs")
+    plt.savefig(f"{output_dir}/outliers_{column}_{string}.png")
+    plt.close()
 
 
 def _print_min_max(obs_table, mask, column, string):
