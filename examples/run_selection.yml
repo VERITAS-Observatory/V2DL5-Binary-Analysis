@@ -22,6 +22,10 @@ dqm:
 
   ontime_min: 3 min
 
+  # TODO
+  # l3_rate_min: (epoch, rate)
+
+
 atmosphere:
 
   weather: ["A", "B", "C"]

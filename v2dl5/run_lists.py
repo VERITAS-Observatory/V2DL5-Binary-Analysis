@@ -5,12 +5,12 @@ Run list selection from observation table.
 
 import logging
 
+import astropy.io
 import astropy.table
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
-from astropy.io import ascii
 
 _logger = logging.getLogger(__name__)
 
@@ -186,11 +186,10 @@ def _write_run_list(obs_table, output_dir):
         Output directory.
 
     """
-
     _logger.info(f"Write run list to {output_dir}/run_list.txt")
 
     column_data = obs_table[np.argsort(obs_table["OBS_ID"])]["OBS_ID"]
-    ascii.write(
+    astropy.io.ascii.write(
         column_data,
         f"{output_dir}/run_list.txt",
         overwrite=True,
@@ -234,14 +233,16 @@ def _dqm_report(obs_table, output_dir):
         print("Outliers for epoch", epoch)
         _print_min_max(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)")
         _print_min_max(obs_table, epoch_mask, "L3RATESD", f"{epoch} (Hz)")
-        _print_min_max(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)")
-        _print_min_max(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)")
-        _print_min_max(obs_table, epoch_mask, "FIRCORM1", f"{epoch} (deg)")
+        _print_outlier(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)", output_dir, "min")
+        _print_outlier(obs_table, epoch_mask, "L3RATESD", f"{epoch} (Hz)", output_dir, "max", True)
 
-        _print_outlier(obs_table, epoch_mask, "L3RATE", f"{epoch} (Hz)", output_dir)
-        _print_outlier(obs_table, epoch_mask, "FIRMEAN1", f"{epoch} (deg)", output_dir)
-        _print_outlier(obs_table, epoch_mask, "FIRCORM1", f"{epoch} (deg)", output_dir)
-        _print_outlier(obs_table, epoch_mask, "FIRSTD1", f"{epoch} (deg)", output_dir)
+    _print_min_max(obs_table, [True], "FIRMEAN1", "all (deg)")
+    _print_min_max(obs_table, [True], "FIRSTD1", "all (deg)")
+    _print_min_max(obs_table, [True], "FIRCORM1", "all (deg)")
+
+    _print_outlier(obs_table, [True], "FIRMEAN1", "all (deg)", output_dir, "max")
+    _print_outlier(obs_table, [True], "FIRCORM1", "all (deg)", output_dir, "max")
+    _print_outlier(obs_table, [True], "FIRSTD1", "all (deg)", output_dir, "max", True)
 
 
 def _reject_outliers(data, m=3.0):
@@ -256,46 +257,66 @@ def _reject_outliers(data, m=3.0):
     return data[s < m], data[s > m], np.median(data), mdev
 
 
-def _print_outlier(obs_table, mask, column, string, output_dir):
+def _outlier_lists(obs_table, string, column, center_measure, outlier_type, sigma=3.0):
+    """
+    Return list of outliers for mean and median cuts.
+
+    """
+
+    if center_measure == "Mean":
+        m = np.mean(obs_table[column])
+        s = np.std(obs_table[column])
+    elif center_measure == "Median":
+        _data = np.ndarray.flatten(obs_table[column])
+        m = np.median(_data)
+        s = np.median(np.abs(_data - m))
+    print(f"{center_measure} {column} for {string}: {m:.2f} +- {s:.2f}")
+    if outlier_type == "bounds":
+        outlier_list = [row["OBS_ID"] for row in obs_table if abs(row[column] - m) > sigma * s]
+    elif outlier_type == "max":
+        outlier_list = [row["OBS_ID"] for row in obs_table if row[column] - m > sigma * s]
+    elif outlier_type == "min":
+        outlier_list = [row["OBS_ID"] for row in obs_table if m - row[column] > sigma * s]
+
+    return m, s, outlier_list
+
+
+def _print_outlier(
+    obs_table, mask, column, string, output_dir, outlier_type="bounds", log_axis=False
+):
     """
     Print OBS_ID with more than sigma deviation from mean
 
     """
-    sigma = 2
-
     _obs_table_cleaned = obs_table[(obs_table[column] > -9998.0) & mask]
+    if log_axis:
+        _obs_table_cleaned[column] = np.log10(_obs_table_cleaned[column])
 
-    _mean = np.mean(_obs_table_cleaned[column])
-    _std = np.std(_obs_table_cleaned[column])
-    _ff = np.ndarray.flatten(_obs_table_cleaned[column])
-    _rr, _med_rejected, _median, _abs_deviation = _reject_outliers(_ff)
-    print(f"Mean {column} for {string}: {_mean:.2f} +- {_std:.2f}")
-    print(f"Median {column} for {string}: {_median:.2f} +- {_abs_deviation:.2f}")
-
-    # get list of obs_ids with more than sigma deviation from mean
-    _outlier_list = [
-        row["OBS_ID"] for row in _obs_table_cleaned if abs(row[column] - _mean) > sigma * _std
-    ]
-    _outlier_list_med = [
-        row["OBS_ID"]
-        for row in _obs_table_cleaned
-        if abs(row[column] - _median) > 3.0 * _abs_deviation
-    ]
+    _mean, _std, _outlier_list_mean = _outlier_lists(
+        _obs_table_cleaned, string, column, "Mean", outlier_type, sigma=2.0
+    )
+    _median, _abs_deviation, _outlier_list_median = _outlier_lists(
+        _obs_table_cleaned, string, column, "Median", outlier_type, sigma=3.0
+    )
 
     print(f"{column} for {string}:")
-    print(f"    Outliers (mean,std): {_outlier_list}")
-    print(f"    Outliers (median,abs): {_outlier_list_med}")
-    _outlier_mask = np.in1d(
-        _obs_table_cleaned["OBS_ID"], list(set(_outlier_list) | set(_outlier_list_med))
-    )
-    _obs_table_cleaned[_outlier_mask].pprint_all()
+    print(f"    Outliers (mean,std): {_outlier_list_mean}")
+    _outlier_mask_mean = np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_mean)
+    _obs_table_cleaned[_outlier_mask_mean].pprint_all()
+    print(f"    Outliers (median,abs): {_outlier_list_median}")
+    _outlier_mask_median = np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_median)
+    _obs_table_cleaned[_outlier_mask_median].pprint_all()
+
+    for row in _obs_table_cleaned:
+        if row["L3RATE"] < 250.0:
+            print(f"{row['OBS_ID']}: {row['L3RATE']}")
 
     _plot_outliers(
         _obs_table_cleaned,
         column,
         string,
-        np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list),
-        np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_med),
+        _outlier_mask_mean,
+        _outlier_mask_median,
         _mean,
         _std,
         _median,
@@ -317,9 +338,9 @@ def _plot_outliers(
     plt.axvline(mean, color="red", linestyle="--", linewidth=2)
     plt.axvspan(median - abs_deviation, median + abs_deviation, color="green", alpha=0.15)
     plt.axvline(median, color="green", linestyle="--", linewidth=2)
-    plt.hist(obs_table[column], bins=20)
-    plt.hist(obs_table[column][mask_std], bins=20, color="red")
-    plt.hist(obs_table[column][mask_med], bins=20, color="green")
+    hist_bins = plt.hist(obs_table[column], bins=50)[1]
+    plt.hist(obs_table[column][mask_med], bins=hist_bins, color="green")
+    plt.hist(obs_table[column][mask_std], bins=hist_bins, color="red")
     plt.title(f"{column} for {string}")
     plt.xlabel(column)
     plt.ylabel("Number of runs")
