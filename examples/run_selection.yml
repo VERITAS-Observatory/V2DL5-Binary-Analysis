@@ -2,7 +2,8 @@
 # Configuration for runlist generator
 
 observations:
-  obs_cone_radius: 1.5 deg
+  obs_cone_radius_min: 0.25 deg
+  obs_cone_radius_max: 1.5 deg
 
 on_region:
   target: "LS I +61 303"
@@ -27,7 +28,6 @@ dqm:
     V5: 10 Hz
     V6: 10 Hz
     V6_redHV: 10 Hz
-
 
 atmosphere:
 

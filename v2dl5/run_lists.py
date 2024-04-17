@@ -177,17 +177,26 @@ def _apply_cut_target(obs_table, args_dict, target):
     """
 
     try:
-        obs_cone_radius = u.Quantity(args_dict["observations"]["obs_cone_radius"])
+        obs_cone_radius_min = u.Quantity(args_dict["observations"]["obs_cone_radius_min"])
     except KeyError:
-        _logger.error("KeyError: observations.obs_cone_radius")
+        obs_cone_radius_min = 0.0 * u.deg
+    try:
+        obs_cone_radius_max = u.Quantity(args_dict["observations"]["obs_cone_radius_max"])
+    except KeyError:
+        _logger.error("KeyError: observations.obs_cone_radius_mix missing")
         raise
 
     angular_separation = target.separation(
         SkyCoord(obs_table["RA_PNT"], obs_table["DEC_PNT"], unit=(u.deg, u.deg))
     )
-    obs_table = obs_table[angular_separation < obs_cone_radius]
+    obs_table = obs_table[
+        (angular_separation > obs_cone_radius_min) & (angular_separation < obs_cone_radius_max)
+    ]
 
-    _logger.info("Selecting %d runs from observation cone around %s", len(obs_table), target)
+    _logger.info(
+        f"Selecting {len(obs_table)} runs from observation cone around {target}"
+        f"(min {obs_cone_radius_min}, max {obs_cone_radius_max})"
+    )
 
     return obs_table
 
@@ -227,7 +236,18 @@ def _dqm_report(obs_table, output_dir):
     """
 
     obs_table.sort("OBS_ID")
+    # print general info
+    obs_table[
+        "OBS_ID",
+        "RUNTYPE",
+        "ONTIME",
+        "RA_PNT",
+        "DEC_PNT",
+        "RA_OBJ",
+        "DEC_OBJ",
+    ].pprint_all()
 
+    # print dqm
     obs_table[
         "OBS_ID",
         "RUNTYPE",
