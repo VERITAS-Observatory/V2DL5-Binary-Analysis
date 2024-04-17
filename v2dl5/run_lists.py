@@ -64,8 +64,28 @@ def _apply_selection_cuts(obs_table, args_dict, target):
     _obs_table = _apply_cut_dqm(_obs_table, args_dict)
     _obs_table = _apply_cut_ontime_min(_obs_table, args_dict)
     _obs_table = _apply_cut_ntel_min(_obs_table, args_dict)
+    _obs_table = _apply_cut_l3rate(_obs_table, args_dict)
 
     return _obs_table
+
+
+def _apply_cut_l3rate(obs_table, args_dict):
+    """
+    Apply epoch and observation mode dependent minimum L3 Rate cut
+
+    """
+
+    mask_V4, mask_V5, mask_V6, mask_V6_redHV = _epoch_masks(obs_table)
+    mask = np.ones(len(obs_table), dtype=bool)
+    for epoch_mask, epoch in zip(
+        [mask_V4, mask_V5, mask_V6, mask_V6_redHV], ["V4", "V5", "V6", "V6_redHV"]
+    ):
+        try:
+            l3rate_min = u.Quantity(args_dict["dqm"]["l3_rate_min"][epoch]).to(u.Hz)
+        except KeyError:
+            l3rate_min = 0.0 * u.Hz
+        mask = mask & [((obs_table["L3RATE"] > l3rate_min.value) & epoch_mask) | ~epoch_mask]
+    return obs_table[mask[0]]
 
 
 def _apply_cut_ntel_min(obs_table, args_dict):
@@ -307,10 +327,6 @@ def _print_outlier(
     _outlier_mask_median = np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_median)
     _obs_table_cleaned[_outlier_mask_median].pprint_all()
 
-    for row in _obs_table_cleaned:
-        if row["L3RATE"] < 250.0:
-            print(f"{row['OBS_ID']}: {row['L3RATE']}")
-
     _plot_outliers(
         _obs_table_cleaned,
         column,
@@ -383,4 +399,9 @@ def _epoch_masks(obs_table):
     mask_V6 = [row["OBS_ID"] > 63372 and row["RUNTYPE"] == "observing" for row in obs_table]
     mask_V6_redHV = [row["OBS_ID"] > 63372 and row["RUNTYPE"] == "obsLowHV" for row in obs_table]
 
-    return mask_V4, mask_V5, mask_V6, mask_V6_redHV
+    return (
+        np.array(mask_V4),
+        np.array(mask_V5),
+        np.array(mask_V6),
+        np.array(mask_V6_redHV),
+    )

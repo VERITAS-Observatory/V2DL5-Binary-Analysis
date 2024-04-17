@@ -22,8 +22,11 @@ dqm:
 
   ontime_min: 3 min
 
-  # TODO
-  # l3_rate_min: (epoch, rate)
+  l3_rate_min:
+    V4: 10 Hz
+    V5: 10 Hz
+    V6: 10 Hz
+    V6_redHV: 10 Hz
 
 
 atmosphere:
