@@ -40,9 +40,7 @@ def _read_observation_table(obs_table_file_name):
     """
 
     obs_table = astropy.table.Table.read(obs_table_file_name)
-    # TODO - check if necessary
     obs_table["DQMSTAT"].fill_value = "unknown"
-
     return obs_table.filled()
 
 
