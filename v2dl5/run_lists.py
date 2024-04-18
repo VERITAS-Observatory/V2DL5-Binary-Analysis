@@ -82,7 +82,10 @@ def _apply_cut_l3rate(obs_table, args_dict):
             l3rate_min = u.Quantity(args_dict["dqm"]["l3_rate_min"][epoch]).to(u.Hz)
         except KeyError:
             l3rate_min = 0.0 * u.Hz
-        mask = mask & [((obs_table["L3RATE"] > l3rate_min.value) & epoch_mask) | ~epoch_mask]
+        mask = np.array(
+            mask & [((obs_table["L3RATE"] > l3rate_min.value) & epoch_mask) | ~epoch_mask]
+        )
+        _print_removed_runs(obs_table, mask[0], "L3RATE", f"{epoch} L3Rate > {l3rate_min}")
     return obs_table[mask[0]]
 
 
@@ -98,8 +101,8 @@ def _apply_cut_ntel_min(obs_table, args_dict):
         _logger.error("KeyError: dqm.ntel_min")
         raise
 
-    mask = [row["N_TELS"] >= ntel_min for row in obs_table]
-    _logger.info(f"Remove {mask.count(False)} runs with ntel < {ntel_min}")
+    mask = np.array([row["N_TELS"] >= ntel_min for row in obs_table])
+    _print_removed_runs(obs_table, mask, "N_TELS", f"NTel >= {ntel_min}")
     obs_table = obs_table[mask]
     _logger.info(f"Minimum number of telescopes: {np.min(obs_table['N_TELS'])}")
 
@@ -118,8 +121,8 @@ def _apply_cut_ontime_min(obs_table, args_dict):
         _logger.error("KeyError: dqm.ontime_min")
         raise
 
-    mask = [row["ONTIME"] > ontime_min.value for row in obs_table]
-    _logger.info(f"Remove {mask.count(False)} runs with ontime < {ontime_min}")
+    mask = np.array([row["ONTIME"] > ontime_min.value for row in obs_table])
+    _print_removed_runs(obs_table, mask, "ONTIME", f"ontime < {ontime_min} m")
     obs_table = obs_table[mask]
     _logger.info(f"Minimum run time: {np.min(obs_table['ONTIME'])} s")
 
@@ -138,8 +141,8 @@ def _apply_cut_dqm(obs_table, args_dict):
         _logger.error("KeyError: dqm.dqmstat")
         raise
 
-    mask = [row["DQMSTAT"] in dqm_stat for row in obs_table]
-    _logger.info(f"Remove {mask.count(False)} runs with dqm status not not in {dqm_stat}")
+    mask = np.array([row["DQMSTAT"] in dqm_stat for row in obs_table])
+    _print_removed_runs(obs_table, mask, "DQMSTAT", "dqm status")
     obs_table = obs_table[mask]
     _logger.info(f"Selected dqm status {np.unique(obs_table['DQMSTAT'])}")
 
@@ -159,11 +162,11 @@ def _apply_cut_atmosphere(obs_table, args_dict):
         raise
 
     try:
-        mask = [row["WEATHER"][0] in weather for row in obs_table]
+        mask = np.array([row["WEATHER"][0] in weather for row in obs_table])
     except IndexError:
         _logger.error("IndexError: weather")
         raise
-    _logger.info(f"Remove {mask.count(False)} runs with weather not in {weather}")
+    _print_removed_runs(obs_table, mask, "WEATHER", "weather")
     obs_table = obs_table[mask]
     _logger.info(f"Selected weather conditions {np.unique(obs_table['WEATHER'])}")
 
@@ -423,3 +426,16 @@ def _epoch_masks(obs_table):
         np.array(mask_V6),
         np.array(mask_V6_redHV),
     )
+
+
+def _print_removed_runs(obs_table, mask, column_name, cut_type):
+    """
+
+    Print removed runs
+
+    """
+
+    _logger.info(f"Remove {len(mask)-mask.sum(~False)} runs failing {cut_type} cut")
+    _removed_runs = [f"{row['OBS_ID']} ({row[column_name]})" for row in obs_table[~mask]]
+    _logger.info(f"Removed following run: {_removed_runs}")
+    _logger.info(f"Keep {mask.sum(~False)} runs after application of {cut_type} cut")

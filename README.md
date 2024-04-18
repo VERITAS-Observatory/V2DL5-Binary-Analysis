@@ -36,3 +36,18 @@ Activate the environment to start the analysis:
 ```bash
 conda activate v2dl5
 ```
+
+## Run list generator
+
+The tool `runlist.py` allows to generate a list of runs for a given observation time and zenith angle.
+It generates a lot of printout which should be used to fine tune the run selection.
+
+Example:
+
+```bash
+
+python v2dl5/scripts/generate_runlist.py \
+    --obs_table ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/obs-index.fits.gz \
+    --config examples/run_selection.yml \
+   --output_dir my_output_dir
+```
