@@ -21,12 +21,30 @@ def generate_run_list(args_dict, target):
 
     """
 
+    calculate_averages(args_dict)
+
     _logger.info("Generate run list. from %s", args_dict["obs_table"])
     obs_table = _read_observation_table(args_dict["obs_table"])
     obs_table = _apply_selection_cuts(obs_table, args_dict, target)
     _logger.info("Selected %d runs.", len(obs_table))
     _dqm_report(obs_table, args_dict["output_dir"])
     _write_run_list(obs_table, args_dict["output_dir"])
+
+
+def calculate_averages(args_dict):
+    """
+    Determine mean / medium for columns relevant for RMS-dependent
+    selection cuts. All other DQM cuts are applied (except target cut).
+
+    """
+
+    _tmp_table = _read_observation_table(args_dict["obs_table"])
+    _tmp_table = _apply_selection_cuts(_tmp_table, args_dict, None)
+    _logger.info(f"Runs selected to calculate averages: {len(_tmp_table)}")
+
+    # TODO
+    # add a class handling averages / outliers plus application of log / lin
+    # selection cuts?
 
 
 def _read_observation_table(obs_table_file_name):
@@ -55,19 +73,17 @@ def _apply_selection_cuts(obs_table, args_dict, target):
 
     """
 
-    _logger.info("Apply selection cuts.")
-
-    _obs_table = _apply_cut_target(obs_table, args_dict, target)
-    _obs_table = _apply_cut_atmosphere(_obs_table, args_dict)
-    _obs_table = _apply_cut_dqm(_obs_table, args_dict)
-    _obs_table = _apply_cut_ontime_min(_obs_table, args_dict)
-    _obs_table = _apply_cut_ntel_min(_obs_table, args_dict)
-    _obs_table = _apply_cut_l3rate(_obs_table, args_dict)
-
-    return _obs_table
+    if target is not None:
+        obs_table = _apply_cut_target(obs_table, args_dict, target)
+    obs_table = _apply_cut_atmosphere(obs_table, args_dict, target)
+    obs_table = _apply_cut_dqm(obs_table, args_dict, target)
+    obs_table = _apply_cut_ontime_min(obs_table, args_dict, target)
+    obs_table = _apply_cut_ntel_min(obs_table, args_dict, target)
+    obs_table = _apply_cut_l3rate(obs_table, args_dict, target)
+    return obs_table
 
 
-def _apply_cut_l3rate(obs_table, args_dict):
+def _apply_cut_l3rate(obs_table, args_dict, target):
     """
     Apply epoch and observation mode dependent minimum L3 Rate cut
 
@@ -85,11 +101,13 @@ def _apply_cut_l3rate(obs_table, args_dict):
         mask = np.array(
             mask & [((obs_table["L3RATE"] > l3rate_min.value) & epoch_mask) | ~epoch_mask]
         )
-        _print_removed_runs(obs_table, mask[0], "L3RATE", f"{epoch} L3Rate > {l3rate_min}")
+        _print_removed_runs(
+            obs_table, mask[0], "L3RATE", f"{epoch} L3Rate > {l3rate_min}", target is not None
+        )
     return obs_table[mask[0]]
 
 
-def _apply_cut_ntel_min(obs_table, args_dict):
+def _apply_cut_ntel_min(obs_table, args_dict, target):
     """
     Apply minimum telescope cut cut.
 
@@ -102,14 +120,15 @@ def _apply_cut_ntel_min(obs_table, args_dict):
         raise
 
     mask = np.array([row["N_TELS"] >= ntel_min for row in obs_table])
-    _print_removed_runs(obs_table, mask, "N_TELS", f"NTel >= {ntel_min}")
+    _print_removed_runs(obs_table, mask, "N_TELS", f"NTel >= {ntel_min}", target is not None)
     obs_table = obs_table[mask]
-    _logger.info(f"Minimum number of telescopes: {np.min(obs_table['N_TELS'])}")
+    if target is not None:
+        _logger.info(f"Minimum number of telescopes: {np.min(obs_table['N_TELS'])}")
 
     return obs_table
 
 
-def _apply_cut_ontime_min(obs_table, args_dict):
+def _apply_cut_ontime_min(obs_table, args_dict, target):
     """
     Apply ontime min cut.
 
@@ -122,14 +141,15 @@ def _apply_cut_ontime_min(obs_table, args_dict):
         raise
 
     mask = np.array([row["ONTIME"] > ontime_min.value for row in obs_table])
-    _print_removed_runs(obs_table, mask, "ONTIME", f"ontime < {ontime_min} m")
+    _print_removed_runs(obs_table, mask, "ONTIME", f"ontime < {ontime_min} m", target is not None)
     obs_table = obs_table[mask]
-    _logger.info(f"Minimum run time: {np.min(obs_table['ONTIME'])} s")
+    if target is not None:
+        _logger.info(f"Minimum run time: {np.min(obs_table['ONTIME'])} s")
 
     return obs_table
 
 
-def _apply_cut_dqm(obs_table, args_dict):
+def _apply_cut_dqm(obs_table, args_dict, target):
     """
     Apply dqm cuts
 
@@ -142,14 +162,15 @@ def _apply_cut_dqm(obs_table, args_dict):
         raise
 
     mask = np.array([row["DQMSTAT"] in dqm_stat for row in obs_table])
-    _print_removed_runs(obs_table, mask, "DQMSTAT", "dqm status")
+    _print_removed_runs(obs_table, mask, "DQMSTAT", "dqm status", target is not None)
     obs_table = obs_table[mask]
-    _logger.info(f"Selected dqm status {np.unique(obs_table['DQMSTAT'])}")
+    if target is not None:
+        _logger.info(f"Selected dqm status {np.unique(obs_table['DQMSTAT'])}")
 
     return obs_table
 
 
-def _apply_cut_atmosphere(obs_table, args_dict):
+def _apply_cut_atmosphere(obs_table, args_dict, target):
     """
     Remove all fields in column "WEATHER" which are not in the list of args_dict.atmosphere.weather
 
@@ -166,9 +187,10 @@ def _apply_cut_atmosphere(obs_table, args_dict):
     except IndexError:
         _logger.error("IndexError: weather")
         raise
-    _print_removed_runs(obs_table, mask, "WEATHER", "weather")
+    _print_removed_runs(obs_table, mask, "WEATHER", "weather", target is not None)
     obs_table = obs_table[mask]
-    _logger.info(f"Selected weather conditions {np.unique(obs_table['WEATHER'])}")
+    if target is not None:
+        _logger.info(f"Selected weather conditions {np.unique(obs_table['WEATHER'])}")
 
     return obs_table
 
@@ -428,12 +450,14 @@ def _epoch_masks(obs_table):
     )
 
 
-def _print_removed_runs(obs_table, mask, column_name, cut_type):
+def _print_removed_runs(obs_table, mask, column_name, cut_type, print=True):
     """
 
     Print removed runs
 
     """
+    if not print:
+        return
 
     _logger.info(f"Remove {len(mask)-mask.sum(~False)} runs failing {cut_type} cut")
     _removed_runs = [f"{row['OBS_ID']} ({row[column_name]})" for row in obs_table[~mask]]
