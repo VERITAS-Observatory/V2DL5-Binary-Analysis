@@ -15,11 +15,6 @@ import logging
 
 import v2dl5.light_curves.data_reader
 
-# import lightCurveDataReader
-# import lightCurveAnalysisPeriodDetermination
-# import lightCurvePlotting
-# import lightCurveAnalysisCrosschecks
-
 
 def _parse():
     """
@@ -93,9 +88,6 @@ def main():
     data_reader.read_data()
     print("Data reader: ", data_reader.data_dict)
 
-
-#    fDataDict, PlotInstruments, PlotVariable = lightCurveDataReader.readData(
-#        InstrumentFile, OrbitalPeriod_BL)
 
 #    icrc2019Plots = False
 #    donotplotaverage = False
