@@ -2,7 +2,7 @@
 """
 Generate a run list for a given sky region or a given target.
 
-Reads in a yaml file (see example `examples/run_selection.yaml`)
+Reads in a configuration yaml file (see example `examples/run_selection.yaml`)
 with criteria for selecting runs.
 
 Generates three output files:
@@ -10,6 +10,10 @@ Generates three output files:
 1. A list of runs that satisfy the criteria.
 2. A detailed printout of the observation table for all runs which satisfy the criteria.
 3. A detailed printout of the observation table for all runs which do not satisfy the criteria.
+
+Applies a simple outlier detection based on mean, median, standard, and absolute deviation of L3Rate
+and FIR1. This should be used as indications for further investigation, not as hard cuts to remove
+runs.
 
 Example:
 
@@ -24,6 +28,7 @@ Example:
 
 import argparse
 import logging
+from pathlib import Path
 
 import v2dl5.configuration
 import v2dl5.run_lists
@@ -67,11 +72,11 @@ def main():
 
     """
     logging.root.setLevel(logging.INFO)
-
     args_dict = v2dl5.configuration.configuration(args=_parse(), generate_dqm_run_list=True)
+    output_path = Path(args_dict["output_dir"])
+    output_path.mkdir(parents=True, exist_ok=True)
 
     sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
-
     v2dl5.run_lists.generate_run_list(args_dict=args_dict, target=sky_regions.target)
 
 
