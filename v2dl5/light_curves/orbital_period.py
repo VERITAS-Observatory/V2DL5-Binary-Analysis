@@ -6,7 +6,7 @@ Orbital phase calculations
 import numpy as np
 
 
-def get_orbital_phase(mjd, orbital_period=317.3, MJD0=54857.0, phase_reduce=True):
+def get_orbital_phase(mjd, orbital_period=317.3, mjd_0=54857.0, phase_reduce=True):
     """
     Calculate orbital phase for a given MJD.
 
@@ -19,7 +19,7 @@ def get_orbital_phase(mjd, orbital_period=317.3, MJD0=54857.0, phase_reduce=True
         MJD
     orbital_period: float
         Orbital period
-    MJD0: float
+    mjd_0: float
         Reference MJD
     phase_reduce: bool
         Reduce phase to interval [0,1]
@@ -36,7 +36,7 @@ def get_orbital_phase(mjd, orbital_period=317.3, MJD0=54857.0, phase_reduce=True
         mjd = mjd[None]  # Makes x 1D
         scalar_input = True
 
-    phase = (mjd - MJD0) / orbital_period
+    phase = (mjd - mjd_0) / orbital_period
 
     if phase_reduce:
         phase -= phase.astype(int)
@@ -47,8 +47,55 @@ def get_orbital_phase(mjd, orbital_period=317.3, MJD0=54857.0, phase_reduce=True
 
     if scalar_input:
         return np.squeeze(phase)
-
     return phase
+
+
+def get_orbital_phase_range(
+    mjd_min, mjd_max, phase_mean=0.5, upper_error=True, orbital_period=317.3, mjd_0=54857.0
+):
+    """
+    Calculate width of observation bin in orbital phase
+
+    Parameters
+    ----------
+    mjd_min: float
+        Start time of observation
+    mjd_max: float
+        End time of observation
+    phase_mean: float
+        Mean phase of observation
+    upper_error: bool
+        Upper error
+    orbital_period: float
+        Orbital period
+    mjd_0: float
+        Reference MJD
+
+    Returns
+    -------
+    float
+        Width of observation bin in orbital phase
+    """
+
+    ph_min = get_orbital_phase(mjd_min, orbital_period, mjd_0)
+    ph_max = get_orbital_phase(mjd_max, orbital_period, mjd_0)
+    if abs(ph_max - ph_min) < 1.0e-3:
+        ph_err = 0.0
+    elif ph_max > ph_min:
+        ph_err = 0.5 * (ph_max - ph_min)
+    else:
+        ph_err = 0.5 * (1.0 + ph_max - ph_min)
+
+    # check if error reaches over '0' or '1' -> simply cut
+    # (not entirely correct)
+    if upper_error:
+        if phase_mean + ph_err > 1.0:
+            ph_err = 1.0 - phase_mean
+    else:
+        if phase_mean - ph_err < 0.0:
+            ph_err = phase_mean
+
+    return ph_err
 
 
 # def getMJDOrbitZeroPhase(mjd, object="HESS J0632+057", orbital_period=317.3):
@@ -87,40 +134,4 @@ def get_orbital_phase(mjd, orbital_period=317.3, MJD0=54857.0, phase_reduce=True
 #     return math.ceil((mjd_max - mjd_min) / Orbit)
 #
 #
-#
-# def getOrbitalPhaseRange(
-#         mjd_min,
-#         mjd_max,
-#         phase_mean=0.5,
-#         UppErr=True,
-#         Orbit=317.3):
-#     """calculate width of observation bin in orbital phase
-#     Parameters:
-#         - mjd_min, mjd_max: edges of MJD mean
-#         - phase_mean: ??
-#         - Up_err: upper error
-#         - Orbit orbital phase
-#     Returns:
-#         - width of bin in orbital phase
-#     """
-#
-#     ph_min = getOrbitalPhase(mjd_min, Orbit)
-#     ph_max = getOrbitalPhase(mjd_max, Orbit)
-#     if abs(ph_max - ph_min) < 1.e-3:
-#         ph_err = 0.
-#     elif ph_max > ph_min:
-#         ph_err = 0.5 * (ph_max - ph_min)
-#     else:
-#         ph_err = 0.5 * (1. + ph_max - ph_min)
-#
-#     # check if error reaches over '0' or '1' -> simply cut (not entirely
-#     # correct)
-#     if UppErr:
-#         if phase_mean + ph_err > 1.:
-#             ph_err = 1. - phase_mean
-#     else:
-#         if phase_mean - ph_err < 0.:
-#             ph_err = phase_mean
-#
-#     return ph_err
 #

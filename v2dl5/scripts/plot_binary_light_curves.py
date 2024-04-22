@@ -13,6 +13,8 @@ Includes the following plots
 import argparse
 import logging
 
+import v2dl5.light_curves.data_reader
+
 # import lightCurveDataReader
 # import lightCurveAnalysisPeriodDetermination
 # import lightCurvePlotting
@@ -76,14 +78,20 @@ def main():
 
     logging.info("Light Curve Analysis - run parameters")
     logging.info("instrument: %s" % args.instrument)
-    logging.info("instrument list: %s" % args.data_file)
+    logging.info("instrument list: %s" % args.configuration)
     logging.info("orbital period: %.2f" % args.period)
     logging.info("number of bins for averaging: %.1f" % args.orbital_bins)
 
     binary = {}
     binary["HESS J0632+057"] = {}
-    binary["HESS J0632+057"]["period"] = 317.3
-    binary["HESS J0632+057"]["MJD0"] = 54857.0  # Bongiorno et al 2011
+    binary["HESS J0632+057"]["orbital_period"] = 317.3
+    binary["HESS J0632+057"]["mjd_0"] = 54857.0  # Bongiorno et al 2011
+
+    data_reader = v2dl5.light_curves.data_reader.LightCurveDataReader(
+        args.configuration, binary=binary.get("HESS J0632+057")
+    )
+    data_reader.read_data()
+    print("Data reader: ", data_reader.data_dict)
 
 
 #    fDataDict, PlotInstruments, PlotVariable = lightCurveDataReader.readData(
