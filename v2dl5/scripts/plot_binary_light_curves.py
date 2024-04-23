@@ -13,6 +13,7 @@ Includes the following plots
 import argparse
 import logging
 
+import v2dl5.light_curves.binary_plotting
 import v2dl5.light_curves.data_reader
 
 
@@ -87,6 +88,12 @@ def main():
     )
     data_reader.read_data()
     print("Data reader: ", data_reader.data_dict)
+
+    plotter = v2dl5.light_curves.binary_plotting.BinaryLightCurvePlotter(
+        data=data_reader.data_dict,
+        binary=binary.get("HESS J0632+057"),
+    )
+    plotter.plot_flux_vs_mjd(None, None)
 
 
 #    icrc2019Plots = False
