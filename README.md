@@ -5,6 +5,7 @@
 [![GitHub Super-Linter](https://github.com/GernotMaier/V2DL5/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
 This is a collection of simple scripts for the high-level analysis of VERITAS data with gammapy.
+The focus is on binary light curve analysis, meaning this is mostly a reflected region analysis with some binary specific tools.
 
 Allows to run analysis scripts for a given list of runs or for a cone search around the given on\_region direction.
 
