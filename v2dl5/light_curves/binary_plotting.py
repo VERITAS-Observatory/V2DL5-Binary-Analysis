@@ -3,14 +3,9 @@ Binary light curve plotting.
 """
 
 import logging
-import math
 
 import matplotlib.pyplot as plt
-import numpy as np
 
-# import lightCurveAverageing
-# import lightCurvePlottingUtilities
-import v2dl5.light_curves.orbital_period as orbit
 import v2dl5.plotting.utilities as plotting_utilities
 
 
@@ -18,18 +13,28 @@ class BinaryLightCurvePlotter:
     """
     Binary light curve plotter
 
+    Parameters
+    ----------
+    data : dict
+        Data dictionary with light-curve data.
+    config : dict
+        Configuration dictionary.
+    binary : dict
+        Binary parameters.
+
     """
 
-    def __init__(self, data, binary):
+    def __init__(self, data, config, binary):
 
         self._logger = logging.getLogger(__name__)
 
         self.data = data
+        self.config = config
         self.binary = binary
 
-    def plot_flux_vs_mjd(self, mjd_min, mjd_max):
+    def plot_flux_vs_time(self, time_axis="MJD", mjd_min=None, mjd_max=None):
         """
-        Plot flux vs MJD.
+        Plot flux vs time (MJD or orbital phase)
 
         Parameters
         ----------
@@ -39,53 +44,105 @@ class BinaryLightCurvePlotter:
             Maximum MJD value.
 
         """
-        self._logger.info("Plotting flux vs MJD")
+        self._logger.info(f"Plotting flux vs {time_axis}")
 
         ax = plotting_utilities.paper_figures(None, None)
         colors = plotting_utilities.get_color_list(len(self.data))
 
-        for instrument, data in self.data.items():
-            print("FFF", instrument)
+        for idx, (instrument, data) in enumerate(self.data.items()):
+            x, y, e = self._get_light_curve_in_MJD_limits(data, time_axis, mjd_min, mjd_max)
 
-            print(type(data["MJD"]))
-            x = []
-            y = []
-            e = []
-            for i in range(len(data["MJD"])):
-                if data["MJD"][i] > mjd_min and data["MJD"][i] < mjd_max:
-                    x.append(data["MJD"][i])
-                    y.append(data["flux"][i])
-                    e.append(data["flux_err"][i])
+            if instrument in self.config and self.config["plot_instrument"] is False:
+                continue
 
             plt.errorbar(
                 x,
                 y,
                 e,
                 None,
-                color=colors[0],
+                label=(
+                    instrument
+                    if self.config[idx].get("plot_label") is None
+                    else self.config[idx]["plot_label"]
+                ),
+                color=(
+                    colors[idx]
+                    if self.config[idx].get("marker_color") is None
+                    else self.config[idx]["marker_color"]
+                ),
+                marker=(
+                    plotting_utilities.get_marker_list()[idx]
+                    if self.config[idx].get("marker_type") is None
+                    else self.config[idx]["marker_type"]
+                ),
                 linestyle="none",
+                fillstyle="none",
+                linewidth=plotting_utilities.get_line_width(),
+                markersize=plotting_utilities.get_marker_size(),
             )
 
+        plt.xlabel(self._get_time_axis_label(time_axis))
+        if mjd_min is not None and mjd_max is not None:
+            ax.set_xlim([mjd_min, mjd_max])
+        # TMP - y-axis: use first entry in configuration dict
+        plt.ylabel(self.config[0]["flux_axis_label"])
+        plt.legend()
 
-#
-# def getPrintInstrumentName(PlotInstruments):
-#     """return print name of Instrument
-#     """
-#
-#     if len(PlotInstruments) == 1:
-#         return PlotInstruments[0]
-#
-#     for key in PlotInstruments:
-#         if "VERITAS" in key or \
-#                 "HESS" in key or \
-#                 "MAGIC" in key:
-#                     return "Gamma"
-#         else:
-#             return "XRay"
-#
-#
-#     return "NoInstrument"
-#
+        plotting_utilities.print_figure(
+            f"Light-Curve-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}"
+        )
+
+    def _get_time_axis_label(self, time_axis):
+        """
+        Return time axis label
+
+        """
+        if time_axis == "orbital phase":
+            return "Orbital phase"
+        return "Modified Julian Date (MJD)"
+
+    def _get_light_curve_in_MJD_limits(self, data, time_axis, mjd_min, mjd_max):
+        """
+        Get light curve restricted in MJD.
+
+        Parameters
+        ----------
+        data : dict
+            Light-curve data.
+        time_axis : str
+            Time axis (MJD or orbital phase)
+        mjd_min : float
+            Minimum MJD value.
+        mjd_max : float
+            Maximum MJD value.
+
+        Returns
+        -------
+        list
+            Light-curve data as three lists.
+
+        """
+
+        x = []
+        y = []
+        e = []
+        for i in range(len(data["MJD"])):
+            if mjd_min is not None and data["MJD"][i] < mjd_min:
+                continue
+            if mjd_max is not None and data["MJD"][i] > mjd_max:
+                continue
+            if time_axis == "MJD":
+                x.append(data["MJD"][i])
+            elif time_axis == "orbital phase":
+                x.append(data["phase"][i])
+            else:
+                self._logger.error(f"Unknown time axis: {time_axis}")
+                raise ValueError
+            y.append(data["flux"][i])
+            e.append(data["flux_err"][i])
+        return x, y, e
+
+
 #
 # def getNumberOfOrbits(fDataDict, PlotInstruments, OrbitalPeriod_BL, FixedMinMax = True ):
 #     """
@@ -398,7 +455,8 @@ class BinaryLightCurvePlotter:
 #         PlotInstruments[0],PlotVariable) )
 #     if PlotInstruments[0].find('Optical') < 0:
 #         plt.axhline(y=0, linestyle=':')
-#     if getPrintInstrumentName(PlotInstruments).find( "fwhm" ) < 0 and getPrintInstrumentName(PlotInstruments).find( "ew" ) < 0:
+#     if getPrintInstrumentName(PlotInstruments).find( "fwhm" ) < 0 and \
+# getPrintInstrumentName(PlotInstruments).find( "ew" ) < 0:
 #         plt.legend(prop={'size': 10}, framealpha=0.1)
 #
 #     lightCurvePlottingUtilities.printFigure(
@@ -445,7 +503,8 @@ class BinaryLightCurvePlotter:
 #         ye = []
 #         for p in range(len(fDataDict[PlotInstruments[i]]['MJD'])):
 #             if fDataDict[PlotInstruments[i]
-#                          ]['MJD'][p] > MJDPlotmin and fDataDict[PlotInstruments[i]]['MJD'][p] < MJDPlotMax:
+#                  ]['MJD'][p] > MJDPlotmin and
+#                   fDataDict[PlotInstruments[i]]['MJD'][p] < MJDPlotMax:
 #                 xp.append(fDataDict[PlotInstruments[i]]['phase'][p])
 #                 yp.append(fDataDict[PlotInstruments[i]][i_plotValue][p])
 #                 ee.append(fDataDict[PlotInstruments[i]][i_plotError][p])
@@ -512,7 +571,8 @@ class BinaryLightCurvePlotter:
 #     #    PlotInstruments[0] += "-" + PlotVariable[0]
 #
 #     lightCurvePlottingUtilities.printFigure(
-#         getPrintInstrumentName(PlotInstruments) + "-HESSJ0632p057-LC-phaseFolded-%dd" % OrbitalPeriod_BL)
+#         getPrintInstrumentName(PlotInstruments)
+#  + "-HESSJ0632p057-LC-phaseFolded-%dd" % OrbitalPeriod_BL)
 #
 #
 # def plotAverageLightCurve_fluxvsPhase(
@@ -622,7 +682,7 @@ class BinaryLightCurvePlotter:
 #     """
 #
 #     lightCurvePlottingUtilities.paper_figures(4, 4, 1, False)
-#     # quick and dirty fix to get consistent colors and markes
+#     # quick and dirty fix to get consistent colors and markers
 #     if len(fColorDict) == 5:
 #         colors = lightCurvePlottingUtilities.getColorList(3)
 #         colors[-1] = 'black'
@@ -721,7 +781,8 @@ class BinaryLightCurvePlotter:
 #
 #     # right label: assume always X-rays
 #     if 'Swift XRT' in fDataDict or 'NuSTAR' in fDataDict:
-#         ax1_y.set_ylabel(lightCurvePlottingUtilities.getFluxAxisString("Swift XRT", None, "10$^{-12} \\times$"))
+#         ax1_y.set_ylabel(lightCurvePlottingUtilities.getFluxAxisString(
+#   "Swift XRT", None, "10$^{-12} \\times$"))
 #
 #     ax1_y.legend(loc=2)
 #     if yaxis_min < 0.:
@@ -746,175 +807,4 @@ class BinaryLightCurvePlotter:
 #
 #     lightCurvePlottingUtilities.printFigure('XG-HESSJ0632p057-LC')
 #
-#
-# def plotLightCurve_fluxvsMJD(
-#         fDataDict,
-#         PlotInstruments,
-#         MJDPlotmin=0,
-#         MJDPlotMax=90000,
-#         PlotVariable=None,
-#         icrc2019Plots=False):
-#     """plot flux vs MJD
-#
-#     Parameters:
-#         fDataDict:   dictionary with all data for plotting
-#         PlotInstruments: list of instruments to be plotted
-#     """
-#
-#     ax = lightCurvePlottingUtilities.paper_figures(None, None)
-#
-#     if icrc2019Plots:
-#         ax.set_ylim(ymin=-1.e-12,ymax=8.e-12)
-#
-#     if PlotInstruments[0].find('Swift XRT') >= 0:
-#         colors = lightCurvePlottingUtilities.getColorList(
-#                     len(PlotInstruments), "xray" )
-#     else:
-#         colors = lightCurvePlottingUtilities.getColorList(len(PlotInstruments))
-#     markers = lightCurvePlottingUtilities.getMarkerList(icrc2019Plots)
-#
-#     if len(PlotInstruments) < 1:
-#         return
-#
-#     # loop over all instruments to be plotted
-#     c = 0
-#     for i in range(len(PlotInstruments)):
-#         print('plotLightCurve_fluxvsMJD: plotting %s (%d points) ' %
-#               (PlotInstruments[i], len(fDataDict[PlotInstruments[i]]['MJD'])))
-#
-#         # plotting variable
-#         i_plotValue, i_plotError = lightCurvePlottingUtilities.getPlottingVariable(
-#             PlotVariable, i)
-#
-#         print('\t plotting %s+-%s' % (i_plotValue, i_plotError))
-#
-#         # asymmetric error bars
-#         if i_plotValue == 'flux':
-#             if PlotInstruments[i].find("XRT" ) >=0:
-#                 fData_a_error = [fDataDict[PlotInstruments[i]][
-#                     'flux_errp'], fDataDict[PlotInstruments[i]]['flux_errn']]
-#             else:
-#                 fData_a_error = [fDataDict[PlotInstruments[i]][
-#                     'flux_err'], fDataDict[PlotInstruments[i]]['flux_err']]
-#
-#         xp = []
-#         yp = []
-#         ee = []
-#         for p in range(len(fDataDict[PlotInstruments[i]]['MJD'])):
-#             if fDataDict[PlotInstruments[i]
-#                          ]['MJD'][p] > MJDPlotmin and fDataDict[PlotInstruments[i]]['MJD'][p] < MJDPlotMax:
-#                 xp.append(fDataDict[PlotInstruments[i]]['MJD'][p])
-#                 yp.append(fDataDict[PlotInstruments[i]][i_plotValue][p])
-#                 ee.append(fDataDict[PlotInstruments[i]][i_plotError][p])
-#
-#         pLabel = PlotInstruments[i]
-#         if pLabel.find( "XRT" ) >= 0:
-#             pLabel = "$\it{Swift}$-XRT"
-#         ff='full'
-#         si=lightCurvePlottingUtilities.getMarkerSize()
-#         li=lightCurvePlottingUtilities.getLineWidth()
-#         if getPrintInstrumentName(PlotInstruments).find( "XRay" ) >= 0:
-#             ff='none'
-#             ff='full'
-#             si=0.5*lightCurvePlottingUtilities.getMarkerSize()
-#             li=0.5*lightCurvePlottingUtilities.getLineWidth()
-#         plt.errorbar(xp, yp, ee, None,
-#                      color=colors[c], marker=markers[c], label=pLabel,
-#                      linestyle='none', fillstyle=ff,
-#                      linewidth=li,
-#                      markersize=si)
-#
-#         c = c + 1
-#
-#     plt.xlabel('Modified Julian Day (MJD)')
-#     plt.ylabel(
-#         lightCurvePlottingUtilities.getFluxAxisString(
-#             PlotInstruments[0],
-#             PlotVariable))
-#     if MJDPlotmin > 0 and MJDPlotMax < 90000:
-#         ax.set_xlim(MJDPlotmin, MJDPlotMax)
-#
-#     if PlotInstruments[0].find('Optical')<0:
-#         plt.axhline(y=0, linestyle=':')
-#         plt.legend()
-#     #elif PlotVariable and len(PlotVariable) == 1:
-#     #    PlotInstruments[0] += "-" + PlotVariable[0]
-#
-#     lightCurvePlottingUtilities.printFigure(getPrintInstrumentName(PlotInstruments)+ '-HESSJ0632p057-LC')
-#
-#
-# def plotLightCurveData(fDataDict,
-#                        PlotInstruments, PlotVariable,
-#                        OrbitalPeriod_BL=315., OrbitalPeriodBins=20.,
-#                        icrc2019Plots=False, donotplotaverage=False):
-#     """plot all light curve related figures
-#     """
-#
-# #    plotLightCurve_fluxvsMJD(fDataDict, PlotInstruments,
-# #            0, 90000, PlotVariable, icrc2019Plots)
-#     plotLightCurve_fluxvsMJD(fDataDict, PlotInstruments,
-#             52950, 58800, PlotVariable, icrc2019Plots)
-#
-#     # calculate and plot smoothed average light curve
-#     if PlotInstruments[0].find('Optical') < 0:
-#         F, lc_spline_bin_centers, lc_spline_sv, lc_spline_sv_err = \
-#         plotAverageLightCurve_fluxvsPhase(fDataDict, PlotInstruments,
-# 											  OrbitalPeriod_BL, OrbitalPeriodBins)
-#     else:
-#         F=None
-#         lc_spline_bin_centers=None
-#         lc_spline_sv=None
-#         lc_spline_sv_err=None
-#     # phase folded light curve
-#     plotLightCurve_fluxvsPhase(
-#         fDataDict,
-#         PlotInstruments,
-#         #lc_spline_bin_centers,
-#         None,
-#         lc_spline_sv,
-#         lc_spline_sv_err,
-#         OrbitalPeriod_BL,
-#         0, 90000, PlotVariable,
-#         icrc2019Plots,
-#         donotplotaverage)
-#
-#     # phase folded light curve (different orbits)
-#     plotLightCurve_fluxvsPhase_inOrbits(
-#         fDataDict,
-#         PlotInstruments,
-#         F,
-#         lc_spline_bin_centers,
-#         lc_spline_sv,
-#         lc_spline_sv_err,
-#         OrbitalPeriod_BL,
-#         OrbitalPeriodBins,
-#         PlotVariable)
-#
-#     if PlotInstruments[0].find('Optical') >=0:
-#         return
-#
-#     # phase folded light curve (different orbits)
-#     # --> plot each orbit in one sub plot
-#     plotLightCurve_fluxvsPhase_eachOrbit(
-#         fDataDict,
-#         PlotInstruments,
-#         F,
-#         lc_spline_bin_centers,
-#         lc_spline_sv,
-#         lc_spline_sv_err,
-#         OrbitalPeriod_BL,
-#         OrbitalPeriodBins,
-#         False,icrc2019Plots)
-#     # phase folded light curve (ratio to average, different orbits)
-#     # --> plot each orbit in one sub plot
-#     plotLightCurve_fluxvsPhase_eachOrbit(
-#         fDataDict,
-#         PlotInstruments,
-#         F,
-#         lc_spline_bin_centers,
-#         lc_spline_sv,
-#         lc_spline_sv_err,
-#         OrbitalPeriod_BL,
-#         OrbitalPeriodBins,
-#         True)
 #

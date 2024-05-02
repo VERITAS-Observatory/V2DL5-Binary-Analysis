@@ -1,8 +1,12 @@
+import logging
 import math
+from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+
+logger = logging.getLogger(__name__)
 
 
 def getPlottingVariable(PlotVariable, index):
@@ -36,15 +40,19 @@ def plotUncertaintyBand(ax, per_stdx):
     # ax.axvspan(per_stdx[0], per_stdx[1], alpha=0.5, color='b')
 
 
-def getLineWidth():
-    "return default line width"
+def get_line_width():
+    """
+    Return default line width.
 
+    """
     return 0.5
 
 
-def getMarkerSize():
-    "return default marker size"
+def get_marker_size():
+    """
+    Return default marker size.
 
+    """
     return 4
 
 
@@ -75,29 +83,37 @@ def get_color_list(n_colors, plot_type=None):
     return [colormap(i) for i in np.linspace(0, 1, n_colors + 1)]
 
 
-def getMarkerList(icrc2019Plots=False):
-    """return a list of markers"""
+def get_marker_list():
+    """
+    Return a list of markers.
 
-    if icrc2019Plots:
-        return ["s", "d", "P", "^", "v"]
-
+    """
     return ["o", "s", "P", "^", "D"]
 
 
-def printFigure(printSTR, ftype=".pdf", ddir="./figures/"):
-    """print a figure into the given format
+def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
+    """
+    Print a figure into the given format.
 
     Parameters:
-        printSTR:    print string
-        ftype:       format for printing
+    -----------
+    print_name :  str
+        Name of the figure.
+    file_type :   str
+        File type of the figure.
+    figure_dir :  str
+        Directory where the figure is saved.
+
     """
 
-    # dont' allow spaces in print string
-    printSTR = printSTR.replace(" ", "-")
+    # don't allow spaces in print string
+    print_name = print_name.replace(" ", "-")
+    figure_path = Path(figure_dir)
+    figure_path.mkdir(parents=True, exist_ok=True)
 
-    printSTR = ddir + printSTR + ftype
-    print("printFigure: saving figure to %s" % printSTR)
-    plt.savefig(printSTR)
+    figure_file = figure_path / (print_name + file_type)
+    logger.info(f"Printing figure to {figure_file}")
+    plt.savefig(figure_file)
 
 
 def getOrbitalPhaseAxisString(OrbitalPeriod):
@@ -109,7 +125,7 @@ def getOrbitalPhaseAxisString(OrbitalPeriod):
     return strOr
 
 
-def getFluxAxisString(Instrument, PlotVariable=None, ScaleFactor=None, EnergyFlux=False):
+def get_flux_axis_string(instrument, PlotVariable=None, ScaleFactor=None, EnergyFlux=False):
     """return a string with the correct unit depending
     on the type of instrument
     """
@@ -117,14 +133,14 @@ def getFluxAxisString(Instrument, PlotVariable=None, ScaleFactor=None, EnergyFlu
     if not ScaleFactor:
         ScaleFactor = ""
 
-    if "VERITAS" in Instrument or "HESS" in Instrument or "MAGIC" in Instrument:
+    if "VERITAS" in instrument or "HESS" in instrument or "MAGIC" in instrument:
         if EnergyFlux:
             pAxisFluxSTR = "Flux E>350 GeV (" + ScaleFactor + "erg/(cm$^2$ s))"
         else:
             pAxisFluxSTR = "Flux E>350 GeV (" + ScaleFactor + "1/(cm$^2$s))"
-    elif Instrument == "XRT":
+    elif instrument == "XRT":
         pAxisFluxSTR = "Swift rate (0.3-10 keV) (counts/s)"
-    elif Instrument.find("Optical") >= 0:
+    elif instrument.find("Optical") >= 0:
         if PlotVariable and len(PlotVariable) == 1:
             if PlotVariable[0] == "ew":
                 pAxisFluxSTR = "EW ($\\AA$)"
@@ -184,8 +200,3 @@ def paper_figures(width=None, height=None, columns=1, xtick_top=True):
     plt.figure(figsize=(width, height))
 
     return plt.gca()
-
-
-def print_figure():
-    """print figure in the given format"""
-    print("print_figure")

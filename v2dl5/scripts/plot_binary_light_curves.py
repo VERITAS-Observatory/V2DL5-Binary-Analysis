@@ -80,6 +80,7 @@ def main():
 
     binary = {}
     binary["HESS J0632+057"] = {}
+    binary["HESS J0632+057"]["name"] = "HESS J0632+057"
     binary["HESS J0632+057"]["orbital_period"] = 317.3
     binary["HESS J0632+057"]["mjd_0"] = 54857.0  # Bongiorno et al 2011
 
@@ -91,9 +92,11 @@ def main():
 
     plotter = v2dl5.light_curves.binary_plotting.BinaryLightCurvePlotter(
         data=data_reader.data_dict,
+        config=data_reader.config,
         binary=binary.get("HESS J0632+057"),
     )
-    plotter.plot_flux_vs_mjd(None, None)
+    plotter.plot_flux_vs_time("MJD", None, None)
+    plotter.plot_flux_vs_time("orbital phase", None, None)
 
 
 #    icrc2019Plots = False

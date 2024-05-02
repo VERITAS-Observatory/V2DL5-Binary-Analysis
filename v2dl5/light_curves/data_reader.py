@@ -14,6 +14,13 @@ class LightCurveDataReader:
     Allows to read gamma-ray, optical or x-ray data. Enrich data
     with information required for orbital analysis.
 
+    Parameters
+    ----------
+    configuration_file: str
+        Configuration file with data description.
+    binary: dict
+        Binary parameters.
+
     """
 
     def __init__(self, configuration_file, binary=None):
@@ -36,7 +43,7 @@ class LightCurveDataReader:
 
     def read_data(self):
         """
-        Read data from configuration file.
+        Read data from files as described in configuration file.
 
         Returns
         -------
@@ -120,7 +127,12 @@ class LightCurveDataReader:
 
     def _add_orbital_parameters(self, data):
         """
-        Add orbital parameters to data.
+        Add orbital phase to light-curve data data.
+
+        Parameters
+        ----------
+        data: dict
+            Data dictionary with light-curve data.
 
         """
 
