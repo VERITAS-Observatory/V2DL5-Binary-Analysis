@@ -11,6 +11,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.time import Time
 
 _logger = logging.getLogger(__name__)
 
@@ -75,6 +76,8 @@ def _apply_selection_cuts(obs_table, args_dict, target):
 
     if target is not None:
         obs_table = _apply_cut_target(obs_table, args_dict, target)
+    return obs_table
+    obs_table = _apply_cut_mjd(obs_table, args_dict)
     obs_table = _apply_cut_atmosphere(obs_table, args_dict, target)
     obs_table = _apply_cut_dqm(obs_table, args_dict, target)
     obs_table = _apply_cut_ontime_min(obs_table, args_dict, target)
@@ -124,6 +127,26 @@ def _apply_cut_ntel_min(obs_table, args_dict, target):
     obs_table = obs_table[mask]
     if target is not None:
         _logger.info(f"Minimum number of telescopes: {np.min(obs_table['N_TELS'])}")
+
+    return obs_table
+
+
+def _apply_cut_mjd(obs_table, args_dict):
+    """
+    Apply cut on MJD (min and max).
+
+    """
+
+    if "mjd_min" in args_dict["observations"]:
+        _logger.info(f"Selecting runs after MJD {args_dict['observations']['mjd_min']}")
+        mjd_min = args_dict["observations"]["mjd_min"]
+        mask = np.array([Time(row["DATE-OBS"], scale="utc").mjd > mjd_min for row in obs_table])
+        obs_table = obs_table[mask]
+    if "mjd_max" in args_dict["observations"]:
+        _logger.info(f"Selecting runs after MJD {args_dict['observations']['mjd_max']}")
+        mjd_max = args_dict["observations"]["mjd_max"]
+        mask = np.array([Time(row["DATE-END"], scale="utc").mjd < mjd_max for row in obs_table])
+        obs_table = obs_table[mask]
 
     return obs_table
 
