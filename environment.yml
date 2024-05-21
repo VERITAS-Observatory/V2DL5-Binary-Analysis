@@ -7,15 +7,15 @@ name: v2dl5
 channels:
   - conda-forge
 dependencies:
-  - astropy<6.0
+  - astropy
   - astroquery
   - gammapy
   - matplotlib
   - pre-commit
-  - pydantic<2
+  - pydantic
   - pyflakes
   - pytest
   - pytest-cov
   - pytest-xdist
-  - python=3.11
+  - python
   - scipy
