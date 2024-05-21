@@ -76,7 +76,6 @@ def _apply_selection_cuts(obs_table, args_dict, target):
 
     if target is not None:
         obs_table = _apply_cut_target(obs_table, args_dict, target)
-    return obs_table
     obs_table = _apply_cut_mjd(obs_table, args_dict)
     obs_table = _apply_cut_atmosphere(obs_table, args_dict, target)
     obs_table = _apply_cut_dqm(obs_table, args_dict, target)
