@@ -32,7 +32,7 @@ class BinaryLightCurvePlotter:
         self.config = config
         self.binary = binary
 
-    def plot_flux_vs_time(self, time_axis="MJD", mjd_min=None, mjd_max=None):
+    def plot_flux_vs_time(self, time_axis="MJD", mjd_min=None, mjd_max=None, file_type=".pdf"):
         """
         Plot flux vs time (MJD or orbital phase)
 
@@ -89,7 +89,8 @@ class BinaryLightCurvePlotter:
         plt.legend()
 
         plotting_utilities.print_figure(
-            f"Light-Curve-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}"
+            f"Light-Curve-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}",
+            file_type=file_type,
         )
 
     def _get_time_axis_label(self, time_axis):

@@ -113,7 +113,10 @@ def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
 
     figure_file = figure_path / (print_name + file_type)
     logger.info(f"Printing figure to {figure_file}")
-    plt.savefig(figure_file)
+    if "png" in file_type:
+        plt.savefig(figure_file, dpi=(400))
+    else:
+        plt.savefig(figure_file)
 
 
 def getOrbitalPhaseAxisString(OrbitalPeriod):

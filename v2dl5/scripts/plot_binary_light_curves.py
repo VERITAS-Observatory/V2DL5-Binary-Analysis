@@ -55,6 +55,13 @@ def _parse():
         default=0.0,
         help="Number of bins in orbital period for averaging.",
     )
+    parser.add_argument(
+        "--plot_type",
+        type=str,
+        required=False,
+        default=".pdf",
+        help="File type for plots (e.g., '.pdf', '.png')",
+    )
     return parser.parse_args()
 
 
@@ -95,8 +102,8 @@ def main():
         config=data_reader.config,
         binary=binary.get("HESS J0632+057"),
     )
-    plotter.plot_flux_vs_time("MJD", None, None)
-    plotter.plot_flux_vs_time("orbital phase", None, None)
+    plotter.plot_flux_vs_time("MJD", None, None, args.plot_type)
+    plotter.plot_flux_vs_time("orbital phase", None, None, args.plot_type)
 
 
 #    icrc2019Plots = False
