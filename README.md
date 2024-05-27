@@ -36,6 +36,7 @@ Activate the environment to start the analysis:
 
 ```bash
 conda activate v2dl5
+export PYTHONPATH=$PYTHONPATH:"${PWD}"
 ```
 
 ## Run list generator
