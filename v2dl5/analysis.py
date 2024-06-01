@@ -143,7 +143,7 @@ class Analysis:
             return
 
         _out_file = f"{self._output_dir}/data/{filename}"
-        self._logger.info("Writing datasets to %s", _out_file)
+        self._logger.info(f"Writing datasets to {_out_file} ({file_format}, {sed_type})")
         if file_format is not None:
             if sed_type is not None:
                 datasets.write(_out_file, overwrite=True, format=file_format, sed_type=sed_type)
