@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages=["v2dl5"]
+include-package-data = true
 
 [tool.setuptools_scm]
 write_to = "v2dl5/_version.py"
@@ -45,6 +46,9 @@ dependencies = [
 "bug tracker" = "https://github.com/GernotMaier/V2DL5/issues"
 
 [project.scripts]
+v2dl5-generate-runlist = "v2dl5.scripts.generate_runlist:main"
+v2dl5-print-simplified-light-curve = "v2dl5.scripts.print_simplified_light_curve:main"
+v2dl5-plot-binary-light-curves = "v2dl5.scripts.plot_binary_light_curves:main"
 v2dl5-reflected-region-analysis = "v2dl5.scripts.reflected_region_analysis:main"
 
 [tool.pytest.ini_options]

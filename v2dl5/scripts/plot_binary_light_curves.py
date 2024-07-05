@@ -66,10 +66,7 @@ def _parse():
 
 
 def main():
-    """
-    Binary light-curve plotting
-
-    """
+    """Binary light-curve plotting."""
     logging.root.setLevel(logging.INFO)
 
     args = _parse()

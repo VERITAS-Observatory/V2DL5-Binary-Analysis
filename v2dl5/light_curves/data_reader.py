@@ -62,14 +62,11 @@ class LightCurveDataReader:
         Read flux from file.
 
         """
-
         try:
-            if data_config["file_name"].endswith(".csv") or data_config["file_name"].endswith(
-                ".ecsv"
-            ):
+            if data_config["file_name"].endswith((".csv", ".ecsv")):
                 return self._read_fluxes_from_ecsv_file(data_config)
         except KeyError:
-            self._logger.error("File name not found in configuration file")
+            self._logger.error(f"File name not found in configuration {data_config}")
             raise KeyError
 
     def _add_orbital_parameters(self, data):
@@ -131,34 +128,38 @@ class LightCurveDataReader:
         """
         table = Table.read(data_config["file_name"])
         f = {}
-        if not TimeMinMax:
-            table["time_min"] = table["time"].data
-            table["time_max"] = table["time"].data + 0.1
+        try:
+            if not TimeMinMax:
+                table["time_min"] = table["time"].data
+                table["time_max"] = table["time"].data + 0.1
 
-        # MJD filter
-        condition = np.ones(len(table), dtype=bool)
-        if MJD_min > -1:
-            condition &= table["time_min"] > MJD_min
-        if MJD_max > -1:
-            condition &= table["time_max"] < MJD_max
-        table = table[condition]
+            # MJD filter
+            condition = np.ones(len(table), dtype=bool)
+            if MJD_min > -1:
+                condition &= table["time_min"] > MJD_min
+            if MJD_max > -1:
+                condition &= table["time_max"] < MJD_max
+            table = table[condition]
 
-        f = {}
-        f["time_min"] = table["time_min"].data.tolist()
-        f["time_max"] = table["time_max"].data.tolist()
-        f["flux"] = table["flux"].data.flatten().tolist()
-        if "flux_err" in table.colnames:
-            f["flux_err"] = table["flux_err"].data.flatten().tolist()
-        else:
-            up = table["flux_up"].data.flatten().tolist()
-            down = table["flux_down"].data.flatten().tolist()
-            f["flux_err"] = [0.5 * abs(u - d) for u, d in zip(up, down)]
-        f["MJD"] = [0.5 * (a + b) for a, b in zip(f["time_min"], f["time_max"])]
-        f["MJD_err"] = [0.5 * (b - a) for a, b in zip(f["time_min"], f["time_max"])]
-        if "flux_ul" in table.colnames:
-            flux_ul = table["flux_ul"].data.flatten().tolist()
-            is_ul = table["is_ul"].data.flatten().tolist()
-            f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
-        else:
-            f["flux_ul"] = [-1.0 for _ in f["flux"]]
+            f = {}
+            f["time_min"] = table["time_min"].data.tolist()
+            f["time_max"] = table["time_max"].data.tolist()
+            f["flux"] = table["flux"].data.flatten().tolist()
+            if "flux_err" in table.colnames:
+                f["flux_err"] = table["flux_err"].data.flatten().tolist()
+            else:
+                up = table["flux_up"].data.flatten().tolist()
+                down = table["flux_down"].data.flatten().tolist()
+                f["flux_err"] = [0.5 * abs(u - d) for u, d in zip(up, down)]
+            f["MJD"] = [0.5 * (a + b) for a, b in zip(f["time_min"], f["time_max"])]
+            f["MJD_err"] = [0.5 * (b - a) for a, b in zip(f["time_min"], f["time_max"])]
+            if "flux_ul" in table.colnames:
+                flux_ul = table["flux_ul"].data.flatten().tolist()
+                is_ul = table["is_ul"].data.flatten().tolist()
+                f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
+            else:
+                f["flux_ul"] = [-1.0 for _ in f["flux"]]
+        except KeyError:
+            self._logger.error(f"Incomplete data file; key not found in {data_config['file_name']}")
+            raise KeyError
         return f
