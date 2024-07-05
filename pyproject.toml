@@ -4,6 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages=["v2dl5"]
+include-package-data = true
 
 [tool.setuptools_scm]
 write_to = "v2dl5/_version.py"

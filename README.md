@@ -57,8 +57,7 @@ python v2dl5/scripts/generate_runlist.py \
 
 ```console
 python v2dl5/scripts/reflected_region_analysis.py \
-    --obs_table ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/obs-index.fits.gz \
-    --runlist my_output_dir/runlist.txt \
+    --run_list my_output_dir/runlist.txt \
     --config examples/reflected_region_analysis.yml \
     --output_dir my_output_dir
 ```
@@ -70,3 +69,24 @@ python v2dl5/scripts/plot_binary_light_curves.py \
     --instrument VERITAS \
     --configuration examples/binary_lightcurve_plotting.yml
 ```
+
+## Auxiliary data
+
+Auxiliary data is stored in v2dl5/data and available at run time. This includes:
+
+### Star catalogues
+
+Hippargos catalog for stars with magnitude < 9: [v2dl5/data/hip_mag9.fits.gz](v2dl5/data/hip_mag9.fits.gz).
+Star catalogs are listed in the configuration files as
+
+```yaml
+datasets:
+    exclusion_region:
+        on_radius: 0.5 deg
+        magnitude_B: 7
+        star_exclusion_radius: 0.30 deg
+        fov: 3.5 deg
+        star_file: hip_mag9.fits.gz
+```
+
+Star catalogs are expected to be in the [v2dl5/data](v2dl5/data) directory and of fits format.README.md
