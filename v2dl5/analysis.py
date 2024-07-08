@@ -100,10 +100,7 @@ class Analysis:
         plotter.plot_light_curves(self.light_curves)
 
     def write(self):
-        """
-        Write all results.
-
-        """
+        """Write results to files."""
 
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
@@ -332,6 +329,15 @@ class Analysis:
                 )
             ),
         }
+        for time_bin_file in self.args_dict["light_curve"]["time_bin_files"]:
+            time_intervals = v2dl5_time.get_time_bins_from_file(time_bin_file)
+            title = Path(time_bin_file).stem
+            self._logger.info(f"Time intervals from {time_bin_file}: {time_intervals}")
+            light_curves[title] = {
+                "light_curve": None,
+                "title": title,
+                "time_intervals": time_intervals,
+            }
 
         for _, light_curve in light_curves.items():
             self._logger.info(light_curve["title"])

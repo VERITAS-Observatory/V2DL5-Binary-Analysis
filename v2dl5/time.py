@@ -3,6 +3,7 @@ Definition of time bins
 
 """
 
+from astropy.table import Table
 from astropy.time import Time
 
 
@@ -59,3 +60,26 @@ def _get_starting_times(data_set):
         _time_start.extend(_data_set.gti.time_start)
 
     return _time_start
+
+
+def get_time_bins_from_file(file_name):
+    """
+    Get the time bins from a file (ecsv format).
+
+    Parameters
+    ----------
+    file_name : str
+        File name.
+
+    Returns
+    -------
+    list
+        List of time bins.
+
+    """
+    _time_bins = []
+    _time_table = Table.read(file_name)
+    for _row in _time_table:
+        _time_bins.append(Time([_row["time_min"], _row["time_max"]], format="mjd", scale="utc"))
+
+    return _time_bins
