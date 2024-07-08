@@ -62,6 +62,14 @@ def _parse():
         default=".pdf",
         help="File type for plots (e.g., '.pdf', '.png')",
     )
+    parser.add_argument(
+        "--figure_dir",
+        type=str,
+        required=False,
+        default="./figures/",
+        help="Directory for saving figures",
+    )
+
     return parser.parse_args()
 
 
@@ -99,8 +107,8 @@ def main():
         config=data_reader.config,
         binary=binary.get("HESS J0632+057"),
     )
-    plotter.plot_flux_vs_time("MJD", None, None, args.plot_type)
-    plotter.plot_flux_vs_time("orbital phase", None, None, args.plot_type)
+    plotter.plot_flux_vs_time("MJD", None, None, args.plot_type, args.figure_dir)
+    plotter.plot_flux_vs_time("orbital phase", None, None, args.plot_type, args.figure_dir)
 
 
 #    icrc2019Plots = False
