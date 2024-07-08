@@ -109,7 +109,7 @@ class Analysis:
             title_with_underscores = light_curve["title"].replace(" ", "_")
             self._write_datasets(
                 light_curve["light_curve"],
-                f"ligth_curve_{title_with_underscores}.ecsv",
+                f"light_curve_{title_with_underscores}.ecsv",
                 "lightcurve",
                 "flux",
             )
@@ -331,7 +331,7 @@ class Analysis:
         }
         for time_bin_file in self.args_dict["light_curve"]["time_bin_files"]:
             time_intervals = v2dl5_time.get_time_bins_from_file(time_bin_file)
-            title = Path(time_bin_file).stem
+            title = Path(time_bin_file).stem.replace("light_curve_", "")
             self._logger.info(f"Time intervals from {time_bin_file}: {time_intervals}")
             light_curves[title] = {
                 "light_curve": None,
