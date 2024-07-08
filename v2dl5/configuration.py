@@ -145,6 +145,7 @@ def _default_config_analysis():
         "light_curve": {
             "energy": {"min": "0.1 TeV", "max": "100 TeV"},
             "time_zone": -7,
+            "time_bin_files": [],
         },
     }
 
