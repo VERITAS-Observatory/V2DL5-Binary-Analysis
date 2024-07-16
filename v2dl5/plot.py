@@ -76,14 +76,18 @@ class Plot:
             FluxPointsDataset(data=flux_points, models=model.copy()),
         )
 
-    def plot_light_curves(self, light_curve_per_obs=None, light_curve_per_night=None):
+    def plot_light_curves(self, light_curves):
         """
-        Light curve related plots
+        Light curve related plots.
+
+        Parameters
+        ----------
+        light_curves : dict
+            Light curves per observation and per night
 
         """
-
-        self.plot_light_curve(light_curve_per_obs, "per observation")
-        self.plot_light_curve(light_curve_per_night, "per night")
+        for _, light_curve in light_curves.items():
+            self.plot_light_curve(light_curve["light_curve"], light_curve["title"])
 
     def plot_event_histograms(self):
         """

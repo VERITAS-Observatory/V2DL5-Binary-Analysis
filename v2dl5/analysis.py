@@ -1,6 +1,4 @@
-""""
-Main analysis class.
-"""
+""""Main analysis class."""
 
 import logging
 from pathlib import Path
@@ -56,8 +54,7 @@ class Analysis:
         self.spectral_model = None
         self.fit_results = None
         self.flux_points = None
-        self.light_curve_per_obs = None
-        self.light_curve_per_night = None
+        self.light_curves = {}
 
     def run(self):
         """
@@ -73,8 +70,7 @@ class Analysis:
         self._define_spectral_models(model=self.args_dict["fit"])
         self._spectral_fits(datasets=_data_sets)
         self._flux_points(_data_sets)
-        self.light_curve_per_obs = self._light_curve(_data_sets, None)
-        self.light_curve_per_night = self._nightly_light_curve(_data_sets)
+        self.light_curves = self._analyse_light_curves(_data_sets)
 
     def plot(self):
         """
@@ -101,26 +97,22 @@ class Analysis:
             )
         else:
             self._logger.warning("Skipping spectral plots because fit failed")
-        plotter.plot_light_curves(
-            light_curve_per_obs=self.light_curve_per_obs,
-            light_curve_per_night=self.light_curve_per_night,
-        )
+        plotter.plot_light_curves(self.light_curves)
 
     def write(self):
-        """
-        Write all results.
-
-        """
+        """Write results to files."""
 
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
         self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
-        self._write_datasets(
-            self.light_curve_per_obs, "light_curve_per_obs.ecsv", "lightcurve", "flux"
-        )
-        self._write_datasets(
-            self.light_curve_per_night, "light_curve_per_night.ecsv", "lightcurve", "flux"
-        )
+        for _, light_curve in self.light_curves.items():
+            title_with_underscores = light_curve["title"].replace(" ", "_")
+            self._write_datasets(
+                light_curve["light_curve"],
+                f"light_curve_{title_with_underscores}.ecsv",
+                "lightcurve",
+                "flux",
+            )
         if self.spectral_model:
             self._write_yaml(self.spectral_model.to_dict(), "spectral_model.yaml")
 
@@ -304,6 +296,55 @@ class Analysis:
         self.flux_points.to_table(sed_type="e2dnde", formatted=True).pprint()
         self.flux_points.to_table(sed_type="e2dnde", formatted=True).pprint_all()
 
+    def _analyse_light_curves(self, data_sets):
+        """
+        Analyse light curves for different time interval.
+
+        Parameters
+        ----------
+        data_sets : Datasets
+            Datasets
+
+        Returns
+        -------
+        light_curves : dict
+            Light curves
+
+        """
+        light_curves = {}
+
+        light_curves["per_obs"] = {
+            "light_curve": None,
+            "title": "per observation",
+            "time_intervals": None,
+        }
+        light_curves["per_obs"] = {
+            "light_curve": None,
+            "title": "per night",
+            "time_intervals": (
+                None
+                if self.args_dict["datasets"]["stack"]
+                else v2dl5_time.get_list_of_nights(
+                    data_sets, time_zone=self.args_dict["light_curve"]["time_zone"]
+                )
+            ),
+        }
+        for time_bin_file in self.args_dict["light_curve"]["time_bin_files"]:
+            time_intervals = v2dl5_time.get_time_bins_from_file(time_bin_file)
+            title = Path(time_bin_file).stem.replace("light_curve_", "")
+            self._logger.info(f"Time intervals from {time_bin_file}: {time_intervals}")
+            light_curves[title] = {
+                "light_curve": None,
+                "title": title,
+                "time_intervals": time_intervals,
+            }
+
+        for _, light_curve in light_curves.items():
+            self._logger.info(light_curve["title"])
+            light_curve["light_curve"] = self._light_curve(data_sets, light_curve["time_intervals"])
+
+        return light_curves
+
     def _light_curve(self, datasets, time_intervals=None):
         """
         Calculate light curve.
@@ -352,29 +393,6 @@ class Analysis:
         _table.pprint_all()
 
         return _light_curve
-
-    def _nightly_light_curve(self, _data_sets):
-        """
-        Combine observations per night and calculate light curve.
-        Not applicable for stacked analysis.
-
-        Parameters
-        ----------
-        _data_sets : Datasets
-            Datasets
-
-        """
-
-        if self.args_dict["datasets"]["stack"]:
-            return None
-
-        self._logger.info("Estimating daily light curve")
-
-        time_intervals = v2dl5_time.get_list_of_nights(
-            _data_sets, time_zone=self.args_dict["light_curve"]["time_zone"]
-        )
-
-        return self._light_curve(_data_sets, time_intervals=time_intervals)
 
     def _get_energy_axis(self, name="energy"):
         """
