@@ -2,6 +2,7 @@
 # create: mamba env create -f environment.yml
 # activate: conda activate v2dl5
 # update: mamba env update -f environment.yml --prune
+# update (micromamba): micromamba update -f environment.yml
 #
 name: v2dl5
 channels:

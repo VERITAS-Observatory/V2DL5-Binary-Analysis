@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 title: >-
-  V2DL5 - high-level analysis for VERITAS with gammapy
+  V2DL5-Binary-Analysis - High-level analysis for binary light curves for VERITAS
 message: Please cite this software using these metadata.
 type: software
 authors:
@@ -8,6 +8,6 @@ authors:
     family-names: Maier
     affiliation: DESY
     orcid: 'https://orcid.org/0000-0001-9868-4700'
-repository-code: 'https://github.com/GernotMaier/V2DL5'
+repository-code: 'https://github.com/GernotMaier/V2DL5-Binary-Analysis'
 doi: 10.5281/zenodo.8254372
 license: BSD-3-Clause
