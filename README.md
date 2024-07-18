@@ -98,3 +98,23 @@ All scripts are containerized and can be run with the provided docker container.
 ```console
 ./light_curve_analysis.sh <anasum file> <time cuts file>
 ```
+
+### Spectral analysis
+
+```console
+./spectral_analysis.sh <anasum file> <output file>
+```
+
+### Time cuts file
+
+The time cuts file is a simple text file with the following format:
+
+```text
+MJD_start MJD_stop
+```
+
+To generate a time cuts file for nightly binning:
+
+```console
+./nightly_time_bins.sh <anasum file>
+```
