@@ -33,7 +33,9 @@ conda activate v2dl5
 pip install -e .
 ```
 
-## Run list generator
+## V2DL5 Analysis
+
+### Run list generator
 
 The tool `runlist.py` allows to generate a list of runs for a given observation time and zenith angle.
 It generates a lot of printout which should be used to fine tune the run selection.
@@ -47,7 +49,7 @@ python v2dl5/scripts/generate_runlist.py \
    --output_dir my_output_dir
 ```
 
-## Reflected region analysis
+### Reflected region analysis
 
 ```console
 python v2dl5/scripts/reflected_region_analysis.py \
@@ -56,7 +58,7 @@ python v2dl5/scripts/reflected_region_analysis.py \
     --output_dir my_output_dir
 ```
 
-## Binary light curve plotting
+### Binary light curve plotting
 
 ```console
 python v2dl5/scripts/plot_binary_light_curves.py \
@@ -64,7 +66,7 @@ python v2dl5/scripts/plot_binary_light_curves.py \
     --configuration examples/binary_lightcurve_plotting.yml
 ```
 
-## Auxiliary data
+### Auxiliary data
 
 Auxiliary data is stored in v2dl5/data and available at run time. This includes:
 
@@ -84,3 +86,15 @@ datasets:
 ```
 
 Star catalogs are expected to be in the [v2dl5/data](v2dl5/data) directory and of fits format.README.md
+
+## Eventdisplay and anasum analysis
+
+High-level analysis is also possible with the [Eventdisplay](https://github.com/VERITAS-Observatory/EventDisplay_v4) package and its high-level tool anasum.
+
+All scripts are containerized and can be run with the provided docker container.
+
+### Light-curve analysis
+
+```console
+./light_curve_analysis.sh <anasum file> <time cuts file>
+```
