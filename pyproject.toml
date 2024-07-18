@@ -12,7 +12,7 @@ write_to = "v2dl5/_version.py"
 [project]
 name = "v2dl5"
 dynamic = ["version"]
-description = "High-level analysis for VERITAS with gammapy"
+description = "High-level analysis for binary light curves for VERITAS"
 readme = "README.md"
 license = { file="LICENSE" }
 authors = [
@@ -42,8 +42,8 @@ dependencies = [
 ]
 
 [project.urls]
-"repository" = "https://github.com/GernotMaier/V2DL5"
-"bug tracker" = "https://github.com/GernotMaier/V2DL5/issues"
+"repository" = "https://github.com/GernotMaier/V2DL5-Binary-Analysis"
+"bug tracker" = "https://github.com/GernotMaier/V2DL5-Binary-Analysis/issues"
 
 [project.scripts]
 v2dl5-generate-runlist = "v2dl5.scripts.generate_runlist:main"
@@ -56,9 +56,6 @@ minversion="6.0"
 norecursedirs=["build", "docs/_build"]
 addopts="-v"
 testpaths="v2dl5/tests/"
-
-[tool.black]
-line_length = 100
 
 [tool.isort]
 profile = "black"

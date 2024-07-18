@@ -1,24 +1,18 @@
-# V2DL5 - high-level analysis for VERITAS with gammapy
+# V2DL5 - High-level analysis for binary light curves for VERITAS
 
+[![LICENSE](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://github.com/GernotMaier/V2DL5-Binary-Analysis/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/673002313.svg)](https://zenodo.org/badge/latestdoi/673002313)
-[![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
-[![GitHub Super-Linter](https://github.com/GernotMaier/V2DL5/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
 
-This is a collection of simple scripts for the high-level analysis of VERITAS data with gammapy.
-The focus is on binary light curve analysis, meaning this is mostly a reflected region analysis with some binary specific tools.
+[![GitHub Super-Linter](https://github.com/GernotMaier/V2DL5/actions/workflows/linter.yml/badge.svg)](https://github.com/marketplace/actions/super-linter)
+[![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
+
+This is a collection of simple scripts for the high-level analysis of binary data for VERITAS. 
+Focus is on the usage of gammapy for binary light curve analysis, meaning this is mostly a reflected region analysis with some binary specific tools.
 
 Allows to run analysis scripts for a given list of runs or for a cone search around the given on\_region direction.
 
 - source detection analysis including integral flux (or flux upper limits), reflection region model
 - spectral analysis, reflected region model
-
-Reminder on data levels (as defined e.g., by CTAO):
-
-- DL3: event lists for gamma-ray like events
-- DL4: binned data (in time, space, energy)
-- DL5: science data products (e.g., sky maps, energy spectra, light curves)
-
-This repository provides scripts to generate DL5 science data products.
 
 ## Acknowledgement
 
