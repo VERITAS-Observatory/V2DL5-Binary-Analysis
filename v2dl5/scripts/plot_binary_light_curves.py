@@ -13,6 +13,7 @@ Includes the following plots
 import argparse
 import logging
 
+import v2dl5.binaries as binaries
 import v2dl5.light_curves.binary_plotting
 import v2dl5.light_curves.data_reader
 
@@ -42,11 +43,11 @@ def _parse():
         help="Configuration describing data files and plotting",
     )
     parser.add_argument(
-        "--period",
-        type=float,
-        required=False,
-        default=317.3,
-        help="Orbital period (in units of days)",
+        "--binary_name",
+        type=str,
+        required=True,
+        default="LS I +61 303",
+        help="Binary name (e.g., LS I +61 303; see v2dl5.binaries for definition).",
     )
     parser.add_argument(
         "--orbital_bins",
@@ -87,25 +88,20 @@ def main():
     logging.info("Light Curve Analysis - run parameters")
     logging.info("instrument: %s" % args.instrument)
     logging.info("instrument list: %s" % args.configuration)
-    logging.info("orbital period: %.2f" % args.period)
     logging.info("number of bins for averaging: %.1f" % args.orbital_bins)
 
-    binary = {}
-    binary["HESS J0632+057"] = {}
-    binary["HESS J0632+057"]["name"] = "HESS J0632+057"
-    binary["HESS J0632+057"]["orbital_period"] = 317.3
-    binary["HESS J0632+057"]["mjd_0"] = 54857.0  # Bongiorno et al 2011
+    try:
+        binary = binaries.binary_properties()[args.binary_name]
+    except KeyError:
+        raise KeyError(f"Binary {args.binary_name} not found in binaries.py")
 
     data_reader = v2dl5.light_curves.data_reader.LightCurveDataReader(
-        args.configuration, binary=binary.get("HESS J0632+057")
+        args.configuration, binary=binary
     )
     data_reader.read_data()
-    print("Data reader: ", data_reader.data_dict)
 
     plotter = v2dl5.light_curves.binary_plotting.BinaryLightCurvePlotter(
-        data=data_reader.data_dict,
-        config=data_reader.config,
-        binary=binary.get("HESS J0632+057"),
+        data=data_reader.data_dict, config=data_reader.config, binary=binary
     )
     plotter.plot_flux_vs_time("MJD", None, None, args.plot_type, args.figure_dir)
     plotter.plot_flux_vs_time("orbital phase", None, None, args.plot_type, args.figure_dir)

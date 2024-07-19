@@ -5,7 +5,7 @@ import numpy as np
 import yaml
 from astropy.table import Table
 
-import v2dl5.light_curves.orbital_period as orbit
+import v2dl5.orbital_phase as orbit
 
 
 class LightCurveDataReader:
@@ -41,6 +41,7 @@ class LightCurveDataReader:
             raise err
 
         self.binary = binary
+        self._logger.info("Binary properties: %s", self.binary)
 
     def read_data(self):
         """
@@ -64,6 +65,7 @@ class LightCurveDataReader:
         """
         try:
             if data_config["file_name"].endswith((".csv", ".ecsv")):
+                self._logger.info("Reading data from %s", data_config["file_name"])
                 return self._read_fluxes_from_ecsv_file(data_config)
         except KeyError:
             self._logger.error(f"File name not found in configuration {data_config}")
@@ -84,17 +86,27 @@ class LightCurveDataReader:
         mjd_0 = self.binary["mjd_0"]
 
         data["phase"] = [
-            orbit.get_orbital_phase(mjd, orbital_period, mjd_0, True) for mjd in data["MJD"]
+            orbit.get_orbital_phase(
+                mjd, orbital_period=orbital_period, mjd_0=mjd_0, phase_reduce=True
+            )
+            for mjd in data["MJD"]
         ]
         data["phaseN"] = [
-            orbit.get_orbital_phase(mjd, orbital_period, mjd_0, False) for mjd in data["MJD"]
+            orbit.get_orbital_phase(
+                mjd, orbital_period=orbital_period, mjd_0=mjd_0, phase_reduce=False
+            )
+            for mjd in data["MJD"]
         ]
         data["phase_err_low"] = [
-            orbit.get_orbital_phase_range(a, b, c, False, orbital_period, mjd_0)
+            orbit.get_orbital_phase_range(
+                a, b, c, upper_error=False, orbital_period=orbital_period, mjd_0=mjd_0
+            )
             for a, b, c in zip(data["time_min"], data["time_max"], data["phase"])
         ]
         data["phase_err_hig"] = [
-            orbit.get_orbital_phase_range(a, b, c, True, orbital_period, mjd_0)
+            orbit.get_orbital_phase_range(
+                a, b, c, upper_error=True, orbital_period=orbital_period, mjd_0=mjd_0
+            )
             for a, b, c in zip(data["time_min"], data["time_max"], data["phase"])
         ]
         data["phase_err"] = [data["phase_err_low"], data["phase_err_hig"]]
@@ -104,7 +116,6 @@ class LightCurveDataReader:
         Convert photon to energy flux
 
         """
-
         f = (-1.0 * gamma + 1) / (-1.0 * gamma + 2)
         # conversion to erg
         f = f * (E_0.to(u.erg)).value

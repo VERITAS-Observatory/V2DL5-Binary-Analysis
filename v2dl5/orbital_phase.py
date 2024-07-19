@@ -1,12 +1,9 @@
-"""
-Orbital phase calculations
-
-"""
+"""Orbital phase calculations."""
 
 import numpy as np
 
 
-def get_orbital_phase(mjd, orbital_period=317.3, mjd_0=54857.0, phase_reduce=True):
+def get_orbital_phase(mjd, orbital_period, mjd_0, phase_reduce=True):
     """
     Calculate orbital phase for a given MJD.
 
@@ -18,9 +15,9 @@ def get_orbital_phase(mjd, orbital_period=317.3, mjd_0=54857.0, phase_reduce=Tru
     mjd: float
         MJD
     orbital_period: float
-        Orbital period
+        Orbital period (in units of days)
     mjd_0: float
-        Reference MJD
+        Reference MJD (in units of days)
     phase_reduce: bool
         Reduce phase to interval [0,1]
 
@@ -50,9 +47,7 @@ def get_orbital_phase(mjd, orbital_period=317.3, mjd_0=54857.0, phase_reduce=Tru
     return phase
 
 
-def get_orbital_phase_range(
-    mjd_min, mjd_max, phase_mean=0.5, upper_error=True, orbital_period=317.3, mjd_0=54857.0
-):
+def get_orbital_phase_range(mjd_min, mjd_max, phase_mean, orbital_period, mjd_0, upper_error=True):
     """
     Calculate width of observation bin in orbital phase
 
@@ -64,12 +59,12 @@ def get_orbital_phase_range(
         End time of observation
     phase_mean: float
         Mean phase of observation
-    upper_error: bool
-        Upper error
-    orbital_period: float
+    orbital_period: float (in units of days)
         Orbital period
     mjd_0: float
         Reference MJD
+    upper_error: bool
+        Upper error
 
     Returns
     -------
@@ -77,8 +72,8 @@ def get_orbital_phase_range(
         Width of observation bin in orbital phase
     """
 
-    ph_min = get_orbital_phase(mjd_min, orbital_period, mjd_0)
-    ph_max = get_orbital_phase(mjd_max, orbital_period, mjd_0)
+    ph_min = get_orbital_phase(mjd=mjd_min, orbital_period=orbital_period, mjd_0=mjd_0)
+    ph_max = get_orbital_phase(mjd=mjd_max, orbital_period=orbital_period, mjd_0=mjd_0)
     if abs(ph_max - ph_min) < 1.0e-3:
         ph_err = 0.0
     elif ph_max > ph_min:

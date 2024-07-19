@@ -1,8 +1,5 @@
 #!/usr/bin/python
-"""
-Read gammapy-generated light curve files and print a simplified and readable version of the data.
-
-"""
+"""Read gammapy-generated light curve files and print a simplified/readable version of the data."""
 
 import argparse
 import logging
