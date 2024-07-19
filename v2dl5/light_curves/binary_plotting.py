@@ -3,6 +3,7 @@ Binary light curve plotting.
 """
 
 import logging
+import math
 
 import matplotlib.pyplot as plt
 
@@ -33,10 +34,18 @@ class BinaryLightCurvePlotter:
         self.binary = binary
 
     def plot_flux_vs_time(
-        self, time_axis="MJD", mjd_min=None, mjd_max=None, file_type=".pdf", figure_dir="./figures/"
+        self,
+        time_axis="MJD",
+        mjd_min=None,
+        mjd_max=None,
+        orbit_number=None,
+        file_type=".pdf",
+        figure_dir="./figures/",
+        axes=None,
+        fontsize=None,
     ):
         """
-        Plot flux vs time (MJD or orbital phase)
+        Plot flux vs time (MJD or orbital phase).
 
         Parameters
         ----------
@@ -49,33 +58,26 @@ class BinaryLightCurvePlotter:
         file_type: str
             File type for plots (e.g., '.pdf', '.png').
         """
-        self._logger.info(f"Plotting flux vs {time_axis}")
+        self._logger.info(
+            f"Plotting flux vs {time_axis}" f"(MJD {mjd_min}, {mjd_max}, orbit id {orbit_number})"
+        )
 
-        ax = plotting_utilities.paper_figures(None, None)
-        colors = plotting_utilities.get_color_list(len(self.data))
+        ax = axes if axes else plotting_utilities.paper_figures(None, None)
 
         for idx, (instrument, data) in enumerate(self.data.items()):
-            x, y, e, x_ul, y_ul = self._get_light_curve_in_MJD_limits(
-                data, time_axis, mjd_min, mjd_max
-            )
 
-            if instrument in self.config and self.config["plot_instrument"] is False:
+            x, y, e, x_ul, y_ul = self._get_light_curve_in_MJD_limits(
+                data, time_axis, mjd_min, mjd_max, orbit_number
+            )
+            if not self.plot_this_instrument(instrument):
                 continue
-            color = (
-                colors[idx]
-                if self.config[idx].get("marker_color") is None
-                else self.config[idx]["marker_color"]
-            )
-            marker = (
-                plotting_utilities.get_marker_list()[idx]
-                if self.config[idx].get("marker_type") is None
-                else self.config[idx]["marker_type"]
-            )
+            color, marker = self.get_marker_and_color(idx)
             plt.errorbar(
                 x,
                 y,
                 e,
                 None,
+                # TODO - label can also be orbit number?
                 label=(
                     instrument
                     if self.config[idx].get("plot_label") is None
@@ -102,17 +104,71 @@ class BinaryLightCurvePlotter:
                     markersize=plotting_utilities.get_marker_size(),
                 )
 
-        plt.xlabel(self._get_time_axis_label(time_axis))
+        ax.axhline(0, color="lightgray", linestyle="--")
+        plt.xlabel(self._get_time_axis_label(time_axis), fontsize=fontsize)
         if mjd_min is not None and mjd_max is not None:
             ax.set_xlim([mjd_min, mjd_max])
         # TMP - y-axis: use first entry in configuration dict
-        plt.ylabel(self.config[0]["flux_axis_label"])
-        plt.legend()
+        plt.ylabel(self.config[0]["flux_axis_label"], fontsize=fontsize)
+        if axes is None:
+            plt.legend()
+            plotting_utilities.print_figure(
+                f"Light-Curve-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}",
+                file_type=file_type,
+                figure_dir=figure_dir,
+            )
 
+    def plot_flux_vs_phase_for_individual_orbits(
+        self, instrument, file_type=".pdf", figure_dir="./figures/"
+    ):
+        """
+        Plot flux vs phase with one plot per orbit.
+
+        """
+        self._logger.info("Plotting flux vs phase for individual orbits")
+        time_axis = "orbital phase"
+
+        data = self.data[instrument]
+        orbits = set(data["orbit_number"])
+        self._logger.info(f"Orbits for {instrument} (total number {len(orbits)}): {orbits}")
+
+        y_min, y_max = self._global_flux_extrema(data)
+        fontsize = 6
+
+        #        plotting_utilities.paper_figures(10, 10)
+        plt.figure(figsize=(16, 10))
+        n_columns = 8
+        n_rows = math.ceil(len(orbits) / n_columns)
+        for i, orbit_id in enumerate(orbits):
+            axes = plt.subplot(n_rows, n_columns, i + 1)
+            axes.set_xlim([0.0, 1.0])
+            axes.set_ylim([y_min, y_max])
+            self.plot_flux_vs_time(
+                time_axis=time_axis,
+                mjd_min=None,
+                mjd_max=None,
+                orbit_number=orbit_id,
+                axes=axes,
+                fontsize=fontsize,
+            )
+            plt.rc("xtick", labelsize=fontsize)
+            plt.rc("ytick", labelsize=fontsize)
+
+        plt.tight_layout()
         plotting_utilities.print_figure(
-            f"Light-Curve-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}",
+            f"Light-Curve-Orbits-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}",
             file_type=file_type,
             figure_dir=figure_dir,
+        )
+
+    def _global_flux_extrema(self, data):
+        """
+        Absolute min and max of flux.
+
+        """
+        return (
+            min([min(data["flux"]) - max(data["flux_err"]), 0.0]),
+            max(data["flux"] + data["flux_err"]) * 1.2,
         )
 
     def _get_time_axis_label(self, time_axis):
@@ -124,9 +180,9 @@ class BinaryLightCurvePlotter:
             return "Orbital phase"
         return "Modified Julian Date (MJD)"
 
-    def _get_light_curve_in_MJD_limits(self, data, time_axis, mjd_min, mjd_max):
+    def _get_light_curve_in_MJD_limits(self, data, time_axis, mjd_min, mjd_max, orbit_number):
         """
-        Get light curve restricted in MJD.
+        Get light curve restricted in MJD or for a certain orbit number.
 
         Parameters
         ----------
@@ -138,14 +194,14 @@ class BinaryLightCurvePlotter:
             Minimum MJD value.
         mjd_max : float
             Maximum MJD value.
+        orbit_number : int
+            Select orbit number.
 
         Returns
         -------
         list
-            Light-curve data as three lists.
-
+            Light-curve data as lists.
         """
-
         x = []
         y = []
         e = []
@@ -155,6 +211,8 @@ class BinaryLightCurvePlotter:
             if mjd_min is not None and data["MJD"][i] < mjd_min:
                 continue
             if mjd_max is not None and data["MJD"][i] > mjd_max:
+                continue
+            if orbit_number is not None and data["orbit_number"][i] != orbit_number:
                 continue
             if time_axis == "MJD":
                 w_x = data["MJD"][i]
@@ -171,6 +229,27 @@ class BinaryLightCurvePlotter:
                 y.append(data["flux"][i])
                 e.append(data["flux_err"][i])
         return x, y, e, x_ul, y_ul
+
+    def plot_this_instrument(self, instrument):
+        """Return if this instrument should be plotted."""
+        if "plot_instrument" in self.config:
+            return self.config["plot_instrument"]
+        return True
+
+    def get_marker_and_color(self, idx):
+        """Return marker and color."""
+        colors = plotting_utilities.get_color_list(len(self.data))
+        color = (
+            colors[idx]
+            if self.config[idx].get("marker_color") is None
+            else self.config[idx]["marker_color"]
+        )
+        marker = (
+            plotting_utilities.get_marker_list()[idx]
+            if self.config[idx].get("marker_type") is None
+            else self.config[idx]["marker_type"]
+        )
+        return color, marker
 
 
 #

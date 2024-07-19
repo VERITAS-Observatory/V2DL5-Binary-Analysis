@@ -103,8 +103,15 @@ def main():
     plotter = v2dl5.light_curves.binary_plotting.BinaryLightCurvePlotter(
         data=data_reader.data_dict, config=data_reader.config, binary=binary
     )
-    plotter.plot_flux_vs_time("MJD", None, None, args.plot_type, args.figure_dir)
-    plotter.plot_flux_vs_time("orbital phase", None, None, args.plot_type, args.figure_dir)
+    plotter.plot_flux_vs_time(
+        "MJD", None, None, file_type=args.plot_type, figure_dir=args.figure_dir
+    )
+    plotter.plot_flux_vs_time(
+        "orbital phase", None, None, file_type=args.plot_type, figure_dir=args.figure_dir
+    )
+    plotter.plot_flux_vs_phase_for_individual_orbits(
+        "VERITAS (anasum)", file_type=args.plot_type, figure_dir=args.figure_dir
+    )
 
 
 #    icrc2019Plots = False
