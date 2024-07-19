@@ -111,6 +111,11 @@ class LightCurveDataReader:
         ]
         data["phase_err"] = [data["phase_err_low"], data["phase_err_hig"]]
 
+        data["orbit_number"] = [
+            orbit.get_orbit_number(mjd=mjd, orbital_period=orbital_period, mjd_0=mjd_0)
+            for mjd in data["MJD"]
+        ]
+
     def convert_photon_to_energy_flux(C_v, C_e, E_0, gamma):
         """
         Convert photon to energy flux
