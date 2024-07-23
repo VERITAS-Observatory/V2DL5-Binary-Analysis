@@ -21,4 +21,4 @@ fi
  }
 
 echo "Running spectral analysis..."
-plot_spectra $1 $2
+plot_spectra "$1" "$2"
