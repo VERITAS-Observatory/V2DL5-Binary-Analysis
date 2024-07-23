@@ -99,6 +99,8 @@ All scripts are containerized and can be run with the provided docker container.
 ./light_curve_analysis.sh <anasum file> <time cuts file>
 ```
 
+Use `RUNWISE` for the `time cuts file` to generate a light curve for each run.
+
 ### Spectral analysis
 
 ```console
