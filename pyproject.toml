@@ -57,6 +57,9 @@ norecursedirs=["build", "docs/_build"]
 addopts="-v"
 testpaths="v2dl5/tests/"
 
+[tool.black]
+line-length = 100
+
 [tool.isort]
 profile = "black"
 filter_files = true
