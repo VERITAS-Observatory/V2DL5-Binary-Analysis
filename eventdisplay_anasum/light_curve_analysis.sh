@@ -4,6 +4,7 @@
 
 if [ "$#" -ne 2 ]; then
     echo "Usage: $0 <anasum_file> <time_interval_file>"
+    echo "  (use RUNWISE for time interval file for run-wise analysis"
     echo
     exit 1
 fi
@@ -21,4 +22,4 @@ fi
  }
 
  echo "Running light-curve analysis..."
-light_curves $1 $2
+light_curves "$1" "$2"
