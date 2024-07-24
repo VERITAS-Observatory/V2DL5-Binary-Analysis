@@ -2,8 +2,6 @@
  * Tools for VERITAS light curve analysis with Eventdisplay
  *
  *  - light_curve_analysis : print a light curve line (ECSV format) for each period
- *  - TODO !! checkLightCurveIntervals - check that all runs are in MJD intervals
- *
  */
 
 R__LOAD_LIBRARY($EVNDISPSYS/lib/libVAnaSum.so);
