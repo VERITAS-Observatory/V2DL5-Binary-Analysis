@@ -118,6 +118,18 @@ class BinaryLightCurvePlotter:
                 figure_dir=figure_dir,
             )
 
+    def _get_number_columns_and_rows(self, number):
+        """
+        Get number of columns and rows for plotting.
+
+        """
+        n_columns = 4
+        if number > 9:
+            n_columns = 6
+        if number > 12:
+            n_columns = 8
+        return n_columns, math.ceil(number / n_columns)
+
     def plot_flux_vs_phase_for_individual_orbits(
         self, instrument, file_type=".pdf", figure_dir="./figures/"
     ):
@@ -136,9 +148,11 @@ class BinaryLightCurvePlotter:
         fontsize = 6
 
         #        plotting_utilities.paper_figures(10, 10)
-        plt.figure(figsize=(16, 10))
-        n_columns = 8
-        n_rows = math.ceil(len(orbits) / n_columns)
+        n_columns, n_rows = self._get_number_columns_and_rows(len(orbits))
+        self._logger.info(f"Number of columns: {n_columns}, number of rows: {n_rows}")
+        figsize = (16, 10) if n_rows > 1 else (10, 4)
+        print("AAAA", figsize)
+        plt.figure(figsize=figsize)
         for i, orbit_id in enumerate(orbits):
             axes = plt.subplot(n_rows, n_columns, i + 1)
             axes.set_xlim([0.0, 1.0])
@@ -177,7 +191,7 @@ class BinaryLightCurvePlotter:
 
         """
         if time_axis == "orbital phase":
-            return "Orbital phase"
+            return "phase"
         return "Modified Julian Date (MJD)"
 
     def _get_light_curve_in_MJD_limits(self, data, time_axis, mjd_min, mjd_max, orbit_number):

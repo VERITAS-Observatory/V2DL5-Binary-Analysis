@@ -27,6 +27,11 @@ def binary_properties():
             "orbital_period": 26.496,
             "mjd_0": 2443366.775 - 2400000.5,
         },
+        "LS I +61 303 superorbital": {
+            "name": "LS I +61 303",
+            "orbital_period": 1667.0,  # Gregory et al. 2002
+            "mjd_0": 2443366.775 - 2400000.5,
+        },
         "LS 5039": {
             "name": "LS 5039",
             "orbital_period": 3.90603,
