@@ -120,3 +120,19 @@ To generate a time cuts file for nightly binning:
 ```console
 ./nightly_time_bins.sh <anasum file>
 ```
+
+### Validate time cuts and generate run lists
+
+Check that every run from the anasum file is inside one of the defined time cuts:
+
+```console
+./runlist_from_time_bins.sh <anasum file> <time cuts file> false
+```
+
+Additionally write run lists for each of the MJD bins:
+
+```console
+./runlist_from_time_bins.sh <anasum file> <time cuts file> true
+```
+
+The tool will also write a figure with the length-of-time bins vs time bin.
