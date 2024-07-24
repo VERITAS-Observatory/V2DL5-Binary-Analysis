@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def getPlottingVariable(PlotVariable, index):
-    """return string with plotting variable"""
+    """String with plotting variable"""
 
     # plotting variable
     i_plotValue = "flux"
@@ -23,7 +23,9 @@ def getPlottingVariable(PlotVariable, index):
 
 
 def align_yaxis(ax1, v1, ax2, v2):
-    """adjust ax2 ylimit so that v2 in ax2 is aligned to v1 in ax1
+    """
+    Adjust ax2 ylimit so that v2 in ax2 is aligned to v1 in ax1
+
     from https://stackoverflow.com/questions/10481990/matplotlib-axis-with-two-scales-shared-origin
     """
     _, y1 = ax1.transData.transform((0, v1))
@@ -35,24 +37,18 @@ def align_yaxis(ax1, v1, ax2, v2):
 
 
 def plotUncertaintyBand(ax, per_stdx):
-    """plot a vertical uncertainty band"""
+    """Plot a vertical uncertainty band"""
     ax.axvspan(per_stdx[0], per_stdx[1], alpha=0.5, color="g")
     # ax.axvspan(per_stdx[0], per_stdx[1], alpha=0.5, color='b')
 
 
 def get_line_width():
-    """
-    Return default line width.
-
-    """
+    """Default line width."""
     return 0.5
 
 
 def get_marker_size():
-    """
-    Return default marker size.
-
-    """
+    """Return default marker size."""
     return 4
 
 
@@ -84,10 +80,7 @@ def get_color_list(n_colors, plot_type=None):
 
 
 def get_marker_list():
-    """
-    Return a list of markers.
-
-    """
+    """Return a list of markers."""
     return ["o", "s", "P", "^", "D"]
 
 
@@ -105,7 +98,6 @@ def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
         Directory where the figure is saved.
 
     """
-
     # don't allow spaces in print string
     print_name = print_name.replace(" ", "-")
     figure_path = Path(figure_dir)
@@ -120,7 +112,7 @@ def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
 
 
 def getOrbitalPhaseAxisString(OrbitalPeriod):
-    """return a string for the orbital phase axis"""
+    """Return a string for the orbital phase axis"""
 
     # strOr = "orbital phase (%.1f d)" % OrbitalPeriod
     strOr = "orbital phase"
@@ -129,9 +121,7 @@ def getOrbitalPhaseAxisString(OrbitalPeriod):
 
 
 def get_flux_axis_string(instrument, PlotVariable=None, ScaleFactor=None, EnergyFlux=False):
-    """return a string with the correct unit depending
-    on the type of instrument
-    """
+    """Flux axis string with the correct unit depending on the type of instrument."""
 
     if not ScaleFactor:
         ScaleFactor = ""
@@ -158,10 +148,7 @@ def get_flux_axis_string(instrument, PlotVariable=None, ScaleFactor=None, Energy
 
 
 def get_paper_figures_parameters(width=None, height=None, xtick_top=True, legend_font_size=8):
-    """
-    Default paper figure parameters
-
-    """
+    """Default paper figure parameters."""
 
     if width is None:
         width = 6
@@ -189,10 +176,7 @@ def get_paper_figures_parameters(width=None, height=None, xtick_top=True, legend
 
 
 def paper_figures(width=None, height=None, columns=1, xtick_top=True):
-    """
-    Set figures parameters for nice paper plotting
-
-    """
+    """Set figures parameters for paper plotting."""
 
     paper_parameters = get_paper_figures_parameters(width, height, xtick_top)
     matplotlib.rcParams.update(paper_parameters)
