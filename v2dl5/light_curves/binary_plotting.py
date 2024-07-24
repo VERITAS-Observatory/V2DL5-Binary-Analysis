@@ -141,17 +141,15 @@ class BinaryLightCurvePlotter:
         time_axis = "orbital phase"
 
         data = self.data[instrument]
-        orbits = set(data["orbit_number"])
+        orbits = sorted(set(data["orbit_number"]))
         self._logger.info(f"Orbits for {instrument} (total number {len(orbits)}): {orbits}")
 
         y_min, y_max = self._global_flux_extrema(data)
         fontsize = 6
 
-        #        plotting_utilities.paper_figures(10, 10)
         n_columns, n_rows = self._get_number_columns_and_rows(len(orbits))
         self._logger.info(f"Number of columns: {n_columns}, number of rows: {n_rows}")
         figsize = (16, 10) if n_rows > 1 else (10, 4)
-        print("AAAA", figsize)
         plt.figure(figsize=figsize)
         for i, orbit_id in enumerate(orbits):
             axes = plt.subplot(n_rows, n_columns, i + 1)
@@ -167,6 +165,14 @@ class BinaryLightCurvePlotter:
             )
             plt.rc("xtick", labelsize=fontsize)
             plt.rc("ytick", labelsize=fontsize)
+            plt.text(
+                0.05,
+                0.95,
+                f"Orbit {orbit_id}",
+                transform=plt.gca().transAxes,
+                fontsize=fontsize,
+                verticalalignment="top",
+            )
 
         plt.tight_layout()
         plotting_utilities.print_figure(
@@ -266,231 +272,7 @@ class BinaryLightCurvePlotter:
         return color, marker
 
 
-#
-# def getNumberOfOrbits(fDataDict, PlotInstruments, OrbitalPeriod_BL, FixedMinMax = True ):
-#     """
-#     return number of orbits observed by the
-#     data set.
-#     """
-#
-#     # calculate number of orbits
-#     min_MJD = 99999
-#     max_MJD = 0
-#     for I in PlotInstruments:
-#         min_MJD = min(min_MJD, min(fDataDict[I]['MJD']))
-#         max_MJD = max(max_MJD, max(fDataDict[I]['MJD']))
-#     if FixedMinMax:
-#         # hardwired min and max MJD for nicer plotting
-#         # MJD min is fixed to first gamma-ray observations
-#         min_MJD = 53080.
-#         # 54540 is for VTS plotting
-#         # min_MJD = 54540.
-#         # value without 2019 data
-#         # max_MJD = 58346.
-#         # value to be used for 2019 data
-#         max_MJD = 58485.
-#         # adding NuSTAR data
-#         # max_MJD = 58910.
-#
-#
-#     MJD_firstOrbit = lightCurveAnalysisOrbitalPeriod.getMJDOrbitZeroPhase(
-#         min_MJD, OrbitalPeriod_BL)
-#     N_orbits = lightCurveAnalysisOrbitalPeriod.getNumberOfOrbits(
-#         MJD_firstOrbit, max_MJD, OrbitalPeriod_BL)
-#
-#     print("Plot flux vs phase:")
-#     print("\t orbital period (%.1f d)" % OrbitalPeriod_BL)
-#     print("\t total number of orbits (%d)" % N_orbits)
-#     if FixedMinMax:
-#         print("\t MJD min (%.1f) max (%.1f) (hardwired!)" % (min_MJD, max_MJD))
-#     else:
-#         print("\t MJD min (%.1f) max (%.1f) " % (min_MJD, max_MJD))
-#     print("\t MJD first orbit (%.1f)" % (MJD_firstOrbit))
-#
-#     return MJD_firstOrbit, N_orbits
-#
-#
-# def plotLightCurve_fluxvsPhase_eachOrbit(
-#         fDataDict,
-#         PlotInstruments,
-#         F,
-#         lc_spline_bin_centers,
-#         lc_spline_sv,
-#         lc_spline_sv_err,
-#         OrbitalPeriod_BL=315.,
-#         OrbitalPeriodBins=20,
-#         PlotRatio=False,
-#         icrc2019Plots=False):
-#     """plot flux vs orbital phase (separated in orbits, each orbit one plot)
-#     """
-#
-#     if len(PlotInstruments) < 1:
-#         return
-#
-#     # calculate min/max values in flux
-#     f_ymin = 1.e9
-#     f_ymax = 0.
-#     for I in PlotInstruments:
-#         f_ymin = min(f_ymin, min(
-#             fDataDict[I]['flux']) - max(fDataDict[I]['flux_err']))
-#         f_ymax = max(f_ymax, max(
-#             fDataDict[I]['flux']) + max(fDataDict[I]['flux_err']))
-#     if f_ymin > 0.:
-#         f_ymin = 0.
-#     f_ymax *= 1.2
-#     f_ymin = max(-2.e-12, f_ymin)
-#     f_ymin = max(-1.e-12, f_ymin)
-#
-#     MJD_firstOrbit, N_orbits = getNumberOfOrbits(
-#         fDataDict, PlotInstruments,
-#         OrbitalPeriod_BL, True)
-#
-#     if icrc2019Plots:
-#         lightCurvePlottingUtilities.paper_figures(12, 6)
-#     else:
-#         lightCurvePlottingUtilities.paper_figures(8, 10)
-#
-#     if PlotInstruments[0].find('Swift XRT') >= 0:
-#         colors = lightCurvePlottingUtilities.getColorList(len(PlotInstruments), "xray")
-#     else:
-#         colors = lightCurvePlottingUtilities.getColorList(len(PlotInstruments))
-#
-#     # sub plots: number of rows:
-#     p_ncol = 3
-#     if N_orbits > 12:
-#         p_ncol = 4
-#     if icrc2019Plots:
-#         p_ncol = 6
-#     p_nrow = math.ceil(N_orbits / p_ncol)
-#
-#     # plot one light curve per orbital period
-#     for i in range(0, N_orbits):
-#         # empty plot
-#         axes = plt.subplot(p_nrow, p_ncol, i + 1)
-#         # axis limits
-#         axes.set_xlim([0., 1.])
-#         if not PlotRatio:
-#             axes.set_ylim([f_ymin, f_ymax])
-#             if f_ymin < 0.:
-#                 plt.axhline(y=0., linestyle=':', color='tab:gray')
-#         else:
-#             axes.set_ylim([0., 6.])
-#
-#         orbit_min = MJD_firstOrbit + i * OrbitalPeriod_BL
-#         orbit_max = MJD_firstOrbit + (i + 1) * OrbitalPeriod_BL - 1.
-#
-#         OrbitPhStr = "Orbit %d:\nMJD %d" % (i + 1, orbit_min)
-#         plt.text(
-#             0.1,
-#             0.83,
-#             OrbitPhStr,
-#             transform=axes.transAxes,
-#             size='smaller')
-#
-#         r_av = 0.
-#         r_n = 0.
-#         c = 0
-#         for I in PlotInstruments:
-#             x = []
-#             y = []
-#             ex = []
-#             ey = []
-#             mj_min = []
-#             mj_max = []
-#             for p in range(len(fDataDict[I]['phaseN'])):
-#                 if fDataDict[I]['MJD'][p] >= orbit_min \
-#                         and fDataDict[I]['MJD'][p] < orbit_max:
-#
-#                     x.append(fDataDict[I]['phase'][p])
-#                     # plot time periods as 'x-errors'
-#                     ex.append(fDataDict[I]['MJD_err'][p]/OrbitalPeriod_BL)
-#                     if not PlotRatio:
-#                         y.append(fDataDict[I]['flux'][p])
-#                         ey.append(fDataDict[I]['flux_err'][p])
-#                     else:
-#                         y.append(fDataDict[I]['flux'][p] /
-#                                  F(1. + fDataDict[I]['phase'][p]))
-#                         ey.append(fDataDict[I]['flux_err'][p] /
-#                                   F(1. + fDataDict[I]['phase'][p]))
-#                         if ey[-1] > 0.:
-#                             r_av += y[-1] / (ey[-1] * ey[-1])
-#                             r_n += 1. / (ey[-1] * ey[-1])
-#                     mj_min.append(
-#                         fDataDict[I]['MJD'][p] -
-#                         fDataDict[I]['MJD_err'][p])
-#                     mj_max.append(
-#                         fDataDict[I]['MJD'][p] +
-#                         fDataDict[I]['MJD_err'][p])
-#
-#             # average plot only for VERITAS and XRT
-#             if I.find("VERITAS") >= 0 or I.find("XRT") >= 0:
-#                 glabel = I + " (average)"
-#                 plt.plot(
-#                     lc_spline_bin_centers,
-#                     lc_spline_sv,
-#                     color='tab:gray',
-#                     linestyle='--',
-#                     linewidth=lightCurvePlottingUtilities.getLineWidth())
-#                 plt.fill_between(
-#                     lc_spline_bin_centers,
-#                     lc_spline_sv - lc_spline_sv_err,
-#                     lc_spline_sv + lc_spline_sv_err,
-#                     color='tab:gray',
-#                     linestyle='--',
-#                     linewidth=lightCurvePlottingUtilities.getLineWidth(),
-#                     alpha=0.3)
-#
-#             # plot points
-#             if len(x):
-#                 pLabel=I
-#                 if pLabel.find( 'XRT' )>=0:
-#                     pLabel="$\it{Swift}$-XRT"
-#                 plt.errorbar(
-#                     x,
-#                     y,
-#                     ey,
-#                     ex,
-#                     color=colors[c],
-#                     marker='o',
-#                     linestyle='none',
-#                     label=pLabel,
-#                     linewidth=lightCurvePlottingUtilities.getLineWidth(),
-#                     markersize=lightCurvePlottingUtilities.getMarkerSize())
-#             c = c + 1
-#
-#         plt.locator_params(axis='x', nbins=4)
-#         plt.xlabel(
-#             lightCurvePlottingUtilities.getOrbitalPhaseAxisString(OrbitalPeriod_BL),
-#             fontsize=8)
-#         plt.ylabel(lightCurvePlottingUtilities.getFluxAxisString(PlotInstruments[0]),
-#         fontsize=8)
-#         plt.legend(loc=2)
-#         plt.legend(prop={'size': 5}, framealpha=0.2)
-#
-#         if PlotRatio:
-#             plt.axhline(y=1, linestyle=':', color='tab:gray')
-#             # plot average ratio + error
-#             if r_n > 0.:
-#                 r_av /= r_n
-#                 r_er = math.sqrt(1. / r_n)
-#                 r_x = [0, 1]
-#                 r_y1 = [r_av - r_er, r_av - r_er]
-#                 r_y2 = [r_av + r_er, r_av + r_er]
-#                 axes.fill_between(
-#                     r_x, r_y1, r_y2, facecolor='tab:gray', alpha=0.3)
-#                 plt.axhline(y=r_av, linestyle=':', color='b')
-#                 r_str = 'Ratio to average: %.2f+-%.2f' % (r_av, r_er)
-#                 # plt.text(0.1, 0.1, r_str)
-#                 print('Orbit %d: %s' % (i,r_str))
-#             plt.ylabel('Ratio to average')
-#
-#     ratiostr = ""
-#     if PlotRatio:
-#         ratiostr = "Ratio"
-#     lightCurvePlottingUtilities.printFigure(
-#         getPrintInstrumentName(PlotInstruments) + "-HESSJ0632p057-LC-phaseFolded-%dd-perOrbit%s" %
-#         (OrbitalPeriod_BL, ratiostr))
-#
+# Temporary stuff - probably not needed
 #
 # def plotLightCurve_fluxvsPhase_inOrbits(
 #         fDataDict,
@@ -587,115 +369,6 @@ class BinaryLightCurvePlotter:
 #         "-HESSJ0632p057-LC-phaseFolded-%dd-Orbits" %
 #         OrbitalPeriod_BL)
 #
-#
-# def plotLightCurve_fluxvsPhase(
-#         fDataDict,
-#         PlotInstruments,
-#         lc_spline_bin_centers,
-#         lc_spline_sv,
-#         lc_spline_sv_err,
-#         OrbitalPeriod_BL=315.,
-#         MJDPlotmin=0,
-#         MJDPlotMax=90000,
-#         PlotVariable=None,
-#         icrc2019Plots=False,
-#         donotplotaverage=False):
-#     """plot flux vs orbital phase
-#     """
-#     ax = lightCurvePlottingUtilities.paper_figures(4, 4)
-#     if PlotInstruments[0].find('Swift XRT') >= 0:
-#         colors = lightCurvePlottingUtilities.getColorList(
-#                     len(PlotInstruments), "xray" )
-#     else:
-#         colors = lightCurvePlottingUtilities.getColorList(
-#                         len(PlotInstruments) )
-#
-#     markers = lightCurvePlottingUtilities.getMarkerList(icrc2019Plots)
-#
-#     if len(PlotInstruments) < 1:
-#         return
-#
-#     c = 0
-#     for i in range(len(PlotInstruments)):
-#
-#         i_plotValue, i_plotError = lightCurvePlottingUtilities.getPlottingVariable(
-#             PlotVariable, i)
-#         xp = []
-#         yp = []
-#         ee = []
-#         ye = []
-#         for p in range(len(fDataDict[PlotInstruments[i]]['MJD'])):
-#             if fDataDict[PlotInstruments[i]
-#                  ]['MJD'][p] > MJDPlotmin and
-#                   fDataDict[PlotInstruments[i]]['MJD'][p] < MJDPlotMax:
-#                 xp.append(fDataDict[PlotInstruments[i]]['phase'][p])
-#                 yp.append(fDataDict[PlotInstruments[i]][i_plotValue][p])
-#                 ee.append(fDataDict[PlotInstruments[i]][i_plotError][p])
-#
-#                 # plot time periods as 'x-errors'
-#                 if 'phase_err' in fDataDict[PlotInstruments[i]] and \
-#                         len(fDataDict[PlotInstruments[i]]['phase_err']) == 2 and \
-#                         len(fDataDict[PlotInstruments[i]]['phase_err'][0]) \
-#                         == len(fDataDict[PlotInstruments[i]]['phase']) and \
-#                         len(fDataDict[PlotInstruments[i]]['phase_err'][1]) \
-#                         == len(fDataDict[PlotInstruments[i]]['phase']):
-#                     ye.append(0.5*(fDataDict[PlotInstruments[i]]['phase_err'][0][p])+\
-#                             fDataDict[PlotInstruments[i]]['phase_err'][1][p])
-#                 else:
-#                     ye.append(0.)
-#
-#         if len(xp) > 0:
-#             ff='full'
-#             si=lightCurvePlottingUtilities.getMarkerSize()
-#             li=lightCurvePlottingUtilities.getLineWidth()
-#             if getPrintInstrumentName(PlotInstruments).find( "XRay" ) >= 0:
-#                 ff='none'
-#                 ff='full'
-#                 si=0.75*lightCurvePlottingUtilities.getMarkerSize()
-#                 li=0.5*lightCurvePlottingUtilities.getLineWidth()
-#             pLabel=PlotInstruments[i]
-#             if pLabel.find( 'XRT' )>=0:
-#                 pLabel="$\it{Swift}$-XRT"
-#             plt.errorbar(
-#                 xp, yp, ee,
-#                 ye,
-#                 color=colors[c], marker=markers[c], linestyle='none',
-#                 label=pLabel,
-#                 linewidth=li, fillstyle=ff,
-#                 markersize=si )
-#         c = c + 1
-#
-#     glabel = PlotInstruments[0] + " (average)"
-#     if lc_spline_bin_centers and len(lc_spline_bin_centers) > 0 \
-#             and not icrc2019Plots \
-#             and not donotplotaverage:
-#         plt.plot(
-#             lc_spline_bin_centers,
-#             lc_spline_sv,
-#             color='tab:gray',
-#             linestyle='--',
-#             linewidth=lightCurvePlottingUtilities.getLineWidth())
-#         plt.fill_between(lc_spline_bin_centers,
-#                          lc_spline_sv - lc_spline_sv_err,
-#                          lc_spline_sv + lc_spline_sv_err,
-#                          color='tab:gray', linestyle='-',
-#                          linewidth=lightCurvePlottingUtilities.getLineWidth(),
-#                          alpha=0.3)
-#     plt.xlabel(
-#         lightCurvePlottingUtilities.getOrbitalPhaseAxisString(OrbitalPeriod_BL))
-#     plt.ylabel(
-#         lightCurvePlottingUtilities.getFluxAxisString(
-#             PlotInstruments[0],
-#             PlotVariable))
-#     if PlotInstruments[0].find('Optical') < 0:
-#         plt.axhline(y=0, linestyle=':')
-#         plt.legend()
-#     #elif PlotVariable and len(PlotVariable) == 1:
-#     #    PlotInstruments[0] += "-" + PlotVariable[0]
-#
-#     lightCurvePlottingUtilities.printFigure(
-#         getPrintInstrumentName(PlotInstruments)
-#  + "-HESSJ0632p057-LC-phaseFolded-%dd" % OrbitalPeriod_BL)
 #
 #
 # def plotAverageLightCurve_fluxvsPhase(
@@ -929,5 +602,4 @@ class BinaryLightCurvePlotter:
 #     ax1_x.set_xlabel('orbital phase')
 #
 #     lightCurvePlottingUtilities.printFigure('XG-HESSJ0632p057-LC')
-#
 #

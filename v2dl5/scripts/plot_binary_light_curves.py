@@ -114,13 +114,5 @@ def main():
     )
 
 
-#    icrc2019Plots = False
-#    donotplotaverage = False
-#    lightCurvePlotting.plotLightCurveData(fDataDict,
-#                                          PlotInstruments, PlotVariable,
-#                                          OrbitalPeriod_BL, OrbitalPeriodBins,
-#                                          icrc2019Plots, donotplotaverage)
-
-
 if __name__ == "__main__":
     main()
