@@ -93,8 +93,6 @@ void runlist_from_time_bins( string iAnaSumFile, string iMJDIntervalFile, bool i
      // loop over all time intervals
      for( unsigned n = 0; n < min_max.size(); n++ )
      {
-         bool bFound = false;
-
          vector< int > iRunList;
          // loop over all runs
          for( int i = 0; i < t->GetEntries(); i++ )
@@ -107,8 +105,29 @@ void runlist_from_time_bins( string iAnaSumFile, string iMJDIntervalFile, bool i
              {
                 iNruns[n]++;
                 iT[n] += tOn;
-                bFound = true;
                 iRunList.push_back( runOn );
+             }
+         }
+         runsPerTimeBin.push_back( iRunList );
+     }
+     // check for missing runs
+     for( int i = 0; i < t->GetEntries(); i++ )
+     {
+         t->GetEntry( i );
+         if( runOn < 0 )
+         {
+             continue;
+         }
+         bool bFound = false;
+         for(unsigned int t = 0; t < runsPerTimeBin.size(); t++ )
+         {
+             for(unsigned s = 0; s < runsPerTimeBin[t].size(); s++ )
+             {
+                 if( runOn == runsPerTimeBin[t][s] )
+                 {
+                     bFound = true;
+                     break;
+                 }
              }
          }
          if( !bFound )
@@ -116,9 +135,10 @@ void runlist_from_time_bins( string iAnaSumFile, string iMJDIntervalFile, bool i
               iMissingRun.push_back( runOn );
               cout << "Missing run " << runOn << "\t" << MJDOn << endl;
          }
-         runsPerTimeBin.push_back( iRunList );
+    }
 
-     }
+
+
 
      cout << "Total number of missing runs: " << iMissingRun.size() << endl;
 

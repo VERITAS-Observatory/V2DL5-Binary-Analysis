@@ -124,11 +124,14 @@ class BinaryLightCurvePlotter:
 
         """
         n_columns = 4
+        fig_size = (10, 4)
         if number > 9:
             n_columns = 6
-        if number > 12:
+            fig_size = (12, 6)
+        if number > 16:
             n_columns = 8
-        return n_columns, math.ceil(number / n_columns)
+            fig_size = (16, 10)
+        return n_columns, math.ceil(number / n_columns), fig_size
 
     def plot_flux_vs_phase_for_individual_orbits(
         self, instrument, file_type=".pdf", figure_dir="./figures/"
@@ -147,9 +150,8 @@ class BinaryLightCurvePlotter:
         y_min, y_max = self._global_flux_extrema(data)
         fontsize = 6
 
-        n_columns, n_rows = self._get_number_columns_and_rows(len(orbits))
+        n_columns, n_rows, figsize = self._get_number_columns_and_rows(len(orbits))
         self._logger.info(f"Number of columns: {n_columns}, number of rows: {n_rows}")
-        figsize = (16, 10) if n_rows > 1 else (10, 4)
         plt.figure(figsize=figsize)
         for i, orbit_id in enumerate(orbits):
             axes = plt.subplot(n_rows, n_columns, i + 1)
