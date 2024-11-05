@@ -103,9 +103,10 @@ void light_curve_analysis(
         string iMJDIntervalFile = "HESSJ0632p057.MJD.v3.txt" )
 {
      // energy threshold in TeV
-     double i_fixed_Emin = 0.35;
+     // double i_fixed_Emin = 0.35;
+     double i_fixed_Emin = 0.3;
      // assumed spectral index:
-     double i_fixed_Index = -2.6;
+     double i_fixed_Index = -2.5;
 
      cout << "# Light curve generation ";
      cout << "E_min > " << i_fixed_Emin << " TeV; ";

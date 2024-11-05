@@ -45,6 +45,9 @@ flux_points:
 light_curve:
     energy: {min: 1. TeV, max: 100 TeV}
     time_zone: -7
+    n_jobs: 4
+      #    time_bin_files:
+      #        - ./light_curve_3days_timebins.ecsv
 
 # bad time intervals (time intervals removed from data)
 bti:
