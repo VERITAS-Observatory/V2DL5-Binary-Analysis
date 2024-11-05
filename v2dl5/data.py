@@ -1,6 +1,4 @@
-"""
-Data class holding data store and observations.
-"""
+"""Data class holding data store and observations."""
 
 import logging
 
@@ -8,12 +6,12 @@ import numpy as np
 from astropy import units as u
 from gammapy.data import DataStore
 
-import v2dl5.bti as BTI
+import v2dl5.bti as BTI  # noqa: N812
 
 
 class Data:
     """
-    Data class holding data store and observations
+    Data class holding data store and observations.
 
     Allows to select data from run list or based on
     target coordinates (and observation cone).
@@ -55,10 +53,7 @@ class Data:
         self._update_gti(args_dict.get("bti", None))
 
     def get_data_store(self):
-        """
-        Return data store.
-
-        """
+        """Return data store."""
         return self._data_store
 
     def get_observations(self, reflected_region=True, skip_missing=False):
@@ -89,7 +84,7 @@ class Data:
 
     def _from_run_list(self, run_list):
         """
-        Read run_list from file and select data
+        Read run_list from file and select data.
 
         Parameters
         ----------
@@ -143,7 +138,7 @@ class Data:
         """
         observations = self.get_observations()
         try:
-            rad_max = set(obs.rad_max.data[0][0] for obs in observations)
+            rad_max = {obs.rad_max.data[0][0] for obs in observations}
         except IndexError:
             self._logger.error("Rad max not found in observations.")
             raise
@@ -160,6 +155,7 @@ class Data:
     def get_max_wobble_distance(self, fov=3.5 * u.deg):
         """
         Return maximum distance from target position.
+
         Add if necessary the telescope field of view.
 
         Parameters

@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 
 def configuration(args, generate_dqm_run_list=False):
     """
-    Configuration.
+    Configure source analysis.
 
     Parameters
     ----------
@@ -44,7 +44,7 @@ def configuration(args, generate_dqm_run_list=False):
 
 def _default_config(generate_dqm_run_list=False):
     """
-    Default configuration.
+    Return default configuration.
 
     Parameters
     ----------
@@ -93,7 +93,7 @@ def _read_config_from_file(config):
 
 def _default_config_analysis():
     """
-    Default analysis configuration.
+    Return default analysis configuration.
 
         Returns
     -------
@@ -149,7 +149,7 @@ def _default_config_analysis():
 
 def _default_config_dqm_run_list():
     """
-    Default configuration run list generation.
+    Return default configuration run list generation.
 
     Returns
     -------

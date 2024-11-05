@@ -50,7 +50,7 @@ def get_orbital_phase(mjd, orbital_period, mjd_0, phase_reduce=True):
 
 def get_orbital_phase_range(mjd_min, mjd_max, phase_mean, orbital_period, mjd_0, upper_error=True):
     """
-    Calculate width of observation bin in orbital phase
+    Calculate width of observation bin in orbital phase.
 
     Parameters
     ----------
