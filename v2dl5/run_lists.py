@@ -8,6 +8,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from astropy.time import Time
 
 _logger = logging.getLogger(__name__)
@@ -225,12 +226,12 @@ def _write_run_list(obs_table, output_dir):
     _logger.info(f"Write run list to {output_dir}/run_list.txt")
 
     column_data = obs_table[np.argsort(obs_table["OBS_ID"])]["OBS_ID"]
+    table_with_single_row = Table([column_data], names=["Item"])
     astropy.io.ascii.write(
-        column_data,
+        table_with_single_row,
         f"{output_dir}/run_list.txt",
         overwrite=True,
         format="no_header",
-        delimiter="\n",
     )
 
     _logger.info(f"Write run table with selected runs to {output_dir}/run_list.fits.gz")
