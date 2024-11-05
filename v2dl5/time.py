@@ -1,7 +1,4 @@
-"""
-Definition of time bins
-
-"""
+"""Definition of time bins."""
 
 from astropy.table import Table
 from astropy.time import Time
@@ -25,7 +22,6 @@ def get_list_of_nights(data_set, time_zone=-7.0):
         List of nights (list of Time objects at midnight).
 
     """
-
     time_list = _get_starting_times(data_set)
 
     # Reduce the list to intervals
@@ -54,7 +50,6 @@ def _get_starting_times(data_set):
         List of starting times.
 
     """
-
     _time_start = []
     for _data_set in data_set:
         _time_start.extend(_data_set.gti.time_start)

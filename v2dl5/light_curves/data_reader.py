@@ -1,3 +1,5 @@
+"""Data reader for light-curve analysis."""
+
 import logging
 
 import astropy.units as u
@@ -30,7 +32,7 @@ class LightCurveDataReader:
 
         self.data_dict = {}
         try:
-            with open(configuration_file, "r") as file:
+            with open(configuration_file) as file:
                 _yml_in = yaml.safe_load(file)
                 self.config = _yml_in["data"]
         except FileNotFoundError as err:
@@ -53,16 +55,12 @@ class LightCurveDataReader:
             Data dictionary with data for each instrument.
 
         """
-
         for data_config in self.config:
             self.data_dict[data_config["instrument"]] = self._read_fluxes_from_file(data_config)
             self._add_orbital_parameters(self.data_dict[data_config["instrument"]])
 
     def _read_fluxes_from_file(self, data_config):
-        """
-        Read flux from file.
-
-        """
+        """Read flux from file."""
         try:
             if data_config["file_name"].endswith((".csv", ".ecsv")):
                 self._logger.info("Reading data from %s", data_config["file_name"])
@@ -81,7 +79,6 @@ class LightCurveDataReader:
             Data dictionary with light-curve data.
 
         """
-
         orbital_period = self.binary["orbital_period"]
         mjd_0 = self.binary["mjd_0"]
 
@@ -116,45 +113,44 @@ class LightCurveDataReader:
             for mjd in data["MJD"]
         ]
 
-    def convert_photon_to_energy_flux(C_v, C_e, E_0, gamma):
-        """
-        Convert photon to energy flux
-
-        """
+    def convert_photon_to_energy_flux(self, c_e, e_0, gamma):
+        """Convert photon to energy flux."""
         f = (-1.0 * gamma + 1) / (-1.0 * gamma + 2)
         # conversion to erg
-        f = f * (E_0.to(u.erg)).value
-        return [v * f for v in C_v], [e * f for e in C_e]
+        f = f * (e_0.to(u.erg)).value
+        return [v * f for v in self], [e * f for e in c_e]
 
-    def _read_fluxes_from_ecsv_file(self, data_config, TimeMinMax=True, MJD_min=-1.0, MJD_max=-1.0):
+    def _read_fluxes_from_ecsv_file(
+        self, data_config, time_min_max=True, mjd_min=-1.0, mjd_max=-1.0
+    ):
         """
-        Read gamma-ray fluxes from ecsv file (open gamma-ray format)
+        Read gamma-ray fluxes from ecsv file (open gamma-ray format).
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_config: dict
             configuration dictionary
-        TimeMinMax: bool
+        time_min_max: bool
             flag to read time_min and time_max
-        MJD_min: float
+        mjd_min: float
             MJD min value for MJD cut
-        MJD_max: float
+        mjd_max: float
             MJD max value for MJD cut
 
         """
         table = Table.read(data_config["file_name"])
         f = {}
         try:
-            if not TimeMinMax:
+            if not time_min_max:
                 table["time_min"] = table["time"].data
                 table["time_max"] = table["time"].data + 0.1
 
             # MJD filter
             condition = np.ones(len(table), dtype=bool)
-            if MJD_min > -1:
-                condition &= table["time_min"] > MJD_min
-            if MJD_max > -1:
-                condition &= table["time_max"] < MJD_max
+            if mjd_min > -1:
+                condition &= table["time_min"] > mjd_min
+            if mjd_max > -1:
+                condition &= table["time_max"] < mjd_max
             table = table[condition]
 
             f = {}

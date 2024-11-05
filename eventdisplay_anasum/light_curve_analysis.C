@@ -26,14 +26,14 @@ using namespace std;
  */
 vector<pair<double, double>> read_MJD_from_file(string iMJDIntervalFile)
 {
-     vector<pair<double, double>> MJD_min_max;
+     vector<pair<double, double>> mjd_min_max;
 
      ifstream is;
      is.open( iMJDIntervalFile.c_str(), ifstream::in );
      if( !is )
      {
           cout << "Error: MJD interval file " << iMJDIntervalFile << " not found" << endl;
-          return MJD_min_max;
+          return mjd_min_max;
      }
      string is_line;
      while( getline( is, is_line ) )
@@ -45,11 +45,11 @@ vector<pair<double, double>> read_MJD_from_file(string iMJDIntervalFile)
               string t_max;
               is_stream >> t_min;
               is_stream >> t_max;
-              MJD_min_max.emplace_back( atof( t_min.c_str() ), atof( t_max.c_str() ) );
+              mjd_min_max.emplace_back( atof( t_min.c_str() ), atof( t_max.c_str() ) );
          }
      }
      is.close();
-     return MJD_min_max;
+     return mjd_min_max;
 }
 
 /*

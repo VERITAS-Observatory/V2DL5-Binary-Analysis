@@ -6,7 +6,7 @@ import pytest
 from astropy.time import Time
 from gammapy.data import GTI, Observation
 
-import v2dl5.bti as BTI
+import v2dl5.bti as BTI  # noqa: N812
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -14,27 +14,25 @@ logger.setLevel(logging.DEBUG)
 
 @pytest.fixture
 def get_good_gti():
-    gti = GTI.create(
+    return GTI.create(
         [0 * u.s],
         [80 * u.s],
         reference_time=Time("2023-10-15T16:04"),
     )
-    return gti
 
 
 @pytest.fixture
 def get_gti():
-    gti = GTI.create(
+    return GTI.create(
         [0 * u.s, 10 * u.s, 20 * u.s],
         [5 * u.s, 15 * u.s, 25 * u.s],
         reference_time=Time("2023-10-15T16:04"),
     )
-    return gti
 
 
 class TestMaxTimeInterval:
     # Return the duration between the beginning of the first and the end of the last GTI.
-    def test_duration_between_first_and_last_GTI(self, get_gti):
+    def test_duration_between_first_and_last_gti(self, get_gti):
         obs = Observation(gti=get_gti)
         bti = BTI.BTI(obs=obs)
         duration = bti.max_time_interval()
@@ -48,7 +46,7 @@ class TestMaxTimeInterval:
         assert isinstance(duration, int)
 
     # The GTI object has only one GTI.
-    def test_one_GTI(self):
+    def test_one_gti(self):
         obs = Observation(gti=GTI.create([0 * u.s], [5 * u.s], reference_time=None))
         bti = BTI.BTI(obs=obs)
         duration = bti.max_time_interval()
@@ -66,7 +64,7 @@ class TestMaxTimeInterval:
         assert duration == 20
 
 
-class Test_CreateOnTimeList:
+class TestCreateOnTimeList:
     # Create a list of on and off times in 1 s bin with no bad time intervals.
     def test_no_bad_time_intervals(self, get_good_gti):
         obs = Observation(gti=get_good_gti)
@@ -126,7 +124,7 @@ class Test_CreateOnTimeList:
         assert all(x == 1 for x in on_time_list[11:69])
 
 
-class Test_ExtractGTIStartStopTimes:
+class TestExtractGTIStartStopTimes:
     # Create a list of on and off times in 1 s bin with no bad time intervals.
     def test_no_bad_time_intervals(self, get_good_gti):
         obs = Observation(gti=get_good_gti)
@@ -148,7 +146,7 @@ class Test_ExtractGTIStartStopTimes:
         assert stop == [9 * u.s, 49 * u.s, 80 * u.s]
 
 
-class Test_MetTstart:
+class TestMETStart:
     # Return start time in seconds since MET.
     def test_return_start_time(self, get_good_gti):
         obs = Observation(gti=get_good_gti)

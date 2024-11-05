@@ -9,6 +9,7 @@ from astropy.table import Table
 
 
 def extract_single_value(column):
+    """Extract a single value from a column."""
     return [
         float(value[0]) if isinstance(value, (list, np.ndarray)) else float(value)
         for value in column
@@ -16,7 +17,7 @@ def extract_single_value(column):
 
 
 def main():
-    """Main function to read and print light curve data."""
+    """Read and print light curve data."""
     parser = argparse.ArgumentParser(description="Read and print light curve data.")
 
     parser.add_argument(

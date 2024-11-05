@@ -1,13 +1,13 @@
 #!/usr/bin/python
-""""
+
+"""
 Plotting of binary light curves.
 
-Includes the following plots
+Includes the following plots:
 
-- Light curve vs time
-- Light curve vs orbital phase
-- Light curve vs orbital phase for each orbit
-
+    - Light curve vs time
+    - Light curve vs orbital phase
+    - Light curve vs orbital phase for each orbit
 """
 
 import argparse
@@ -86,9 +86,9 @@ def main():
             args.orbital_bins = 20.0
 
     logging.info("Light Curve Analysis - run parameters")
-    logging.info("instrument: %s" % args.instrument)
-    logging.info("instrument list: %s" % args.configuration)
-    logging.info("number of bins for averaging: %.1f" % args.orbital_bins)
+    logging.info(f"instrument: {args.instrument}")
+    logging.info(f"instrument list: {args.configuration}")
+    logging.info(f"number of bins for averaging: {args.orbital_bins}")
 
     try:
         binary = binaries.binary_properties()[args.binary_name]

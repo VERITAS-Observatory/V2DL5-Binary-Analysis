@@ -5,17 +5,13 @@
 
 [![gammapy](https://img.shields.io/badge/powered%20by-gammapy-orange.svg?style=flat)](https://www.gammapy.org/)
 
-This is a collection of simple scripts for the high-level analysis of binary data for VERITAS.
-Focus is on the usage of gammapy for binary light curve analysis, meaning this is mostly a reflected region analysis with some binary specific tools.
+This is a collection of scripts for the high-level analysis of binary data for VERITAS.
+Focus is on the usage of gammapy and anasum for binary light curve analysis, meaning this is mostly a reflected region analysis with some binary specific tools.
 
 Allows to run analysis scripts for a given list of runs or for a cone search around the given on\_region direction.
 
 - source detection analysis including integral flux (or flux upper limits), reflection region model
 - spectral analysis, reflected region model
-
-## Acknowledgement
-
-This work relies heavily on the [gammapy](https://gammapy.org/) development and especially on the excellent [tutorials](https://docs.gammapy.org/1.1/tutorials/index.html) provided by the gammapy team.
 
 ## Installation
 
@@ -135,3 +131,7 @@ Additionally write run lists for each of the MJD bins:
 ```
 
 The tool will also write a figure with the length-of-time bins vs time bin.
+
+## Acknowledgement
+
+This work relies heavily on the [gammapy](https://gammapy.org/) development and especially on the excellent [tutorials](https://docs.gammapy.org/1.1/tutorials/index.html) provided by the gammapy team.

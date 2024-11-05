@@ -1,6 +1,4 @@
-"""
-Sky regions definition.
-"""
+"""Sky regions definition."""
 
 import logging
 
@@ -15,7 +13,10 @@ from regions import CircleSkyRegion
 
 class SkyRegions:
     """
-    Define sky regions required for the analysis:
+    Define sky regions required for the analysis.
+
+    Sky regions include:
+
     - target coordinates
     - on region
     - exclusion regions
@@ -36,7 +37,8 @@ class SkyRegions:
 
     def get_target(self, sky_coord=None, print_target_info=True):
         """
-        Defines a SkyCoord object for the target.
+        Define SkyCoord object for the target.
+
         Reads target coordinates from Simbad if target name is given
         (use coordinates, if given)
 
@@ -49,7 +51,6 @@ class SkyRegions:
             Print info about target.
 
         """
-
         target = None
         lon = sky_coord.get("lon", None)
         lat = sky_coord.get("lat", None)
@@ -85,7 +86,7 @@ class SkyRegions:
 
     def define_on_region(self, on_region_dict=None):
         """
-        Defines a CircleSkyRegion object for the on region.
+        Define CircleSkyRegion object for the on region.
 
         Parameters
         ----------
@@ -98,7 +99,6 @@ class SkyRegions:
             on region.
 
         """
-
         self.on_region = CircleSkyRegion(
             center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
             radius=Angle(on_region_dict.get("radius", 0.5 * u.deg)),
@@ -110,7 +110,7 @@ class SkyRegions:
 
     def get_exclusion_mask(self, args_dict, max_wobble_distance=None):
         """
-        Defines a mask for the exclusion regions.
+        Define mask for the exclusion regions.
 
         Parameters
         ----------
@@ -120,7 +120,6 @@ class SkyRegions:
             maximum wobble distance (with FOV radius added).
 
         """
-
         exclusion_regions = []
 
         # on region
@@ -171,7 +170,6 @@ class SkyRegions:
             List exclusion regions due to bright stars.
 
         """
-
         _exclusion_regions = []
         if exclusion_region_dict["star_file"] is None:
             return _exclusion_regions
@@ -210,7 +208,7 @@ class SkyRegions:
 
     def update_regions(self, args_dict, on_region_radius=None, max_wobble_distance=None):
         """
-        Update on and exclusion region definitions
+        Update on and exclusion region definitions.
 
         Parameters
         ----------
@@ -222,7 +220,6 @@ class SkyRegions:
             maximum wobble distance (with FOV radius added).
 
         """
-
         args_dict["on_region"]["radius"] = on_region_radius
         self.define_on_region(on_region_dict=args_dict["on_region"])
 

@@ -38,10 +38,7 @@ _logger = logging.getLogger(__name__)
 
 
 def _parse():
-    """
-    Parse command line arguments.
-
-    """
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Generate a run list.")
 
     parser.add_argument(
@@ -67,10 +64,7 @@ def _parse():
 
 
 def main():
-    """
-    Generate a run list.
-
-    """
+    """Generate a run list."""
     logging.root.setLevel(logging.INFO)
     args_dict = v2dl5.configuration.configuration(args=_parse(), generate_dqm_run_list=True)
     output_path = Path(args_dict["output_dir"])

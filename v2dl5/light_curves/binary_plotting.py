@@ -1,6 +1,4 @@
-"""
-Binary light curve plotting.
-"""
+"""Binary light curve plotting."""
 
 import logging
 import math
@@ -12,7 +10,7 @@ import v2dl5.plotting.utilities as plotting_utilities
 
 class BinaryLightCurvePlotter:
     """
-    Binary light curve plotter
+    Binary light curve plotter.
 
     Parameters
     ----------
@@ -66,7 +64,7 @@ class BinaryLightCurvePlotter:
 
         for idx, (instrument, data) in enumerate(self.data.items()):
 
-            x, y, e, x_ul, y_ul = self._get_light_curve_in_MJD_limits(
+            x, y, e, x_ul, y_ul = self._get_light_curve_in_mjd_limits(
                 data, time_axis, mjd_min, mjd_max, orbit_number
             )
             if not self.plot_this_instrument(instrument):
@@ -119,10 +117,7 @@ class BinaryLightCurvePlotter:
             )
 
     def _get_number_columns_and_rows(self, number):
-        """
-        Get number of columns and rows for plotting.
-
-        """
+        """Get number of columns and rows for plotting."""
         n_columns = 4
         fig_size = (10, 4)
         if number > 9:
@@ -136,10 +131,7 @@ class BinaryLightCurvePlotter:
     def plot_flux_vs_phase_for_individual_orbits(
         self, instrument, file_type=".pdf", figure_dir="./figures/"
     ):
-        """
-        Plot flux vs phase with one plot per orbit.
-
-        """
+        """Plot flux vs phase with one plot per orbit."""
         self._logger.info("Plotting flux vs phase for individual orbits")
         time_axis = "orbital phase"
 
@@ -184,25 +176,19 @@ class BinaryLightCurvePlotter:
         )
 
     def _global_flux_extrema(self, data):
-        """
-        Absolute min and max of flux.
-
-        """
+        """Absolute min and max of flux."""
         return (
             min([min(data["flux"]) - max(data["flux_err"]), 0.0]),
             max(data["flux"] + data["flux_err"]) * 1.2,
         )
 
     def _get_time_axis_label(self, time_axis):
-        """
-        Return time axis label
-
-        """
+        """Return time axis label."""
         if time_axis == "orbital phase":
             return "phase"
         return "Modified Julian Date (MJD)"
 
-    def _get_light_curve_in_MJD_limits(self, data, time_axis, mjd_min, mjd_max, orbit_number):
+    def _get_light_curve_in_mjd_limits(self, data, time_axis, mjd_min, mjd_max, orbit_number):
         """
         Get light curve restricted in MJD or for a certain orbit number.
 
@@ -283,15 +269,15 @@ class BinaryLightCurvePlotter:
 #         lc_spline_bin_centers,
 #         lc_spline_sv,
 #         lc_spline_sv_err,
-#         OrbitalPeriod_BL=315.,
-#         OrbitalPeriodBins=20,
-#         PlotVariable=None):
+#         orbital_period_BL=315.,
+#         orbital_periodBins=20,
+#         plot_variable=None):
 #     """plot flux vs orbital phase (separated in orbits, all in one plot)
 #     """
 #
 #     MJD_firstOrbit, N_orbits = getNumberOfOrbits(
 #         fDataDict, PlotInstruments,
-#         OrbitalPeriod_BL, False)
+#         orbital_period_BL, False)
 #
 #     lightCurvePlottingUtilities.paper_figures(4, 4)
 #     colors = lightCurvePlottingUtilities.getColorList(N_orbits)
@@ -325,11 +311,11 @@ class BinaryLightCurvePlotter:
 #         y = []
 #         ex = []
 #         mj = []
-#         orbit_min = MJD_firstOrbit + i * OrbitalPeriod_BL
-#         orbit_max = MJD_firstOrbit + (i + 1) * OrbitalPeriod_BL - 1.
+#         orbit_min = MJD_firstOrbit + i * orbital_period_BL
+#         orbit_max = MJD_firstOrbit + (i + 1) * orbital_period_BL - 1.
 #         for j in range(len(PlotInstruments)):
-#             i_plotValue, i_plotError = lightCurvePlottingUtilities.getPlottingVariable(
-#                 PlotVariable, j)
+#             i_plotValue, i_plotError = lightCurvePlottingUtilities.get_plotting_variable(
+#                 plot_variable, j)
 #
 #             for p in range(len(fDataDict[PlotInstruments[j]]['phaseN'])):
 #                 if fDataDict[PlotInstruments[j]]['MJD'][p] >= orbit_min \
@@ -356,10 +342,10 @@ class BinaryLightCurvePlotter:
 #                 markersize=lightCurvePlottingUtilities.getMarkerSize())
 #
 #     plt.xlabel(
-#         lightCurvePlottingUtilities.getOrbitalPhaseAxisString(OrbitalPeriod_BL) )
+#         lightCurvePlottingUtilities.get_orbital_phase_axis_string(orbital_period_BL) )
 #     plt.ylabel(
 #         lightCurvePlottingUtilities.getFluxAxisString(
-#         PlotInstruments[0],PlotVariable) )
+#         PlotInstruments[0],plot_variable) )
 #     if PlotInstruments[0].find('Optical') < 0:
 #         plt.axhline(y=0, linestyle=':')
 #     if getPrintInstrumentName(PlotInstruments).find( "fwhm" ) < 0 and \
@@ -369,15 +355,15 @@ class BinaryLightCurvePlotter:
 #     lightCurvePlottingUtilities.printFigure(
 #         getPrintInstrumentName(PlotInstruments) +
 #         "-HESSJ0632p057-LC-phaseFolded-%dd-Orbits" %
-#         OrbitalPeriod_BL)
+#         orbital_period_BL)
 #
 #
 #
 # def plotAverageLightCurve_fluxvsPhase(
 #         fDataDict,
 #         PlotInstruments,
-#         OrbitalPeriod_BL=315.,
-#         OrbitalPeriodBins=20):
+#         orbital_period_BL=315.,
+#         orbital_periodBins=20):
 #     """
 #     plot average flux vs orbital phase
 #
@@ -385,8 +371,8 @@ class BinaryLightCurvePlotter:
 #     """
 #
 #     print("Plot phase binned averaged light curve:")
-#     print("\t orbital phase (%.1f d)" % OrbitalPeriod_BL)
-#     print("\t number of phase bins (%d)" % OrbitalPeriodBins)
+#     print("\t orbital phase (%.1f d)" % orbital_period_BL)
+#     print("\t number of phase bins (%d)" % orbital_periodBins)
 #     print("\t calculating average light curve for ", PlotInstruments)
 #     if len(PlotInstruments) < 1:
 #         return
@@ -406,10 +392,10 @@ class BinaryLightCurvePlotter:
 #
 #     # calculate phase binned average light curve
 #     lc_bincenters, lc_mean, lc_std = lightCurveAverageing.calculateAverageLightCurve(
-#         i_MJD, i_flux, i_flux_err, OrbitalPeriod_BL, OrbitalPeriodBins)
+#         i_MJD, i_flux, i_flux_err, orbital_period_BL, orbital_periodBins)
 #
 #     # bin width
-#     lc_binw = np.repeat(0.5 / OrbitalPeriodBins, len(lc_bincenters))
+#     lc_binw = np.repeat(0.5 / orbital_periodBins, len(lc_bincenters))
 #     plt.errorbar(lc_bincenters, lc_mean, lc_std, lc_binw,
 #                  color='b', linestyle='none',
 #                  linewidth=lightCurvePlottingUtilities.getLineWidth(),
@@ -420,13 +406,13 @@ class BinaryLightCurvePlotter:
 #     F, lc_spline_bin_centers, lc_spline_sv = \
 #         lightCurveAverageing.smoothCubeSplineLightCurve(
 #             i_MJD, i_flux, i_flux_err,
-#             OrbitalPeriod_BL, OrbitalPeriodBins,
+#             orbital_period_BL, orbital_periodBins,
 #             True, 0.)
 #     # get errors on the same
 #     F_temp, lc_spline_bin_centers, lc_spline_sv_err = \
 #         lightCurveAverageing.smoothCubeSplineLightCurve(
 #             i_MJD, i_flux, i_flux_err,
-#             OrbitalPeriod_BL, OrbitalPeriodBins,
+#             orbital_period_BL, orbital_periodBins,
 #             True, 1.)
 #     lc_spline_sv_err = list(
 #         np.array(lc_spline_sv_err) -
@@ -438,8 +424,8 @@ class BinaryLightCurvePlotter:
 #
 #     # data set used for averaging
 #     wP = []
-#     wP = [lightCurveAnalysisOrbitalPeriod.getOrbitalPhase(
-#         x, OrbitalPeriod_BL) for x in i_MJD]
+#     wP = [lightCurveAnalysisorbital_period.getOrbitalPhase(
+#         x, orbital_period_BL) for x in i_MJD]
 #     plt.errorbar(wP, i_flux, i_flux_err, None,
 #                  color='g', linestyle='none',
 #                  linewidth=lightCurvePlottingUtilities.getLineWidth(),
@@ -454,7 +440,7 @@ class BinaryLightCurvePlotter:
 #                      alpha=0.3)
 #
 #     plt.xlabel(
-#         lightCurvePlottingUtilities.getOrbitalPhaseAxisString(OrbitalPeriod_BL))
+#         lightCurvePlottingUtilities.get_orbital_phase_axis_string(orbital_period_BL))
 #     plt.ylabel(lightCurvePlottingUtilities.getFluxAxisString(PlotInstruments[0]))
 #     plt.legend()
 #     plt.axhline(y=lc_spline_sv[0], linestyle=':')
@@ -462,7 +448,7 @@ class BinaryLightCurvePlotter:
 #     lightCurvePlottingUtilities.printFigure(
 #         getPrintInstrumentName(PlotInstruments) +
 #         "-HESSJ0632p057-LC-phaseFolded-%dd-Average" %
-#         OrbitalPeriod_BL)
+#         orbital_period_BL)
 #
 #     return F, lc_spline_bin_centers, lc_spline_sv, lc_spline_sv_err
 #
@@ -589,13 +575,13 @@ class BinaryLightCurvePlotter:
 #
 #     # orbital phase axis
 #     # (note: use default orbital period here
-#     # as defined in lightCurveAnalysisOrbitalPeriod
+#     # as defined in lightCurveAnalysisorbital_period
 #     phase_ticks = []
 #     label_format = '%.2f'
 #     for t in ax1_x.get_xticks():
 #         mjd=mjd_min+t*(mjd_max-mjd_min)
 #         phase_ticks.append(label_format % (
-#             lightCurveAnalysisOrbitalPeriod.getOrbitalPhase(mjd),))
+#             lightCurveAnalysisorbital_period.getOrbitalPhase(mjd),))
 #     # remove first and last label from plotting
 #     if len(phase_ticks)>0:
 #         phase_ticks[0]=None

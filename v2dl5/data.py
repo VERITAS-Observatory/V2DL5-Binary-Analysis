@@ -1,6 +1,4 @@
-"""
-Data class holding data store and observations.
-"""
+"""Data class holding data store and observations."""
 
 import logging
 
@@ -8,12 +6,12 @@ import numpy as np
 from astropy import units as u
 from gammapy.data import DataStore
 
-import v2dl5.bti as BTI
+import v2dl5.bti as BTI  # noqa: N812
 
 
 class Data:
     """
-    Data class holding data store and observations
+    Data class holding data store and observations.
 
     Allows to select data from run list or based on
     target coordinates (and observation cone).
@@ -39,7 +37,6 @@ class Data:
         according to target coordinates and observation cone.
 
         """
-
         self._logger = logging.getLogger(__name__)
 
         self._logger.info(
@@ -56,11 +53,7 @@ class Data:
         self._update_gti(args_dict.get("bti", None))
 
     def get_data_store(self):
-        """
-        Return data store.
-
-        """
-
+        """Return data store."""
         return self._data_store
 
     def get_observations(self, reflected_region=True, skip_missing=False):
@@ -80,7 +73,6 @@ class Data:
             List of observations.
 
         """
-
         required_irf = "full-enclosure"
         if reflected_region:
             required_irf = "point-like"
@@ -92,7 +84,7 @@ class Data:
 
     def _from_run_list(self, run_list):
         """
-        Read run_list from file and select data
+        Read run_list from file and select data.
 
         Parameters
         ----------
@@ -100,7 +92,6 @@ class Data:
             Path to run list.
 
         """
-
         if run_list is None:
             return None
 
@@ -128,7 +119,6 @@ class Data:
             observation cone radius (deg).
 
         """
-
         observations = self._data_store.obs_table
         mask = self.target.separation(observations.pointing_radec) < obs_cone_radius * u.deg
         _runs = observations[mask]["OBS_ID"].data
@@ -146,10 +136,9 @@ class Data:
         Simplest case. Ignores possible energy and offset dependence.
 
         """
-
         observations = self.get_observations()
         try:
-            rad_max = set(obs.rad_max.data[0][0] for obs in observations)
+            rad_max = {obs.rad_max.data[0][0] for obs in observations}
         except IndexError:
             self._logger.error("Rad max not found in observations.")
             raise
@@ -166,6 +155,7 @@ class Data:
     def get_max_wobble_distance(self, fov=3.5 * u.deg):
         """
         Return maximum distance from target position.
+
         Add if necessary the telescope field of view.
 
         Parameters
@@ -179,7 +169,6 @@ class Data:
             Maximum offset.
 
         """
-
         woff = np.array(
             [
                 self.target.separation(obs.pointing.get_icrs()).degree
@@ -199,7 +188,6 @@ class Data:
             Given us {"run": run, "bti_start": start, "bti_length": length}
 
         """
-
         if bti is None:
             return
 

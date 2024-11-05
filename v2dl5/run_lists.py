@@ -1,7 +1,4 @@
-"""
-Run list selection from observation table.
-
-"""
+"""Run list selection from observation table."""
 
 import logging
 
@@ -11,17 +8,14 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
 from astropy.coordinates import SkyCoord
+from astropy.table import Table
 from astropy.time import Time
 
 _logger = logging.getLogger(__name__)
 
 
 def generate_run_list(args_dict, target):
-    """
-    Read observation index table, apply selection cuts and write run list.
-
-    """
-
+    """Read observation index table, apply selection cuts and write run list."""
     calculate_averages(args_dict)
 
     _logger.info("Generate run list. from %s", args_dict["obs_table"])
@@ -34,11 +28,11 @@ def generate_run_list(args_dict, target):
 
 def calculate_averages(args_dict):
     """
-    Determine mean / medium for columns relevant for RMS-dependent
-    selection cuts. All other DQM cuts are applied (except target cut).
+    Determine mean / medium for columns relevant for RMS-dependent selection cuts.
+
+    All other DQM cuts are applied (except target cut).
 
     """
-
     _tmp_table = _read_observation_table(args_dict["obs_table"])
     _tmp_table = _apply_selection_cuts(_tmp_table, args_dict, None)
     _logger.info(f"Runs selected to calculate averages: {len(_tmp_table)}")
@@ -57,7 +51,6 @@ def _read_observation_table(obs_table_file_name):
     - DQMSTAT: "unknown"
 
     """
-
     obs_table = astropy.table.Table.read(obs_table_file_name)
     obs_table["DQMSTAT"].fill_value = "unknown"
     return obs_table.filled()
@@ -73,7 +66,6 @@ def _apply_selection_cuts(obs_table, args_dict, target):
         Observation table.
 
     """
-
     if target is not None:
         obs_table = _apply_cut_target(obs_table, args_dict, target)
     obs_table = _apply_cut_mjd(obs_table, args_dict)
@@ -81,16 +73,11 @@ def _apply_selection_cuts(obs_table, args_dict, target):
     obs_table = _apply_cut_dqm(obs_table, args_dict, target)
     obs_table = _apply_cut_ontime_min(obs_table, args_dict, target)
     obs_table = _apply_cut_ntel_min(obs_table, args_dict, target)
-    obs_table = _apply_cut_l3rate(obs_table, args_dict, target)
-    return obs_table
+    return _apply_cut_l3rate(obs_table, args_dict, target)
 
 
 def _apply_cut_l3rate(obs_table, args_dict, target):
-    """
-    Apply epoch and observation mode dependent minimum L3 Rate cut
-
-    """
-
+    """Apply epoch and observation mode dependent minimum L3 Rate cut."""
     mask_V4, mask_V5, mask_V6, mask_V6_redHV = _epoch_masks(obs_table)
     mask = np.ones(len(obs_table), dtype=bool)
     for epoch_mask, epoch in zip(
@@ -110,11 +97,7 @@ def _apply_cut_l3rate(obs_table, args_dict, target):
 
 
 def _apply_cut_ntel_min(obs_table, args_dict, target):
-    """
-    Apply minimum telescope cut cut.
-
-    """
-
+    """Apply minimum telescope cut cut."""
     try:
         ntel_min = args_dict["dqm"]["ntel_min"]
     except KeyError:
@@ -131,11 +114,7 @@ def _apply_cut_ntel_min(obs_table, args_dict, target):
 
 
 def _apply_cut_mjd(obs_table, args_dict):
-    """
-    Apply cut on MJD (min and max).
-
-    """
-
+    """Apply cut on MJD (min and max)."""
     if "mjd_min" in args_dict["observations"]:
         _logger.info(f"Selecting runs after MJD {args_dict['observations']['mjd_min']}")
         mjd_min = args_dict["observations"]["mjd_min"]
@@ -151,11 +130,7 @@ def _apply_cut_mjd(obs_table, args_dict):
 
 
 def _apply_cut_ontime_min(obs_table, args_dict, target):
-    """
-    Apply ontime min cut.
-
-    """
-
+    """Apply ontime min cut."""
     try:
         ontime_min = u.Quantity(args_dict["dqm"]["ontime_min"]).to(u.s)
     except KeyError:
@@ -172,11 +147,7 @@ def _apply_cut_ontime_min(obs_table, args_dict, target):
 
 
 def _apply_cut_dqm(obs_table, args_dict, target):
-    """
-    Apply dqm cuts
-
-    """
-
+    """Apply dqm cuts."""
     try:
         dqm_stat = args_dict["dqm"]["dqmstat"]
     except KeyError:
@@ -193,11 +164,7 @@ def _apply_cut_dqm(obs_table, args_dict, target):
 
 
 def _apply_cut_atmosphere(obs_table, args_dict, target):
-    """
-    Remove all fields in column "WEATHER" which are not in the list of args_dict.atmosphere.weather
-
-    """
-
+    """Remove fields in column "WEATHER" which are not in args_dict.atmosphere.weather."""
     try:
         weather = args_dict["atmosphere"]["weather"]
     except KeyError:
@@ -218,11 +185,7 @@ def _apply_cut_atmosphere(obs_table, args_dict, target):
 
 
 def _apply_cut_target(obs_table, args_dict, target):
-    """
-    Apply target cut.
-
-    """
-
+    """Apply target cut."""
     try:
         obs_cone_radius_min = u.Quantity(args_dict["observations"]["obs_cone_radius_min"])
     except KeyError:
@@ -263,12 +226,12 @@ def _write_run_list(obs_table, output_dir):
     _logger.info(f"Write run list to {output_dir}/run_list.txt")
 
     column_data = obs_table[np.argsort(obs_table["OBS_ID"])]["OBS_ID"]
+    table_with_single_row = Table([column_data], names=["Item"])
     astropy.io.ascii.write(
-        column_data,
+        table_with_single_row,
         f"{output_dir}/run_list.txt",
         overwrite=True,
         format="no_header",
-        delimiter="\n",
     )
 
     _logger.info(f"Write run table with selected runs to {output_dir}/run_list.fits.gz")
@@ -277,11 +240,7 @@ def _write_run_list(obs_table, output_dir):
 
 
 def _dqm_report(obs_table, output_dir):
-    """
-    Print list of selected runs to screen
-
-    """
-
+    """Print list of selected runs to screen."""
     obs_table.sort("OBS_ID")
     # print general info
     obs_table[
@@ -332,6 +291,8 @@ def _dqm_report(obs_table, output_dir):
 
 def _reject_outliers(data, m=3.0):
     """
+    Reject outliers from data.
+
     from
     stackoverflow.com/questions/11686720/is-there-a-numpy-builtin-to-reject-outliers-from-a-list
 
@@ -343,11 +304,7 @@ def _reject_outliers(data, m=3.0):
 
 
 def _outlier_lists(obs_table, string, column, center_measure, outlier_type, sigma=3.0):
-    """
-    Return list of outliers for mean and median cuts.
-
-    """
-
+    """Return list of outliers for mean and median cuts."""
     if center_measure == "Mean":
         m = np.mean(obs_table[column])
         s = np.std(obs_table[column])
@@ -369,10 +326,7 @@ def _outlier_lists(obs_table, string, column, center_measure, outlier_type, sigm
 def _print_outlier(
     obs_table, mask, column, string, output_dir, outlier_type="bounds", log_axis=False
 ):
-    """
-    Print OBS_ID with more than sigma deviation from mean
-
-    """
+    """Print OBS_ID with more than sigma deviation from mean."""
     _obs_table_cleaned = obs_table[(obs_table[column] > -9998.0) & mask]
     if log_axis:
         _obs_table_cleaned[column] = np.log10(_obs_table_cleaned[column])
@@ -386,10 +340,10 @@ def _print_outlier(
 
     print(f"{column} for {string}:")
     print(f"    Outliers (mean,std): {_outlier_list_mean}")
-    _outlier_mask_mean = np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_mean)
+    _outlier_mask_mean = np.isin(_obs_table_cleaned["OBS_ID"], _outlier_list_mean)
     _obs_table_cleaned[_outlier_mask_mean].pprint_all()
     print(f"    Outliers (median,abs): {_outlier_list_median}")
-    _outlier_mask_median = np.in1d(_obs_table_cleaned["OBS_ID"], _outlier_list_median)
+    _outlier_mask_median = np.isin(_obs_table_cleaned["OBS_ID"], _outlier_list_median)
     _obs_table_cleaned[_outlier_mask_median].pprint_all()
 
     _plot_outliers(
@@ -411,10 +365,9 @@ def _plot_outliers(
 ):
     """
     Plot distribution of column values include outliers.
+
     Indicate mean and std as background color (gray)
-
     """
-
     plt.axvspan(mean - std, mean + std, color="red", alpha=0.15)
     plt.axvline(mean, color="red", linestyle="--", linewidth=2)
     plt.axvspan(median - abs_deviation, median + abs_deviation, color="green", alpha=0.15)
@@ -430,11 +383,7 @@ def _plot_outliers(
 
 
 def _print_min_max(obs_table, mask, column, string):
-    """
-    Print min/max entry for a specific column
-
-    """
-
+    """Print min/max entry for a specific column."""
     _obs_table_cleaned = obs_table[(obs_table[column] > -9998.0) & mask]
     try:
         min_index = np.argmin(_obs_table_cleaned[column])
@@ -454,11 +403,7 @@ def _print_min_max(obs_table, mask, column, string):
 
 
 def _epoch_masks(obs_table):
-    """
-    Return VERITAS Epochs as table mask
-
-    """
-
+    """Return VERITAS Epochs as table mask."""
     mask_V4 = [row["OBS_ID"] < 46642 for row in obs_table]
     mask_V5 = [row["OBS_ID"] < 63372 and row["OBS_ID"] > 46642 for row in obs_table]
     mask_V6 = [row["OBS_ID"] > 63372 and row["RUNTYPE"] == "observing" for row in obs_table]
@@ -472,13 +417,9 @@ def _epoch_masks(obs_table):
     )
 
 
-def _print_removed_runs(obs_table, mask, column_name, cut_type, print=True):
-    """
-
-    Print removed runs
-
-    """
-    if not print:
+def _print_removed_runs(obs_table, mask, column_name, cut_type, print_runs=True):
+    """Print removed runs."""
+    if not print_runs:
         return
 
     _logger.info(f"Remove {len(mask)-mask.sum(~False)} runs failing {cut_type} cut")

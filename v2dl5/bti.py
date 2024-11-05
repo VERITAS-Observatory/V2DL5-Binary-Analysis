@@ -1,3 +1,5 @@
+"""Bad time interval definition."""
+
 import logging
 
 import astropy.units as u
@@ -10,6 +12,7 @@ logging.basicConfig(level=logging.INFO)
 class BTI:
     """
     Bad time intervals (BTI).
+
     Add bad time intervals to gammapy GTI objects.
 
     """
@@ -22,11 +25,7 @@ class BTI:
         self.tstop = obs.tstop
 
     def max_time_interval(self):
-        """
-        Return time between beginning of first and end of last GTI.
-
-        """
-
+        """Return time between beginning of first and end of last GTI."""
         duration = int(round((np.max(self.gti.met_stop) - np.min(self.gti.met_start)).value))
         self._logger.info("Max time interval [s]: %d", duration)
 
@@ -48,7 +47,6 @@ class BTI:
             List of on and off times in 1 s bins.
 
         """
-
         on_time_s = [0] * (self.max_time_interval() + 1)
 
         start_times = (self.gti.table["START"] - self.tstart).to_value("sec")
@@ -72,7 +70,7 @@ class BTI:
 
     def _extract_gti_start_stop(self, on_time_s):
         """
-        Extract start and stop times from list of on times
+        Extract start and stop times from list of on times.
 
         Parameters
         ----------
@@ -87,7 +85,6 @@ class BTI:
             List of stop times.
 
         """
-
         _gti_start = []
         _gti_end = []
         _duration = self.max_time_interval()
@@ -123,7 +120,6 @@ class BTI:
             Start time in seconds since MET.
 
         """
-
         self._logger.info(f'Seconds since MET {(self.tstart - self.gti.time_ref).to_value("sec")}')
 
         return (self.tstart - self.gti.time_ref).to_value("sec") * u.s
@@ -144,7 +140,6 @@ class BTI:
             Updated good time intervals.
 
         """
-
         self._logger.info(f"BTI: {bti}")
 
         if bti is None:
@@ -153,6 +148,4 @@ class BTI:
         on_time_s = self._create_on_time_list(bti)
         gti_start, gti_end = self._extract_gti_start_stop(on_time_s)
 
-        updated_gti = GTI.create(gti_start, gti_end, self.gti.time_ref)
-
-        return updated_gti
+        return GTI.create(gti_start, gti_end, self.gti.time_ref)

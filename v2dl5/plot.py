@@ -1,7 +1,4 @@
-"""
-Plotting
-
-"""
+"""Plotting."""
 
 import logging
 import warnings
@@ -20,10 +17,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 
 class Plot:
-    """
-    Plotting functions
-
-    """
+    """Plotting functions."""
 
     def __init__(self, v2dl5_data, data_set, on_region=None, output_dir=None):
         self._logger = logging.getLogger(__name__)
@@ -34,40 +28,24 @@ class Plot:
         self.output_dir = output_dir
 
     def default_offsets(self):
-        """
-        List of default offsets
-
-        """
-
+        """List of default offsets."""
         _offsets = [0.5, 0.7, 1.0, 1.5] * u.deg
         self._logger.info(f"Default offsets for plotting: {_offsets}")
         return _offsets
 
     def default_energy_true(self):
-        """
-        List of default true energies
-
-        """
-
+        """List of default true energies."""
         _energy_true = [0.2, 0.3, 1.0, 3.0, 10.0, 20.0] * u.TeV
         self._logger.info(f"Default true energies for plotting: {_energy_true}")
         return _energy_true
 
     def plot_maps(self, exclusion_mask=None):
-        """
-        Map and geometry related plots
-
-        """
-
+        """Map and geometry related plots."""
         self.plot_regions(exclusion_mask=exclusion_mask)
         self.plot_theta2()
 
     def plot_spectra(self, flux_points=None, model=None):
-        """
-        Spectrum related plots
-
-        """
-
+        """Spectrum related plots."""
         for dataset in self.data_set:
             self.plot_fit(dataset)
 
@@ -90,11 +68,7 @@ class Plot:
             self.plot_light_curve(light_curve["light_curve"], light_curve["title"])
 
     def plot_event_histograms(self):
-        """
-        Plot event histograms per observation
-
-        """
-
+        """Plot event histograms per observation."""
         for obs in self.v2dl5_data.get_observations():
             obs.events.select_offset([0, 2.5] * u.deg).peek()
             try:
@@ -106,11 +80,7 @@ class Plot:
                 pass
 
     def plot_source_statistics(self):
-        """
-        Plot significance vs observation time
-
-        """
-
+        """Plot significance vs observation time."""
         info_table = self.data_set.info_table(cumulative=True)
         _, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
         ax_excess.plot(
@@ -143,21 +113,13 @@ class Plot:
             pass
 
     def plot_irfs(self):
-        """
-        Plot instrument response functions per observation
-
-        """
-
+        """Plot instrument response functions per observation."""
         for obs in self.v2dl5_data.get_observations():
             self._plot_effective_area(obs)
             self._plot_energy_dispersion(obs)
 
     def plot_fit(self, data_set):
-        """
-        Plot successful fit results and residuals.
-
-        """
-
+        """Plot successful fit results and residuals."""
         try:
             ax_spectrum, _ = data_set.plot_fit()
         except ValueError:
@@ -173,22 +135,14 @@ class Plot:
             pass
 
     def plot_flux_points(self, flux_point_dataset):
-        """
-        Plot flux points
-
-        """
-
+        """Plot flux points."""
         _, ax = plt.subplots()
         flux_point_dataset.plot(ax=ax, sed_type="dnde", color="darkorange")
         flux_point_dataset.plot_ts_profiles(ax=ax, sed_type="dnde")
         self._plot(plot_name="flux_points", output_dir=self.output_dir)
 
     def plot_sed(self, flux_point_dataset):
-        """
-        Plot spectral energy distribution
-
-        """
-
+        """Plot spectral energy distribution."""
         kwargs_model = {"color": "grey", "ls": "--", "sed_type": "dnde"}
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
         flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
@@ -200,11 +154,7 @@ class Plot:
             pass
 
     def plot_light_curve(self, light_curve, plot_name):
-        """
-        Plot light curve
-
-        """
-
+        """Plot light curve."""
         _, ax = plt.subplots(
             figsize=(8, 6),
             gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
@@ -220,11 +170,7 @@ class Plot:
             pass
 
     def plot_regions(self, exclusion_mask):
-        """
-        Plot on and off regions, exclusion mask
-
-        """
-
+        """Plot on and off regions, exclusion mask."""
         ax = exclusion_mask.plot()
         self.on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="k")
         try:
@@ -234,11 +180,7 @@ class Plot:
             pass
 
     def plot_theta2(self):
-        """
-        Plot theta2 distribution
-
-        """
-
+        """Plot theta2 distribution."""
         theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
 
         theta2_table = make_theta_squared_table(
@@ -256,10 +198,7 @@ class Plot:
             pass
 
     def _plot(self, plot_name=None, output_dir=None):
-        """
-        Plotting helper function
-
-        """
+        """Execute plotting helper function."""
         if output_dir is not None:
             output_dir.mkdir(parents=True, exist_ok=True)
             _ofile = f"{output_dir}/{plot_name}.png"
@@ -270,11 +209,7 @@ class Plot:
         plt.close()
 
     def _plot_effective_area(self, obs):
-        """
-        Plot effective area
-
-        """
-
+        """Plot effective area."""
         _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
         obs.aeff.plot(ax=axes[2])
         obs.aeff.plot_energy_dependence(ax=axes[0], offset=self.default_offsets())
@@ -290,11 +225,7 @@ class Plot:
             pass
 
     def _plot_energy_dispersion(self, obs):
-        """
-        Plot energy dispersion
-
-        """
-
+        """Plot energy dispersion."""
         _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
         obs.edisp.plot_bias(
             ax=axes[0],
