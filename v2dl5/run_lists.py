@@ -14,6 +14,14 @@ from astropy.time import Time
 _logger = logging.getLogger(__name__)
 
 
+class ZeroRunLengthError(Exception):
+    """Exception raised for errors in the run length being zero."""
+
+    def __init__(self, message="Run length is zero."):
+        self.message = message
+        super().__init__(self.message)
+
+
 def generate_run_list(args_dict, target):
     """Read observation index table, apply selection cuts and write run list."""
     calculate_averages(args_dict)
@@ -21,7 +29,11 @@ def generate_run_list(args_dict, target):
     _logger.info("Generate run list. from %s", args_dict["obs_table"])
     obs_table = _read_observation_table(args_dict["obs_table"])
     obs_table = _apply_selection_cuts(obs_table, args_dict, target)
-    _logger.info("Selected %d runs.", len(obs_table))
+    try:
+        _logger.info("Selected %d runs.", len(obs_table))
+    except TypeError:
+        _logger.error("No runs selected.")
+        return
     _dqm_report(obs_table, args_dict["output_dir"])
     _write_run_list(obs_table, args_dict["output_dir"])
 
@@ -66,14 +78,19 @@ def _apply_selection_cuts(obs_table, args_dict, target):
         Observation table.
 
     """
-    if target is not None:
-        obs_table = _apply_cut_target(obs_table, args_dict, target)
-    obs_table = _apply_cut_mjd(obs_table, args_dict)
-    obs_table = _apply_cut_atmosphere(obs_table, args_dict, target)
-    obs_table = _apply_cut_dqm(obs_table, args_dict, target)
-    obs_table = _apply_cut_ontime_min(obs_table, args_dict, target)
-    obs_table = _apply_cut_ntel_min(obs_table, args_dict, target)
-    return _apply_cut_l3rate(obs_table, args_dict, target)
+    try:
+        if target is not None:
+            obs_table = _apply_cut_target(obs_table, args_dict, target)
+        obs_table = _apply_cut_mjd(obs_table, args_dict)
+        obs_table = _apply_cut_atmosphere(obs_table, args_dict, target)
+        obs_table = _apply_cut_dqm(obs_table, args_dict, target)
+        obs_table = _apply_cut_ontime_min(obs_table, args_dict, target)
+        obs_table = _apply_cut_ntel_min(obs_table, args_dict, target)
+        obs_table = _apply_cut_l3rate(obs_table, args_dict, target)
+    except ZeroRunLengthError as e:
+        _logger.error(e.message)
+        return None
+    return obs_table
 
 
 def _apply_cut_l3rate(obs_table, args_dict, target):
@@ -110,6 +127,8 @@ def _apply_cut_ntel_min(obs_table, args_dict, target):
     if target is not None:
         _logger.info(f"Minimum number of telescopes: {np.min(obs_table['N_TELS'])}")
 
+    if len(obs_table) == 0:
+        raise ZeroRunLengthError()
     return obs_table
 
 
@@ -126,6 +145,8 @@ def _apply_cut_mjd(obs_table, args_dict):
         mask = np.array([Time(row["DATE-END"], scale="utc").mjd < mjd_max for row in obs_table])
         obs_table = obs_table[mask]
 
+    if len(obs_table) == 0:
+        raise ZeroRunLengthError()
     return obs_table
 
 
@@ -143,6 +164,8 @@ def _apply_cut_ontime_min(obs_table, args_dict, target):
     if target is not None:
         _logger.info(f"Minimum run time: {np.min(obs_table['ONTIME'])} s")
 
+    if len(obs_table) == 0:
+        raise ZeroRunLengthError()
     return obs_table
 
 
@@ -160,6 +183,8 @@ def _apply_cut_dqm(obs_table, args_dict, target):
     if target is not None:
         _logger.info(f"Selected dqm status {np.unique(obs_table['DQMSTAT'])}")
 
+    if len(obs_table) == 0:
+        raise ZeroRunLengthError()
     return obs_table
 
 
@@ -181,6 +206,8 @@ def _apply_cut_atmosphere(obs_table, args_dict, target):
     if target is not None:
         _logger.info(f"Selected weather conditions {np.unique(obs_table['WEATHER'])}")
 
+    if len(obs_table) == 0:
+        raise ZeroRunLengthError()
     return obs_table
 
 
@@ -208,6 +235,8 @@ def _apply_cut_target(obs_table, args_dict, target):
         f"(min {obs_cone_radius_min}, max {obs_cone_radius_max})"
     )
 
+    if len(obs_table) == 0:
+        raise ZeroRunLengthError()
     return obs_table
 
 
@@ -422,6 +451,9 @@ def _print_removed_runs(obs_table, mask, column_name, cut_type, print_runs=True)
     if not print_runs:
         return
 
+    if len(mask) == 0:
+        _logger.info(f"No runs removed by {cut_type} cut")
+        return
     _logger.info(f"Remove {len(mask)-mask.sum(~False)} runs failing {cut_type} cut")
     _removed_runs = [f"{row['OBS_ID']} ({row[column_name]})" for row in obs_table[~mask]]
     _logger.info(f"Removed following run: {_removed_runs}")

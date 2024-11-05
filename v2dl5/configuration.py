@@ -30,6 +30,7 @@ def configuration(args, generate_dqm_run_list=False):
 
     """
     args_dict = _default_config(generate_dqm_run_list)
+    args_dict["target_list"] = args.target_list
     if args.config is not None:
         args_dict.update(_read_config_from_file(args.config))
 
