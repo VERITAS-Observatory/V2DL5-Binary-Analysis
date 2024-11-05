@@ -34,7 +34,7 @@ import v2dl5.configuration
 import v2dl5.run_lists
 import v2dl5.sky_regions
 
-_logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 def _parse():
