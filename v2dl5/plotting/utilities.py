@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 def getPlottingVariable(PlotVariable, index):
     """String with plotting variable"""
-
     # plotting variable
     i_plotValue = "flux"
     i_plotError = "flux_err"
@@ -69,7 +68,6 @@ def get_color_list(n_colors, plot_type=None):
         List of colors
 
     """
-
     if plot_type == "icrc2019Plots":
         colormap = plt.cm.Dark2
     elif plot_type == "xray":
@@ -88,8 +86,8 @@ def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
     """
     Print a figure into the given format.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     print_name :  str
         Name of the figure.
     file_type :   str
@@ -113,7 +111,6 @@ def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
 
 def getOrbitalPhaseAxisString(OrbitalPeriod):
     """Return a string for the orbital phase axis"""
-
     # strOr = "orbital phase (%.1f d)" % OrbitalPeriod
     strOr = "orbital phase"
 
@@ -122,7 +119,6 @@ def getOrbitalPhaseAxisString(OrbitalPeriod):
 
 def get_flux_axis_string(instrument, PlotVariable=None, ScaleFactor=None, EnergyFlux=False):
     """Flux axis string with the correct unit depending on the type of instrument."""
-
     if not ScaleFactor:
         ScaleFactor = ""
 
@@ -149,7 +145,6 @@ def get_flux_axis_string(instrument, PlotVariable=None, ScaleFactor=None, Energy
 
 def get_paper_figures_parameters(width=None, height=None, xtick_top=True, legend_font_size=8):
     """Default paper figure parameters."""
-
     if width is None:
         width = 6
 
@@ -177,7 +172,6 @@ def get_paper_figures_parameters(width=None, height=None, xtick_top=True, legend
 
 def paper_figures(width=None, height=None, columns=1, xtick_top=True):
     """Set figures parameters for paper plotting."""
-
     paper_parameters = get_paper_figures_parameters(width, height, xtick_top)
     matplotlib.rcParams.update(paper_parameters)
     width = paper_parameters["figure.figsize"][0] if width is None else width

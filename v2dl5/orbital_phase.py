@@ -13,7 +13,6 @@ def get_orbital_phase(mjd, orbital_period, mjd_0, phase_reduce=True):
 
     Parameters
     ----------
-
     mjd: float
         MJD
     orbital_period: float
@@ -73,7 +72,6 @@ def get_orbital_phase_range(mjd_min, mjd_max, phase_mean, orbital_period, mjd_0,
     float
         Width of observation bin in orbital phase
     """
-
     ph_min = get_orbital_phase(mjd=mjd_min, orbital_period=orbital_period, mjd_0=mjd_0)
     ph_max = get_orbital_phase(mjd=mjd_max, orbital_period=orbital_period, mjd_0=mjd_0)
     if abs(ph_max - ph_min) < 1.0e-3:

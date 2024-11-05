@@ -30,7 +30,7 @@ class LightCurveDataReader:
 
         self.data_dict = {}
         try:
-            with open(configuration_file, "r") as file:
+            with open(configuration_file) as file:
                 _yml_in = yaml.safe_load(file)
                 self.config = _yml_in["data"]
         except FileNotFoundError as err:
@@ -53,7 +53,6 @@ class LightCurveDataReader:
             Data dictionary with data for each instrument.
 
         """
-
         for data_config in self.config:
             self.data_dict[data_config["instrument"]] = self._read_fluxes_from_file(data_config)
             self._add_orbital_parameters(self.data_dict[data_config["instrument"]])
@@ -81,7 +80,6 @@ class LightCurveDataReader:
             Data dictionary with light-curve data.
 
         """
-
         orbital_period = self.binary["orbital_period"]
         mjd_0 = self.binary["mjd_0"]
 
@@ -130,8 +128,8 @@ class LightCurveDataReader:
         """
         Read gamma-ray fluxes from ecsv file (open gamma-ray format)
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         data_config: dict
             configuration dictionary
         TimeMinMax: bool

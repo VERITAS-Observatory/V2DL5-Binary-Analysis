@@ -15,6 +15,7 @@ dependencies:
   - pre-commit
   - pydantic
   - pyflakes
+  - pylint
   - pytest
   - pytest-cov
   - pytest-xdist

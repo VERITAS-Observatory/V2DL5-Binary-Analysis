@@ -39,7 +39,6 @@ class Data:
         according to target coordinates and observation cone.
 
         """
-
         self._logger = logging.getLogger(__name__)
 
         self._logger.info(
@@ -60,7 +59,6 @@ class Data:
         Return data store.
 
         """
-
         return self._data_store
 
     def get_observations(self, reflected_region=True, skip_missing=False):
@@ -80,7 +78,6 @@ class Data:
             List of observations.
 
         """
-
         required_irf = "full-enclosure"
         if reflected_region:
             required_irf = "point-like"
@@ -100,7 +97,6 @@ class Data:
             Path to run list.
 
         """
-
         if run_list is None:
             return None
 
@@ -128,7 +124,6 @@ class Data:
             observation cone radius (deg).
 
         """
-
         observations = self._data_store.obs_table
         mask = self.target.separation(observations.pointing_radec) < obs_cone_radius * u.deg
         _runs = observations[mask]["OBS_ID"].data
@@ -146,7 +141,6 @@ class Data:
         Simplest case. Ignores possible energy and offset dependence.
 
         """
-
         observations = self.get_observations()
         try:
             rad_max = set(obs.rad_max.data[0][0] for obs in observations)
@@ -179,7 +173,6 @@ class Data:
             Maximum offset.
 
         """
-
         woff = np.array(
             [
                 self.target.separation(obs.pointing.get_icrs()).degree
@@ -199,7 +192,6 @@ class Data:
             Given us {"run": run, "bti_start": start, "bti_length": length}
 
         """
-
         if bti is None:
             return
 

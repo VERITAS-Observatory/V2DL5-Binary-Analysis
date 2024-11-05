@@ -56,10 +56,7 @@ def _parse():
 
 
 def main():
-    """
-    Reflected region analysis.
-
-    """
+    """Reflected region analysis."""
     logging.root.setLevel(logging.INFO)
 
     args_dict = v2dl5.configuration.configuration(args=_parse())

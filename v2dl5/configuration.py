@@ -29,7 +29,6 @@ def configuration(args, generate_dqm_run_list=False):
         Dictionary with configuration parameters.
 
     """
-
     args_dict = _default_config(generate_dqm_run_list)
     if args.config is not None:
         args_dict.update(_read_config_from_file(args.config))
@@ -78,12 +77,11 @@ def _read_config_from_file(config):
         Dictionary with configuration parameters.
 
     """
-
     _logger.info("Reading configuration from %s", config)
 
     args_dict = {}
     try:
-        with open(config, "r", encoding="utf-8") as stream:
+        with open(config, encoding="utf-8") as stream:
             args_dict = yaml.safe_load(stream)
     except (FileNotFoundError, yaml.YAMLError) as exc:
         _logger.error(exc)
@@ -103,7 +101,6 @@ def _default_config_analysis():
         Default analysis configuration
 
     """
-
     return {
         "observations": {
             "datastore": "../../../VTS/DL3/v490/point-like/",
@@ -160,7 +157,6 @@ def _default_config_dqm_run_list():
         Default configuration for run list generation.
 
     """
-
     return {
         "observations": {
             "target": "Crab",

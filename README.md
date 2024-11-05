@@ -13,10 +13,6 @@ Allows to run analysis scripts for a given list of runs or for a cone search aro
 - source detection analysis including integral flux (or flux upper limits), reflection region model
 - spectral analysis, reflected region model
 
-## Acknowledgement
-
-This work relies heavily on the [gammapy](https://gammapy.org/) development and especially on the excellent [tutorials](https://docs.gammapy.org/1.1/tutorials/index.html) provided by the gammapy team.
-
 ## Installation
 
 To install the required python packages, run:
@@ -135,3 +131,7 @@ Additionally write run lists for each of the MJD bins:
 ```
 
 The tool will also write a figure with the length-of-time bins vs time bin.
+
+## Acknowledgement
+
+This work relies heavily on the [gammapy](https://gammapy.org/) development and especially on the excellent [tutorials](https://docs.gammapy.org/1.1/tutorials/index.html) provided by the gammapy team.

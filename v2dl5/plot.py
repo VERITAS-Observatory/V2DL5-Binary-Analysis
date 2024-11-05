@@ -38,7 +38,6 @@ class Plot:
         List of default offsets
 
         """
-
         _offsets = [0.5, 0.7, 1.0, 1.5] * u.deg
         self._logger.info(f"Default offsets for plotting: {_offsets}")
         return _offsets
@@ -48,7 +47,6 @@ class Plot:
         List of default true energies
 
         """
-
         _energy_true = [0.2, 0.3, 1.0, 3.0, 10.0, 20.0] * u.TeV
         self._logger.info(f"Default true energies for plotting: {_energy_true}")
         return _energy_true
@@ -58,7 +56,6 @@ class Plot:
         Map and geometry related plots
 
         """
-
         self.plot_regions(exclusion_mask=exclusion_mask)
         self.plot_theta2()
 
@@ -67,7 +64,6 @@ class Plot:
         Spectrum related plots
 
         """
-
         for dataset in self.data_set:
             self.plot_fit(dataset)
 
@@ -94,7 +90,6 @@ class Plot:
         Plot event histograms per observation
 
         """
-
         for obs in self.v2dl5_data.get_observations():
             obs.events.select_offset([0, 2.5] * u.deg).peek()
             try:
@@ -110,7 +105,6 @@ class Plot:
         Plot significance vs observation time
 
         """
-
         info_table = self.data_set.info_table(cumulative=True)
         _, (ax_excess, ax_sqrt_ts) = plt.subplots(figsize=(10, 4), ncols=2, nrows=1)
         ax_excess.plot(
@@ -147,7 +141,6 @@ class Plot:
         Plot instrument response functions per observation
 
         """
-
         for obs in self.v2dl5_data.get_observations():
             self._plot_effective_area(obs)
             self._plot_energy_dispersion(obs)
@@ -157,7 +150,6 @@ class Plot:
         Plot successful fit results and residuals.
 
         """
-
         try:
             ax_spectrum, _ = data_set.plot_fit()
         except ValueError:
@@ -177,7 +169,6 @@ class Plot:
         Plot flux points
 
         """
-
         _, ax = plt.subplots()
         flux_point_dataset.plot(ax=ax, sed_type="dnde", color="darkorange")
         flux_point_dataset.plot_ts_profiles(ax=ax, sed_type="dnde")
@@ -188,7 +179,6 @@ class Plot:
         Plot spectral energy distribution
 
         """
-
         kwargs_model = {"color": "grey", "ls": "--", "sed_type": "dnde"}
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
         flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
@@ -204,7 +194,6 @@ class Plot:
         Plot light curve
 
         """
-
         _, ax = plt.subplots(
             figsize=(8, 6),
             gridspec_kw={"left": 0.16, "bottom": 0.2, "top": 0.98, "right": 0.98},
@@ -224,7 +213,6 @@ class Plot:
         Plot on and off regions, exclusion mask
 
         """
-
         ax = exclusion_mask.plot()
         self.on_region.to_pixel(ax.wcs).plot(ax=ax, edgecolor="k")
         try:
@@ -238,7 +226,6 @@ class Plot:
         Plot theta2 distribution
 
         """
-
         theta2_axis = MapAxis.from_bounds(0, 0.2, nbin=20, interp="lin", unit="deg2")
 
         theta2_table = make_theta_squared_table(
@@ -274,7 +261,6 @@ class Plot:
         Plot effective area
 
         """
-
         _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
         obs.aeff.plot(ax=axes[2])
         obs.aeff.plot_energy_dependence(ax=axes[0], offset=self.default_offsets())
@@ -294,7 +280,6 @@ class Plot:
         Plot energy dispersion
 
         """
-
         _, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
         obs.edisp.plot_bias(
             ax=axes[0],

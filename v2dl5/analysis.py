@@ -61,7 +61,6 @@ class Analysis:
         Run analysis.
 
         """
-
         self._data_reduction()
         if self.args_dict["datasets"]["stack"]:
             _data_sets = Datasets(self.datasets).stack_reduce()
@@ -77,7 +76,6 @@ class Analysis:
         Plot all results.
 
         """
-
         _plot_dir = Path(f"{self._output_dir}/plots")
 
         plotter = v2dl5_plot.Plot(
@@ -101,7 +99,6 @@ class Analysis:
 
     def write(self):
         """Write results to files."""
-
         for dataset in self.datasets:
             self._write_datasets(dataset, f"{dataset.name}.fits.gz")
         self._write_datasets(self.flux_points, "flux_points.ecsv", "gadf-sed")
@@ -130,7 +127,6 @@ class Analysis:
             Format specification (gammapy)
 
         """
-
         if datasets is None:
             return
 
@@ -156,7 +152,6 @@ class Analysis:
             Filename
 
         """
-
         _data_dir = Path(f"{self._output_dir}/data")
         _data_dir.mkdir(parents=True, exist_ok=True)
         _out_file = f"{_data_dir}/{filename}"
@@ -169,7 +164,6 @@ class Analysis:
         Reduce data using the reflected region maker.
 
         """
-
         energy_axis = self._get_energy_axis(name="energy")
         energy_axis_true = self._get_energy_axis(name="energy_true")
 
@@ -214,7 +208,6 @@ class Analysis:
             Table with results per run
 
         """
-
         for col in info_table.colnames:
             if info_table[col].dtype.kind == "f":
                 info_table[col].format = "{:.2f}"
@@ -239,7 +232,6 @@ class Analysis:
         Spectral fitting.
 
         """
-
         datasets.models = self.spectral_model
 
         _fit = Fit()
@@ -252,7 +244,6 @@ class Analysis:
         Spectral models
 
         """
-
         _spectral_model = None
         if model.get("model", "pl") == "pl":
             _spectral_model = PowerLawSpectralModel(
@@ -277,7 +268,6 @@ class Analysis:
         Calculate flux points.
 
         """
-
         energy_edges = (
             np.geomspace(
                 u.Quantity(self.args_dict["flux_points"]["energy"]["min"]).value,
@@ -362,7 +352,6 @@ class Analysis:
             Light curve
 
         """
-
         self._logger.info(f"Estimating light curve {time_intervals}")
 
         lc_maker_1d = LightCurveEstimator(
@@ -399,7 +388,6 @@ class Analysis:
         Get energy axis.
 
         """
-
         _axes_dict = self.args_dict["datasets"]["geom"]["axes"][name]
 
         return MapAxis.from_energy_bounds(
