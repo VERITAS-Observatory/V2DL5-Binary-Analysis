@@ -19,7 +19,7 @@ dqm:
     - "needs_adjustments"
     - "unknown"
 
-  ntel_min: 4
+  ntel_min: 3
 
   ontime_min: 3 min
 
