@@ -36,6 +36,7 @@ def generate_run_list(args_dict, target):
         return
     _dqm_report(obs_table, args_dict["output_dir"])
     _write_run_list(obs_table, args_dict["output_dir"])
+    _print_summary(obs_table, args_dict["on_region"]["target"], target)
 
 
 def calculate_averages(args_dict):
@@ -252,7 +253,7 @@ def _write_run_list(obs_table, output_dir):
         Output directory.
 
     """
-    _logger.info(f"Write run list to {output_dir}/run_list.txt")
+    _logger.info(f"Write run list with {len(obs_table)} runs to {output_dir}/run_list.txt")
 
     column_data = obs_table[np.argsort(obs_table["OBS_ID"])]["OBS_ID"]
     table_with_single_row = Table([column_data], names=["Item"])
@@ -458,3 +459,13 @@ def _print_removed_runs(obs_table, mask, column_name, cut_type, print_runs=True)
     _removed_runs = [f"{row['OBS_ID']} ({row[column_name]})" for row in obs_table[~mask]]
     _logger.info(f"Removed following run: {_removed_runs}")
     _logger.info(f"Keep {mask.sum(~False)} runs after application of {cut_type} cut")
+
+
+def _print_summary(obs_table, target_name, target):
+    """Print a summary for the given run list and target."""
+    _logger.info(f"Summary for target {target_name}")
+    _logger.info(f"Target coordinates ra={target.ra}, dec={target.dec}")
+    _logger.info(f"Selected {len(obs_table)} runs.")
+    total_on_time_min = np.sum(obs_table["ONTIME"]) / 60.0
+    total_on_time_hour = np.sum(obs_table["ONTIME"]) / 3600.0
+    _logger.info(f"Total on time: {total_on_time_min:.2f} min" f" ({total_on_time_hour:.2f} hours)")
