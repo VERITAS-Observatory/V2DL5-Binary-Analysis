@@ -41,6 +41,7 @@ optional-dependencies."tests" = [
 urls."bug tracker" = "https://github.com/GernotMaier/V2DL5-Binary-Analysis/issues"
 urls."repository" = "https://github.com/GernotMaier/V2DL5-Binary-Analysis"
 scripts.v2dl5-generate-runlist = "v2dl5.scripts.generate_runlist:main"
+scripts.v2dl5-generate-runlists-from-target-list = "v2dl5.scripts.generate_runlists_from_target_list:main"
 scripts.v2dl5-plot-binary-light-curves = "v2dl5.scripts.plot_binary_light_curves:main"
 scripts.v2dl5-print-simplified-light-curve = "v2dl5.scripts.print_simplified_light_curve:main"
 scripts.v2dl5-reflected-region-analysis = "v2dl5.scripts.reflected_region_analysis:main"
