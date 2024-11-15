@@ -92,7 +92,12 @@ def main():
 
     for target in target_list:
         target_dir_name = (
-            target.replace(" ", "_").replace(",", "").replace("+", "p").replace("-", "m")
+            target.replace(" ", "_")
+            .replace(",", "")
+            .replace("+", "p")
+            .replace("-", "m")
+            .replace("[", "")
+            .replace("]", "")
         )
 
         args_dict["output_dir"] = output_path_main / target_dir_name
