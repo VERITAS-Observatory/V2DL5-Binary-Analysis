@@ -32,7 +32,7 @@ def generate_run_list(args_dict, target):
     try:
         _logger.info("Selected %d runs.", len(obs_table))
     except TypeError:
-        _logger.error("No runs selected.")
+        _logger.warning("No runs selected (zero length run list).")
         return
     _dqm_report(obs_table, args_dict["output_dir"])
     _write_run_list(obs_table, args_dict["output_dir"])
@@ -89,7 +89,7 @@ def _apply_selection_cuts(obs_table, args_dict, target):
         obs_table = _apply_cut_ntel_min(obs_table, args_dict, target)
         obs_table = _apply_cut_l3rate(obs_table, args_dict, target)
     except ZeroRunLengthError as e:
-        _logger.error(e.message)
+        _logger.warning(e.message)
         return None
     return obs_table
 
@@ -162,7 +162,7 @@ def _apply_cut_ontime_min(obs_table, args_dict, target):
     mask = np.array([row["ONTIME"] > ontime_min.value for row in obs_table])
     _print_removed_runs(obs_table, mask, "ONTIME", f"ontime < {ontime_min} m", target is not None)
     obs_table = obs_table[mask]
-    if target is not None:
+    if target is not None and len(obs_table["ONTIME"]) > 0:
         _logger.info(f"Minimum run time: {np.min(obs_table['ONTIME'])} s")
 
     if len(obs_table) == 0:
