@@ -30,6 +30,8 @@ import argparse
 import logging
 from pathlib import Path
 
+from astropy.table import Table
+
 import v2dl5.configuration
 import v2dl5.run_lists
 import v2dl5.sky_regions
@@ -71,10 +73,17 @@ def _parse():
 
 def read_list_of_targets(target_list_file):
     """Read list of targets from file."""
-    with open(target_list_file) as file:
-        target_list = [line.strip() for line in file]
+    if Path(target_list_file).suffix == ".ecsv":
+        object_table = Table.read(target_list_file, format="ascii.ecsv")
+        target_list = [
+            typed_id if typed_id and len(str(typed_id).strip()) > 0 else main_id
+            for typed_id, main_id in zip(object_table["TYPED_ID"], object_table["MAIN_ID"])
+        ]
+    else:
+        with open(target_list_file) as file:
+            target_list = [line.strip() for line in file]
 
-    print(f"Found {len(target_list)} targets in {target_list_file}")
+    logger.info(f"Found {len(target_list)} targets in {target_list_file}")
     return target_list
 
 
@@ -84,7 +93,7 @@ def main():
 
     args_dict = v2dl5.configuration.configuration(args=_parse(), generate_dqm_run_list=True)
 
-    print("args_dict:", args_dict)
+    logger.info("args_dict:", args_dict)
 
     target_list = read_list_of_targets(args_dict["target_list"])
 
