@@ -8,7 +8,7 @@ name: v2dl5
 channels:
   - conda-forge
 dependencies:
-  - astropy
+  - astropy-base
   - astroquery
   - gammapy
   - matplotlib
