@@ -9,8 +9,8 @@ if [ "$#" -ne 3 ]; then
     exit 1
 fi
 
- runlist_from_time_bins()
- {
+runlist_from_time_bins()
+{
     ANASUM_FILE="/data/$(basename $1)"
     TIME_FILE="/time_data/$(basename $2)"
     podman run --platform linux/amd64 --rm -it -v "$(pwd)/:/workdir" \
@@ -19,7 +19,7 @@ fi
         ghcr.io/veritas-observatory/eventdisplay_v4:main \
         /bin/bash -c \
         "cd /workdir/; root -l -q -b 'runlist_from_time_bins.C(\"$ANASUM_FILE\", \"$TIME_FILE\", $3)';"
- }
+}
 
- echo "Generate run lists..."
+echo "Generate run lists..."
 runlist_from_time_bins "$1" "$2" "$3"

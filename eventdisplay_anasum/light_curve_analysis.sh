@@ -9,8 +9,8 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
- light_curves()
- {
+light_curves()
+{
     ANASUM_FILE="/data/$(basename $1)"
     TIME_FILE="/time_data/$(basename $2)"
     podman run --platform linux/amd64 --rm -it -v "$(pwd)/:/workdir" \
@@ -19,7 +19,7 @@ fi
         ghcr.io/veritas-observatory/eventdisplay_v4:main \
         /bin/bash -c \
         "cd /workdir/; root -l -q -b 'light_curve_analysis.C(\"$ANASUM_FILE\", \"$TIME_FILE\")';"
- }
+}
 
- echo "Running light-curve analysis..."
+echo "Running light-curve analysis..."
 light_curves "$1" "$2"

@@ -8,8 +8,8 @@ if [ "$#" -ne 2 ]; then
     exit 1
 fi
 
- plot_spectra()
- {
+plot_spectra()
+{
     ANASUM_FILE="/data/$(basename $1)"
     OUTPUT_FILE="/output/$(basename $2)"
     podman run --platform linux/amd64 --rm -it -v "$(pwd)/:/workdir" \
@@ -18,7 +18,7 @@ fi
         ghcr.io/veritas-observatory/eventdisplay_v4:main \
         /bin/bash -c \
         "cd /workdir/; root -l -q -b 'spectral_analysis.C(\"$ANASUM_FILE\", 0.2,  \"$OUTPUT_FILE\")';"
- }
+}
 
 echo "Running spectral analysis..."
 plot_spectra "$1" "$2"
