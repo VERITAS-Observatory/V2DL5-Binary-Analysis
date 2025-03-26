@@ -1,4 +1,4 @@
-""""Main analysis class."""
+"""Main analysis class."""
 
 import logging
 from pathlib import Path
