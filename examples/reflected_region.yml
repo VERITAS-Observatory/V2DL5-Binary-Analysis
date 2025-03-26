@@ -2,7 +2,7 @@
 # Configuration for a reflected region analysis
 
 observations:
-    datastore: ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/
+    datastore: ../../../VTS/DL3/v491/dl3_pointlike_moderate2tel/
     # search for observations around the target direction
     # within a maximum offset of obs_cone_radius
     obs_cone_radius: 1.5 deg

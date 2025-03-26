@@ -1,4 +1,4 @@
-""""Main analysis class."""
+"""Main analysis class."""
 
 import logging
 from pathlib import Path
@@ -301,7 +301,7 @@ class Analysis:
                 )
             ),
         }
-        for time_bin_file in self.args_dict["light_curve"]["time_bin_files"]:
+        for time_bin_file in self.args_dict["light_curve"].get("time_bin_files", []):
             time_intervals = v2dl5_time.get_time_bins_from_file(time_bin_file)
             title = Path(time_bin_file).stem.replace("light_curve_", "")
             self._logger.info(f"Time intervals from {time_bin_file}: {time_intervals}")
