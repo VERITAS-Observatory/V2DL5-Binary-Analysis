@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Reflected region analysis.
+Reflected region analysis using gammapy.
 
 Example using a run list:
 
