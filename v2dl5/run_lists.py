@@ -529,8 +529,10 @@ def split_binary_run_list(run_list_file, obs_table, binary_name, orbital_bins):
     plt.xlim(0, 1)
     plt.xlabel("orbital phase")
     plt.ylabel("live time (h)")
-    plt.savefig(f"{run_list_file.removesuffix('.txt')}_live_time_per_orbital_phase_bin.png")
+    plot_file = f"{run_list_file.removesuffix('.txt')}_live_time_per_orbital_phase_bin.png"
+    plt.savefig(plot_file)
     plt.close()
+    _logger.info(f"Live time plot saved to {plot_file}")
 
     _logger.info(f"Run lists written to {run_list_file.removesuffix('.txt')}_orbital_bin_*.txt")
     _logger.info(f"Live times per orbital phase bin: {live_times}")
