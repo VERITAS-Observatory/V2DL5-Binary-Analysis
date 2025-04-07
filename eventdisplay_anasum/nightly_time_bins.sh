@@ -19,4 +19,4 @@ nightly_time_bins()
 }
 
 echo "Determining nightly time bins..."
-nightly_time_bins "$1" "$2"
+nightly_time_bins "$1"
