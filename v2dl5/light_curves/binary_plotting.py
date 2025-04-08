@@ -71,34 +71,38 @@ class BinaryLightCurvePlotter:
 
         ax = axes if axes else plotting_utilities.paper_figures(None, None)
 
+        significance_list = [None, 4.0, 5.0]
+        significance_colors = [None, "g", "r"]
+
         for idx, (instrument, data) in enumerate(self.data.items()):
 
-            x, y, e, x_ul, y_ul = self._get_light_curve_in_mjd_limits(
-                data, time_axis, mjd_min, mjd_max, orbit_number
-            )
             if not self.plot_this_instrument(instrument):
                 continue
             color, marker = self.get_marker_and_color(idx)
-            plt.errorbar(
-                x,
-                y,
-                e,
-                None,
-                # TODO - label can also be orbit number?
-                label=(
-                    instrument
-                    if self.config[idx].get("plot_label") is None
-                    else self.config[idx]["plot_label"]
-                ),
-                color=color,
-                marker=marker,
-                linestyle="none",
-                fillstyle="none",
-                linewidth=plotting_utilities.get_line_width(),
-                markersize=(
-                    plotting_utilities.get_marker_size() if markersize is None else markersize
-                ),
-            )
+
+            for sig_limit, sig_color in zip(significance_list, significance_colors):
+                x, y, e, x_ul, y_ul = self._get_light_curve_in_mjd_limits(
+                    data, time_axis, mjd_min, mjd_max, orbit_number, sig_limit
+                )
+                plt.errorbar(
+                    x,
+                    y,
+                    e,
+                    None,
+                    label=(
+                        instrument
+                        if self.config[idx].get("plot_label") is None
+                        else self.config[idx]["plot_label"]
+                    ),
+                    color=color if sig_color is None else sig_color,
+                    marker=marker,
+                    linestyle="none",
+                    fillstyle="none",
+                    linewidth=plotting_utilities.get_line_width(),
+                    markersize=(
+                        plotting_utilities.get_marker_size() if markersize is None else markersize
+                    ),
+                )
             if len(y_ul) > 0:
                 plt.errorbar(
                     x_ul,
@@ -200,7 +204,9 @@ class BinaryLightCurvePlotter:
             return "phase"
         return "Modified Julian Date (MJD)"
 
-    def _get_light_curve_in_mjd_limits(self, data, time_axis, mjd_min, mjd_max, orbit_number):
+    def _get_light_curve_in_mjd_limits(
+        self, data, time_axis, mjd_min, mjd_max, orbit_number, min_significance=None
+    ):
         """
         Get light curve restricted in MJD or for a certain orbit number.
 
@@ -216,6 +222,8 @@ class BinaryLightCurvePlotter:
             Maximum MJD value.
         orbit_number : int
             Select orbit number.
+        min_significance : float
+            Minimum significance for flux values.
 
         Returns
         -------
@@ -228,6 +236,12 @@ class BinaryLightCurvePlotter:
         x_ul = []
         y_ul = []
         for i in range(len(data["MJD"])):
+            if (
+                min_significance is not None
+                and "significance" in data
+                and data["significance"][i] < min_significance
+            ):
+                continue
             if mjd_min is not None and data["MJD"][i] < mjd_min:
                 continue
             if mjd_max is not None and data["MJD"][i] > mjd_max:
