@@ -41,6 +41,7 @@ class BinaryLightCurvePlotter:
         figure_dir="./figures/",
         axes=None,
         fontsize=None,
+        markersize=None,
     ):
         """
         Plot flux vs time (MJD or orbital phase).
@@ -55,6 +56,14 @@ class BinaryLightCurvePlotter:
             Maximum MJD value.
         file_type: str
             File type for plots (e.g., '.pdf', '.png').
+        figure_dir: str
+            Directory for saving figures.
+        axes: matplotlib.axes.Axes
+            Axes object to plot on.
+        fontsize: int
+            Font size for labels.
+        markersize: int
+            Marker size for points.
         """
         self._logger.info(
             f"Plotting flux vs {time_axis}" f"(MJD {mjd_min}, {mjd_max}, orbit id {orbit_number})"
@@ -86,7 +95,9 @@ class BinaryLightCurvePlotter:
                 linestyle="none",
                 fillstyle="none",
                 linewidth=plotting_utilities.get_line_width(),
-                markersize=plotting_utilities.get_marker_size(),
+                markersize=(
+                    plotting_utilities.get_marker_size() if markersize is None else markersize
+                ),
             )
             if len(y_ul) > 0:
                 plt.errorbar(
@@ -156,6 +167,7 @@ class BinaryLightCurvePlotter:
                 orbit_number=orbit_id,
                 axes=axes,
                 fontsize=fontsize,
+                markersize=plotting_utilities.get_marker_size() * 0.5,
             )
             plt.rc("xtick", labelsize=fontsize)
             plt.rc("ytick", labelsize=fontsize)
