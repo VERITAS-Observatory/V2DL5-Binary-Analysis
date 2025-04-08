@@ -110,7 +110,7 @@ def main():
         "orbital phase", None, None, file_type=args.plot_type, figure_dir=args.figure_dir
     )
     plotter.plot_flux_vs_phase_for_individual_orbits(
-        "VERITAS (anasum)", file_type=args.plot_type, figure_dir=args.figure_dir
+        instrument=args.instrument, file_type=args.plot_type, figure_dir=args.figure_dir
     )
 
 
