@@ -18,7 +18,7 @@ light_curves()
         -v "$(dirname $2):/time_data" \
         ghcr.io/veritas-observatory/eventdisplay_v4:main \
         /bin/bash -c \
-        "cd /workdir/; root -l -q -b 'light_curve_analysis.C(\"$ANASUM_FILE\", \"$TIME_FILE\")';"
+        "cd /workdir/; root -l -q -b 'light_curve_analysis.C(\"$ANASUM_FILE\", \"$TIME_FILE\", 0.3)';"
 }
 
 echo "Running light-curve analysis..."

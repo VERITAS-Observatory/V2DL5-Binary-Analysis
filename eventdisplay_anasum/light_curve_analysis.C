@@ -100,11 +100,11 @@ vector< pair<double, double> > read_runlist_from_file(string iAnaSumFile)
  */
 void light_curve_analysis(
         string iAnaSumFile = "anasum/anasum.combined.root",
-        string iMJDIntervalFile = "HESSJ0632p057.MJD.v3.txt" )
+        string iMJDIntervalFile = "HESSJ0632p057.MJD.v3.txt",
+        double iEnergyThreshold = 0.35)
 {
      // energy threshold in TeV
-     // double i_fixed_Emin = 0.35;
-     double i_fixed_Emin = 0.3;
+     double i_fixed_Emin = iEnergyThreshold;
      // assumed spectral index:
      double i_fixed_Index = -2.5;
 
