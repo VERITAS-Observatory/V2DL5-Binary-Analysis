@@ -108,7 +108,7 @@ class BinaryLightCurvePlotter:
                 color=color,
                 marker=marker,
                 linestyle="none",
-                fillstyle="none",
+                fillstyle="full",
                 linewidth=plotting_utilities.get_line_width(),
                 markersize=(
                     plotting_utilities.get_marker_size() if markersize is None else markersize
@@ -125,7 +125,7 @@ class BinaryLightCurvePlotter:
                     fillstyle="none",
                     uplims=True,
                     linewidth=plotting_utilities.get_line_width(),
-                    markersize=plotting_utilities.get_marker_size(),
+                    markersize=plotting_utilities.get_marker_size() * 0.5,
                 )
 
         ax.axhline(0, color="lightgray", linestyle="--")
@@ -243,6 +243,16 @@ class BinaryLightCurvePlotter:
                 axes=axes,
                 fontsize=fontsize,
                 markersize=plotting_utilities.get_marker_size() * 0.5,
+            )
+            plt.rc("xtick", labelsize=fontsize)
+            plt.rc("ytick", labelsize=fontsize)
+            plt.text(
+                0.05,
+                0.95,
+                f"Orbit phase {phase_min:.2f} - {phase_max:.2f}",
+                transform=plt.gca().transAxes,
+                fontsize=fontsize,
+                verticalalignment="top",
             )
 
         plt.tight_layout()
