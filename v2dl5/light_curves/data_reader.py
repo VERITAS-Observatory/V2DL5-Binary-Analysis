@@ -170,7 +170,7 @@ class LightCurveDataReader:
                 is_ul = table["is_ul"].data.flatten().tolist()
                 f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
             else:
-                f["flux_ul"] = [-1.0 for _ in f["flux"]]
+                f["flux_ul"] = [-1.0 if fe > 0 else fl for fe, fl in zip(f["flux_err"], f["flux"])]
             if "significance" in table.colnames:
                 f["significance"] = table["significance"].data.flatten().tolist()
         except KeyError:
