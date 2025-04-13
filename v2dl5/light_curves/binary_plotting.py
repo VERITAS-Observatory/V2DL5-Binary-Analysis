@@ -135,9 +135,15 @@ class BinaryLightCurvePlotter:
         """Get number of columns and rows for plotting."""
         n_columns = 4
         fig_size = (10, 4)
+        if number == 9:
+            n_columns = 3
+            fig_size = (10, 8)
         if number > 9:
             n_columns = 6
             fig_size = (12, 6)
+        if number == 16:
+            n_columns = 4
+            fig_size = (10, 8)
         if number > 16:
             n_columns = 8
             fig_size = (16, 10)
@@ -187,6 +193,85 @@ class BinaryLightCurvePlotter:
         plt.tight_layout()
         plotting_utilities.print_figure(
             f"Light-Curve-Orbits-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}",
+            file_type=file_type,
+            figure_dir=figure_dir,
+        )
+
+    def plot_flux_vs_orbit_number(
+        self, instrument, phase_bins=10, file_type=".pdf", figure_dir="./figures/"
+    ):
+        """Plot flux vs orbit number."""
+        self._logger.info("Plotting flux vs orbit number")
+        time_axis = "orbit number"
+
+        data = self.data[instrument]
+        orbits = sorted(set(data["orbit_number"]))
+        self._logger.info(f"Orbits for {instrument} (total number {len(orbits)}): {orbits}")
+
+        y_min, y_max = self._global_flux_extrema(data)
+        fontsize = 6
+        n_columns, n_rows, figsize = self._get_number_columns_and_rows(phase_bins)
+        self._logger.info(f"Number of columns: {n_columns}, number of rows: {n_rows}")
+
+        plt.figure(figsize=figsize)
+        for i in range(phase_bins):
+            axes = plt.subplot(n_rows, n_columns, i + 1)
+            axes.set_xlim([min(orbits), max(orbits)])
+            axes.set_ylim([y_min, y_max])
+
+            phase_min = i * (1.0 / phase_bins)
+            phase_max = (i + 1) * (1.0 / phase_bins)
+
+            x = []
+            y = []
+            e = []
+            x_ul = []
+            y_ul = []
+
+            for j in range(len(data["MJD"])):
+                if phase_min <= data["phase"][j] <= phase_max:
+                    if "flux_ul" in data and data["flux_ul"][j] > 0:
+                        x_ul.append(data["orbit_number"][j])
+                        y_ul.append(data["flux_ul"][j])
+                    elif "flux_ul" not in data or data["flux_ul"][j] < 0:
+                        x.append(data["orbit_number"][j])
+                        y.append(data["flux"][j])
+                        e.append(data["flux_err"][j])
+
+            plt.errorbar(
+                x,
+                y,
+                e,
+                fmt="o",
+                markersize=plotting_utilities.get_marker_size() * 0.5,
+                label=f"Phase {phase_min:.2f} - {phase_max:.2f}",
+            )
+            if len(y_ul) > 0:
+                plt.errorbar(
+                    x_ul,
+                    y_ul,
+                    yerr=0.1 * max(y_ul),
+                    color="k",
+                    fmt="_",
+                    linestyle="none",
+                    fillstyle="none",
+                    uplims=True,
+                    linewidth=plotting_utilities.get_line_width(),
+                    markersize=plotting_utilities.get_marker_size(),
+                )
+
+            plt.text(
+                0.05,
+                0.95,
+                f"Phase {phase_min:.2f} - {phase_max:.2f}",
+                transform=plt.gca().transAxes,
+                fontsize=fontsize,
+                verticalalignment="top",
+            )
+
+        plt.tight_layout()
+        plotting_utilities.print_figure(
+            f"Light-Curve-Orbit-Number-{self.binary['name']}-Flux-vs-{time_axis.replace(' ', '-')}",
             file_type=file_type,
             figure_dir=figure_dir,
         )
