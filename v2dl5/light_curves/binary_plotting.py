@@ -269,6 +269,8 @@ class BinaryLightCurvePlotter:
                 fontsize=fontsize,
                 verticalalignment="top",
             )
+            plt.xlabel("orbit number", fontsize=fontsize)
+            plt.ylabel(self.config[0]["flux_axis_label"], fontsize=fontsize)
 
         plt.tight_layout()
         plotting_utilities.print_figure(
