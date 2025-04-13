@@ -318,21 +318,15 @@ class BinaryLightCurvePlotter:
         list
             Light-curve data as lists.
         """
-        x = []
-        y = []
-        e = []
-        x_ul = []
-        y_ul = []
-        for i in range(len(data["MJD"])):
+        x, y, e, x_ul, y_ul = [], [], [], [], []
+        mjd = data["MJD"]
+        for i, t in enumerate(mjd):
             if (
                 min_significance is not None
-                and "significance" in data
-                and data["significance"][i] < min_significance
+                and data.get("significance", [None] * len(mjd))[i] < min_significance
             ):
                 continue
-            if mjd_min is not None and data["MJD"][i] < mjd_min:
-                continue
-            if mjd_max is not None and data["MJD"][i] > mjd_max:
+            if (mjd_min is not None and t < mjd_min) or (mjd_max is not None and t > mjd_max):
                 continue
             if orbit_number is not None and data["orbit_number"][i] != orbit_number:
                 continue
@@ -341,9 +335,9 @@ class BinaryLightCurvePlotter:
             elif time_axis == "orbital phase":
                 w_x = data["phase"][i]
             else:
-                self._logger.error(f"Unknown time axis: {time_axis}")
-                raise ValueError
-            if "flux_ul" in data and data["flux_ul"][i] > 0:
+                raise ValueError(f"Unknown time axis: {time_axis}")
+            flux_ul = data.get("flux_ul", [None] * len(mjd))[i]
+            if flux_ul is not None and flux_ul > 0:
                 x_ul.append(w_x)
                 y_ul.append(data["flux_ul"][i])
             elif "flux_ul" not in data or data["flux_ul"][i] < 0:
