@@ -1,6 +1,7 @@
 """Data reader for light-curve analysis."""
 
 import logging
+import os
 
 import astropy.units as u
 import numpy as np
@@ -62,12 +63,16 @@ class LightCurveDataReader:
     def _read_fluxes_from_file(self, data_config):
         """Read flux from file."""
         try:
-            if data_config["file_name"].endswith((".csv", ".ecsv")):
-                self._logger.info("Reading data from %s", data_config["file_name"])
-                return self._read_fluxes_from_ecsv_file(data_config)
+            data_config["file_name"] = os.path.expandvars(data_config["file_name"])
         except KeyError:
             self._logger.error(f"File name not found in configuration {data_config}")
             raise KeyError
+
+        if data_config["file_name"].endswith((".csv", ".ecsv")):
+            self._logger.info("Reading data from %s", data_config["file_name"])
+            return self._read_fluxes_from_ecsv_file(data_config)
+
+        return None
 
     def _add_orbital_parameters(self, data):
         """
