@@ -43,7 +43,7 @@ def _parse():
         "--binary_name",
         type=str,
         required=True,
-        default="LS I +61 303",
+        default=None,
         help="Binary name (e.g., LS I +61 303; see v2dl5.binaries for definition).",
     )
     parser.add_argument(

@@ -495,13 +495,17 @@ def split_binary_run_list(run_list_file, obs_table, binary_name, orbital_bins):
     _logger.info(f"Splitting run list of length {len(run_list)} into {orbital_bins} bins")
     obs_table = astropy.table.Table.read(obs_table)
     obs_table = obs_table[np.isin(obs_table["OBS_ID"], run_list)]
-    print(obs_table.columns)
 
     output_files = []
     for i in range(orbital_bins):
         output_files.append(
             open(f"{run_list_file.removesuffix('.txt')}_orbital_bin_{i:02d}.txt", "w")
         )
+
+    _logger.info(
+        f"Using {binary_name} for orbital phase calculation (period: "
+        f"{binaries.binary_properties()[binary_name]['orbital_period']} days)"
+    )
 
     live_times = [0] * orbital_bins
     for row in obs_table:
