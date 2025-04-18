@@ -11,6 +11,9 @@ from astropy.coordinates import SkyCoord
 from astropy.table import Table
 from astropy.time import Time
 
+import v2dl5.binaries as binaries
+import v2dl5.orbital_phase as orbital_phase
+
 _logger = logging.getLogger(__name__)
 
 
@@ -469,3 +472,71 @@ def _print_summary(obs_table, target_name, target):
     total_on_time_min = np.sum(obs_table["ONTIME"]) / 60.0
     total_on_time_hour = np.sum(obs_table["ONTIME"]) / 3600.0
     _logger.info(f"Total on time: {total_on_time_min:.2f} min" f" ({total_on_time_hour:.2f} hours)")
+
+
+def split_binary_run_list(run_list_file, obs_table, binary_name, orbital_bins):
+    """
+    Split a run list into run list per orbital phase bins.
+
+    Parameters
+    ----------
+    run_list_file : str
+        Path to the run list.
+    obs_table : str
+        Path to observation table.
+    binary_name : str
+        Binary name (e.g., LS I +61 303; see v2dl5.binaries for definition).
+    orbital_bins : float
+        Number of bins in orbital period for averaging.
+
+    """
+    with open(run_list_file, encoding="utf-8") as f:
+        run_list = [line.strip() for line in f.readlines()]
+    _logger.info(f"Splitting run list of length {len(run_list)} into {orbital_bins} bins")
+    obs_table = astropy.table.Table.read(obs_table)
+    obs_table = obs_table[np.isin(obs_table["OBS_ID"], run_list)]
+
+    output_files = []
+    for i in range(orbital_bins):
+        output_files.append(
+            open(f"{run_list_file.removesuffix('.txt')}_orbital_bin_{i:02d}.txt", "w")
+        )
+
+    _logger.info(
+        f"Using {binary_name} for orbital phase calculation (period: "
+        f"{binaries.binary_properties()[binary_name]['orbital_period']} days)"
+    )
+
+    live_times = [0] * orbital_bins
+    for row in obs_table:
+        phase = orbital_phase.get_orbital_phase_from_iso_time(
+            iso_time=row["DATE-OBS"],
+            orbital_period=binaries.binary_properties()[binary_name]["orbital_period"],
+            mjd_0=binaries.binary_properties()[binary_name]["mjd_0"],
+        )
+        bin_index = int(phase * orbital_bins) % orbital_bins
+        live_times[bin_index] += row["LIVETIME"]
+        output_files[bin_index].write(f"{row['OBS_ID']}\n")
+
+    for f in output_files:
+        f.close()
+
+    plt.figure()
+    # Create histogram with bin edges from 0 to 1
+    plt.hist(
+        np.linspace(0, 1, orbital_bins + 1)[:-1],
+        bins=np.linspace(0, 1, orbital_bins + 1),
+        weights=np.array(live_times) / 3600.0,
+        histtype="step",
+        linewidth=2,
+    )
+    plt.xlim(0, 1)
+    plt.xlabel("orbital phase")
+    plt.ylabel("live time (h)")
+    plot_file = f"{run_list_file.removesuffix('.txt')}_live_time_per_orbital_phase_bin.png"
+    plt.savefig(plot_file)
+    plt.close()
+    _logger.info(f"Live time plot saved to {plot_file}")
+
+    _logger.info(f"Run lists written to {run_list_file.removesuffix('.txt')}_orbital_bin_*.txt")
+    _logger.info(f"Live times per orbital phase bin: {live_times}")

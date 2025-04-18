@@ -46,6 +46,8 @@ python v2dl5/scripts/generate_runlist.py \
 
 ### Reflected region analysis
 
+Reflected region analysis using gammapy:
+
 ```console
 python v2dl5/scripts/reflected_region_analysis.py \
     --run_list my_output_dir/runlist.txt \
@@ -54,6 +56,9 @@ python v2dl5/scripts/reflected_region_analysis.py \
 ```
 
 ### Binary light curve plotting
+
+Light-curve plotting is independent of the analysis code.
+Input required is a table (ecsv format) with the light-curve data.
 
 ```console
 python v2dl5/scripts/plot_binary_light_curves.py \
@@ -65,7 +70,7 @@ python v2dl5/scripts/plot_binary_light_curves.py \
 
 Auxiliary data is stored in v2dl5/data and available at run time. This includes:
 
-### Star catalogues
+#### Star catalogues
 
 Hippargos catalog for stars with magnitude < 9: [v2dl5/data/hip_mag9.fits.gz](v2dl5/data/hip_mag9.fits.gz).
 Star catalogs are listed in the configuration files as
@@ -80,7 +85,7 @@ datasets:
         star_file: hip_mag9.fits.gz
 ```
 
-Star catalogs are expected to be in the [v2dl5/data](v2dl5/data) directory and of fits format.README.md
+Star catalogs are expected to be in the [v2dl5/data](v2dl5/data) directory and of FITS format.
 
 ## Eventdisplay and anasum analysis
 

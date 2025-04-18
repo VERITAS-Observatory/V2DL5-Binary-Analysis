@@ -26,7 +26,7 @@ class BTI:
 
     def max_time_interval(self):
         """Return time between beginning of first and end of last GTI."""
-        duration = int(round((np.max(self.gti.met_stop) - np.min(self.gti.met_start)).value))
+        duration = round((np.max(self.gti.met_stop) - np.min(self.gti.met_start)).value)
         self._logger.info("Max time interval [s]: %d", duration)
 
         return duration

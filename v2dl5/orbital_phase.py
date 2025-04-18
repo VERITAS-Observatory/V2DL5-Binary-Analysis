@@ -3,6 +3,36 @@
 import math
 
 import numpy as np
+from astropy.time import Time
+
+
+def get_orbital_phase_from_iso_time(iso_time, orbital_period, mjd_0, phase_reduce=True):
+    """
+    Calculate orbital phase for a given time.
+
+    Parameters
+    ----------
+    iso_time: str
+        Time in ISO format (e.g., '2023-10-01T00:00:00')
+    orbital_period: float
+        Orbital period (in units of days)
+    mjd_0: float
+        Reference MJD (in units of days)
+    phase_reduce: bool
+        Reduce phase to interval [0,1]
+
+    Returns
+    -------
+    float or np.ndarray
+        Orbital phase
+
+    """
+    return get_orbital_phase(
+        mjd=Time(iso_time, scale="utc").mjd,
+        orbital_period=orbital_period,
+        mjd_0=mjd_0,
+        phase_reduce=phase_reduce,
+    )
 
 
 def get_orbital_phase(mjd, orbital_period, mjd_0, phase_reduce=True):

@@ -1,6 +1,7 @@
 """Data reader for light-curve analysis."""
 
 import logging
+import os
 
 import astropy.units as u
 import numpy as np
@@ -62,12 +63,16 @@ class LightCurveDataReader:
     def _read_fluxes_from_file(self, data_config):
         """Read flux from file."""
         try:
-            if data_config["file_name"].endswith((".csv", ".ecsv")):
-                self._logger.info("Reading data from %s", data_config["file_name"])
-                return self._read_fluxes_from_ecsv_file(data_config)
+            data_config["file_name"] = os.path.expandvars(data_config["file_name"])
         except KeyError:
             self._logger.error(f"File name not found in configuration {data_config}")
             raise KeyError
+
+        if data_config["file_name"].endswith((".csv", ".ecsv")):
+            self._logger.info("Reading data from %s", data_config["file_name"])
+            return self._read_fluxes_from_ecsv_file(data_config)
+
+        return None
 
     def _add_orbital_parameters(self, data):
         """
@@ -170,7 +175,9 @@ class LightCurveDataReader:
                 is_ul = table["is_ul"].data.flatten().tolist()
                 f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
             else:
-                f["flux_ul"] = [-1.0 for _ in f["flux"]]
+                f["flux_ul"] = [-1.0 if fe > 0 else fl for fe, fl in zip(f["flux_err"], f["flux"])]
+            if "significance" in table.colnames:
+                f["significance"] = table["significance"].data.flatten().tolist()
         except KeyError:
             self._logger.error(f"Incomplete data file; key not found in {data_config['file_name']}")
             raise KeyError

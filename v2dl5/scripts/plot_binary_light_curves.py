@@ -51,10 +51,10 @@ def _parse():
     )
     parser.add_argument(
         "--orbital_bins",
-        type=float,
+        type=int,
         required=False,
-        default=0.0,
-        help="Number of bins in orbital period for averaging.",
+        default=16,
+        help="Number of orbital bins",
     )
     parser.add_argument(
         "--plot_type",
@@ -81,9 +81,9 @@ def main():
     args = _parse()
     if args.orbital_bins < 1:
         if args.instrument in ["VERITAS", "Gamma", "HESS"]:
-            args.orbital_bins = 10.0
+            args.orbital_bins = 10
         else:
-            args.orbital_bins = 20.0
+            args.orbital_bins = 20
 
     logging.info("Light Curve Analysis - run parameters")
     logging.info(f"instrument: {args.instrument}")
@@ -110,7 +110,13 @@ def main():
         "orbital phase", None, None, file_type=args.plot_type, figure_dir=args.figure_dir
     )
     plotter.plot_flux_vs_phase_for_individual_orbits(
-        "VERITAS (anasum)", file_type=args.plot_type, figure_dir=args.figure_dir
+        instrument=args.instrument, file_type=args.plot_type, figure_dir=args.figure_dir
+    )
+    plotter.plot_flux_vs_orbit_number(
+        instrument=args.instrument,
+        phase_bins=args.orbital_bins,
+        file_type=args.plot_type,
+        figure_dir=args.figure_dir,
     )
 
 

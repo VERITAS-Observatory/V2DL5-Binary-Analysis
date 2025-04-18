@@ -99,12 +99,13 @@ vector< pair<double, double> > read_runlist_from_file(string iAnaSumFile)
  *
  */
 void light_curve_analysis(
-        string iAnaSumFile = "anasum/anasum.combined.root",
-        string iMJDIntervalFile = "HESSJ0632p057.MJD.v3.txt" )
+     string iAnaSumFile = "anasum/anasum.combined.root",
+     string iMJDIntervalFile = "HESSJ0632p057.MJD.v3.txt",
+     double iEnergyThreshold = 0.35,
+     double iSig_UL = -5., double iSig_minEvents = -10.)
 {
      // energy threshold in TeV
-     // double i_fixed_Emin = 0.35;
-     double i_fixed_Emin = 0.3;
+     double i_fixed_Emin = iEnergyThreshold;
      // assumed spectral index:
      double i_fixed_Index = -2.5;
 
@@ -136,7 +137,7 @@ void light_curve_analysis(
                min_max[i].first,
                min_max[i].second
           );
-          a.setSignificanceParameters( -5., -10. );
+          a.setSignificanceParameters( iSig_UL, iSig_minEvents, 0.95 );
           a.setSpectralParameters( i_fixed_Emin, 1., i_fixed_Index );
           a.calculateIntegralFlux( i_fixed_Emin );
           a.printECSVLine();
