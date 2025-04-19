@@ -12,6 +12,8 @@ Allows to run analysis scripts for a given list of runs or for a cone search aro
 
 - source detection analysis including integral flux (or flux upper limits), reflection region model
 - spectral analysis, reflected region model
+- run-list generation
+- light-curve analysis and plotting
 
 ## Installation
 
@@ -28,17 +30,17 @@ conda activate v2dl5
 pip install -e .
 ```
 
-## V2DL5 Analysis
+## Analysis
 
 ### Run list generator
 
-The tool `runlist.py` allows to generate a list of runs for a given observation time and zenith angle.
+The tool `generate_run_list.py` allows to generate a list of runs for a given observation time and zenith angle.
 It generates a lot of printout which should be used to fine tune the run selection.
 
 Example:
 
 ```console
-python v2dl5/scripts/generate_runlist.py \
+python v2dl5/scripts/generate_run_list.py \
     --obs_table ../../../VTS/DL3/v490/dl3_pointlike_moderate2tel/obs-index.fits.gz \
     --config examples/run_selection.yml \
    --output_dir my_output_dir

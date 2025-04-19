@@ -19,7 +19,7 @@ Example:
 
 .. code-block:: console
 
-        $ python generate_runlist.py \
+        $ python generate_run_list.py \
             --obs_table /path/to/ob_table.fits \
             --config examples/run_selection.yaml \
             --output_dir run_lists
