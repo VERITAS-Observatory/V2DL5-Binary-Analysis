@@ -48,12 +48,11 @@ map<string,double> read_config(string config_file) {
 /*
  * spectral analysis
  *
- * Typical settings for energy binning are 0.2 or 0.3 (in equal interval on the log-energy axis)
 */
 void spectral_analysis(
     string anasumfile = "",
     string config_file = "spectral_plotting_config.txt",
-    string csv_output_file = "")
+    string output_file = "")
 {
     map<string,double> config = read_config(config_file);
 
@@ -85,9 +84,9 @@ void spectral_analysis(
     a.plotFitValues();
     if (c)
     {
-        c->Print((csv_output_file + ".pdf").c_str());
+        c->Print((output_file + ".pdf").c_str());
     }
 
     // write to spectral points
-    a.writeSpectralPointsToCSVFile((csv_output_file + ".ecsv").c_str());
+    a.writeSpectralPointsToCSVFile((output_file + ".ecsv").c_str());
 }
