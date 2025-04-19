@@ -1,5 +1,5 @@
 #!/bin/bash
-# spectral plotting using Eventdisplay container and podman
+# spectral analysis using Eventdisplay container and podman
 #
 
 if [ "$#" -ne 3 ]; then
