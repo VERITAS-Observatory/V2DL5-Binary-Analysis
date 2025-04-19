@@ -46,15 +46,44 @@ map<string,double> read_config(string config_file) {
 }
 
 /*
+ read a list of runs from a text file
+*/
+vector< int > read_run_list(string run_list) {
+    vector< int > runs;
+    if( run_list.size() == 0 )
+    {
+        return runs;
+    }
+    ifstream fin(run_list.c_str());
+    if (!fin.is_open()) {
+        cerr << "Error opening run list file: " << run_list << endl;
+        exit( -1 );
+    }
+
+    string line;
+    while (getline(fin, line)) {
+        if (line.empty() || line[0] == '#') continue;
+
+        stringstream ss(line);
+        int run;
+        ss >> run;
+        runs.push_back(run);
+    }
+    return runs;
+}
+
+/*
  * spectral analysis
  *
 */
 void spectral_analysis(
     string anasumfile = "",
     string config_file = "spectral_plotting_config.txt",
-    string output_file = "")
+    string output_file = "",
+    string run_list_file = "")
 {
     map<string,double> config = read_config(config_file);
+    vector< int > run_list = read_run_list(run_list_file);
 
     VEnergySpectrum a(anasumfile);
     a.setSignificanceParameters(1., 1., 0.95, 17, 4);
@@ -62,6 +91,10 @@ void spectral_analysis(
     a.setEnergyBinning(config["ENERGYBINNING"]);
     a.setPlottingYaxis(config["FLUX_MIN"], config["FLUX_MAX"]);
     a.setPlottingEnergyRangeLinear(config["ENERGY_MIN"], config["ENERGY_MAX"]);
+    if(run_list.size() > 0)
+    {
+        a.combineRuns(run_list);
+    }
     TCanvas *c = a.plot();
 
     double iEMax_lin_TeV = a.getUpperEdgeofLastFilledEnergyBin( 0., 1. );
