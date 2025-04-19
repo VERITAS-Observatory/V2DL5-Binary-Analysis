@@ -31,19 +31,19 @@ def _parse():
         help="Minimum significance for light curve points to be considered",
     )
     parser.add_argument(
-        "--light-curve-file",
+        "--light_curve_file",
         type=str,
         required=True,
         help="Path to light curve ECSV file",
     )
     parser.add_argument(
-        "--anasum-file",
+        "--anasum_file",
         type=str,
         required=True,
         help="Path to anasum ROOT file",
     )
     parser.add_argument(
-        "--output-directory",
+        "--output_directory",
         type=str,
         default="./run_lists",
         help="Output directory for run lists (default: ./run_lists)",
