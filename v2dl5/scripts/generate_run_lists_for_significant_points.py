@@ -76,7 +76,7 @@ def main():
         mask = (mjd_on >= tmin) & (mjd_on <= tmax)
         matched = run_on[mask]
 
-        output_file = output_dir / f"runs_window_{int(tmin)}_{int(tmax)}.txt"
+        output_file = output_dir / f"runs_MJD_{int(tmin)}_{int(tmax)}.txt"
         np.savetxt(output_file, matched, fmt="%d")
         print(f"Runs for MJD {tmin}-{tmax} with {len(matched)} runs written to {output_file}")
 

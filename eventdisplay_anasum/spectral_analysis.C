@@ -97,8 +97,8 @@ void spectral_analysis(
     }
     TCanvas *c = a.plot();
 
-    double iEMax_lin_TeV = a.getUpperEdgeofLastFilledEnergyBin( 0., 1. );
-    double iEMin_lin_TeV = a.getLowerEdgeofFirstFilledEnergyBin( 0., 1. );
+    double iEMax_lin_TeV = a.getUpperEdgeofLastFilledEnergyBin( config["EXCESS_EVENTS_FIT_MIN"], config["SIGNIFICANCE_FIT_MIN"] );
+    double iEMin_lin_TeV = a.getLowerEdgeofFirstFilledEnergyBin( config["EXCESS_EVENTS_FIT_MIN"], config["SIGNIFICANCE_FIT_MIN"] );
 
     a.setSpectralFitRangeLin(iEMin_lin_TeV, iEMax_lin_TeV);
     // power law fit
@@ -106,9 +106,13 @@ void spectral_analysis(
     TF1 *fFitFunction = a.fitEnergySpectrum();
 
     // plotting of spectra plus fit
-    a.setSignificanceParameters(1., 1., 0.95, 17, 4);
-//    a.setPlottingUpperLimits(false);
+    a.setSignificanceParameters(config["SIGNIFICANCE_PLOT_MIN"], config["EXCESS_EVENTS_PLOT_MIN"], 0.95, 17, 4);
+    a.setPlottingUpperLimits((int)config["PLOT_UPPER_LIMITS"]);
     c = a.plot();
+    if( (int)config["PLOT_EVENT_NUMBERS"])
+    {
+        a.plotEventNumbers();
+    }
     TGraphAsymmErrors* i_cl = a.getEnergySpectrumGraph();
     if (fFitFunction != 0)
     {
@@ -120,6 +124,6 @@ void spectral_analysis(
         c->Print((output_file + ".pdf").c_str());
     }
 
-    // write to spectral points
+    // write spectral points
     a.writeSpectralPointsToCSVFile((output_file + ".ecsv").c_str());
 }
