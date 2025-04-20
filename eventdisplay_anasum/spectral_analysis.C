@@ -130,7 +130,7 @@ void spectral_analysis(
     }
     yaml_out << "fit_parameters:" << endl;
     yaml_out << "  - name: " << fFitFunction->GetName() << endl;
-    yaml_out << "    type: " << fFitFunction->GetTitle() << endl;
+    yaml_out << "    type: \"" << fFitFunction->GetTitle() << "\"" << endl;
     yaml_out << "    e0_TeV: " << config["DECORRELATIONENERGY_TEV"] << endl;
     yaml_out << "    chi2: " << fFitFunction->GetChisquare() << endl;
     yaml_out << "    ndf: " << fFitFunction->GetNDF() << endl;
