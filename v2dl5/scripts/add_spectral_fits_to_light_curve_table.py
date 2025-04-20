@@ -128,7 +128,6 @@ def process_yaml_file(yaml_path, table):
 
 def main():
     """Add spectral fit parameters to light curve table."""
-    # Set up logging
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",

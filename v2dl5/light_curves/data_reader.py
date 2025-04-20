@@ -176,8 +176,9 @@ class LightCurveDataReader:
                 f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
             else:
                 f["flux_ul"] = [-1.0 if fe > 0 else fl for fe, fl in zip(f["flux_err"], f["flux"])]
-            if "significance" in table.colnames:
-                f["significance"] = table["significance"].data.flatten().tolist()
+            for column_name in ["significance", "index", "index_err", "live_time"]:
+                if column_name in table.colnames:
+                    f[column_name] = table[column_name].data.flatten().tolist()
         except KeyError:
             self._logger.error(f"Incomplete data file; key not found in {data_config['file_name']}")
             raise KeyError
