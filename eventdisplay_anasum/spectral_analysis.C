@@ -119,6 +119,32 @@ void spectral_analysis(
         fFitFunction->Draw("same");
     }
     a.plotFitValues();
+
+    // write fit results as yaml file
+    string yaml_file = output_file + ".yaml";
+    cout << "Writing fit results to: " << yaml_file << endl;
+    ofstream yaml_out(yaml_file.c_str());
+    if (!yaml_out.is_open()) {
+        cerr << "Error opening YAML output file: " << yaml_file << endl;
+        exit( -1 );
+    }
+    yaml_out << "fit_parameters:" << endl;
+    yaml_out << "  - name: " << fFitFunction->GetName() << endl;
+    yaml_out << "    type: " << fFitFunction->GetTitle() << endl;
+    yaml_out << "    e0_TeV: " << config["DECORRELATIONENERGY_TEV"] << endl;
+    yaml_out << "    chi2: " << fFitFunction->GetChisquare() << endl;
+    yaml_out << "    ndf: " << fFitFunction->GetNDF() << endl;
+    yaml_out << "    significance: " << fFitFunction->GetProb() << endl;
+    yaml_out << "    min_TeV: " << iEMin_lin_TeV << endl;
+    yaml_out << "    max_TeV: " << iEMax_lin_TeV << endl;
+    yaml_out << "    parameters:" << endl;
+    for (int i = 0; i < fFitFunction->GetNpar(); ++i) {
+        yaml_out << "      - name: " << fFitFunction->GetParName(i) << endl;
+        yaml_out << "        value: " << fFitFunction->GetParameter(i) << endl;
+        yaml_out << "        error: " << fFitFunction->GetParError(i) << endl;
+    }
+    yaml_out.close();
+
     if (c)
     {
         c->Print((output_file + ".pdf").c_str());
