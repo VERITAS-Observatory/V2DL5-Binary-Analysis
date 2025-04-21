@@ -11,11 +11,11 @@ fi
 
 runlist_from_time_bins()
 {
-    ANASUM_FILE="/data/$(basename $1)"
-    TIME_FILE="/time_data/$(basename $2)"
+    ANASUM_FILE="/data/$(basename "$1")"
+    TIME_FILE="/time_data/$(basename "$2")"
     podman run --platform linux/amd64 --rm -it -v "$(pwd)/:/workdir" \
-        -v "$(dirname $1):/data" \
-        -v "$(dirname $2):/time_data" \
+        -v "$(dirname "$1"):/data" \
+        -v "$(dirname "$2"):/time_data" \
         ghcr.io/veritas-observatory/eventdisplay_v4:main \
         /bin/bash -c \
         "cd /workdir/; root -l -q -b 'runlist_from_time_bins.C(\"$ANASUM_FILE\", \"$TIME_FILE\", $3)';"

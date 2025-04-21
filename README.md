@@ -70,7 +70,7 @@ python v2dl5/scripts/plot_binary_light_curves.py \
 
 ### Auxiliary data
 
-Auxiliary data is stored in v2dl5/data and available at run time. This includes:
+Auxiliary data is stored in v2dl5/data and available at runtime. This includes:
 
 #### Star catalogues
 
