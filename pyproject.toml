@@ -44,6 +44,7 @@ scripts.v2dl5-add_spectral-fits-to-light-curve-table = "v2dl5.scripts.add_spectr
 scripts.v2dl5-generate-run-list = "v2dl5.scripts.generate_run_list:main"
 scripts.v2dl5-generate-run-lists-for-significant-points = "v2dl5.scripts.generate_run_lists_for_significant_points:main"
 scripts.v2dl5-generate-run-lists-from-target-list = "v2dl5.scripts.generate_run_lists_from_target_list:main"
+scripts.v2dl5-nightly-time-bins = "v2dl5.scripts.nightly_time_bins:main"
 scripts.v2dl5-plot-binary-light-curves = "v2dl5.scripts.plot_binary_light_curves:main"
 scripts.v2dl5-print-simplified-light-curve = "v2dl5.scripts.print_simplified_light_curve:main"
 scripts.v2dl5-reflected-region-analysis = "v2dl5.scripts.reflected_region_analysis:main"
