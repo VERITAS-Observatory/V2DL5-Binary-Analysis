@@ -170,6 +170,9 @@ class BinaryLightCurvePlotter:
         time_axis = "orbital phase"
 
         data = self.data[instrument]
+        if y_axis not in data:
+            self._logger.warning(f"Y-axis {y_axis} not found in data for {instrument}")
+            return
         orbits = sorted(set(data["orbit_number"]))
         self._logger.info(f"Orbits for {instrument} (total number {len(orbits)}): {orbits}")
 
@@ -219,6 +222,9 @@ class BinaryLightCurvePlotter:
         time_axis = "orbit number"
 
         data = self.data[instrument]
+        if y_axis not in data:
+            self._logger.warning(f"Y-axis {y_axis} not found in data for {instrument}")
+            return
         orbits = sorted(set(data["orbit_number"]))
         self._logger.info(f"Orbits for {instrument} (total number {len(orbits)}): {orbits}")
 
