@@ -69,11 +69,6 @@ jobs:
       - name: Python dependencies
         run: |
           pip install -e '.[tests,dev,doc]'
-          pip install pylint
-
-      - name: pylint
-        run: |
-          git ls-files 'v2dl5/*.py' | xargs pylint -v
 
       - name: Pre-commit
         run: |

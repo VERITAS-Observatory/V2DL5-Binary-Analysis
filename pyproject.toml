@@ -150,6 +150,12 @@ good-names = [
   "veritas",
   "mask_V6_redHV",
 ]
+# Ignore files
+ignore = [
+  "__init__.py",
+  "scm_version.py",
+  "_version.py",
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
