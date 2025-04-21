@@ -1,9 +1,8 @@
 ---
-## Super Linter GitHub Actions ##
-name: Lint Code Base
+name: CI-linting
 
-# Start the job on all push #
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
     types: [opened, synchronize]
@@ -12,9 +11,12 @@ on:
       - main
 
 jobs:
-  build:
-    name: Lint Code Base
+
+  linting:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
 
     permissions:
       contents: read
@@ -22,10 +24,60 @@ jobs:
       statuses: write
 
     steps:
-      - name: Checkout Code
+      - name: checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+
+      - name: Check for non-ASCII characters
+        run: |
+          output=$(find . -type f \
+          \( -name "*.py" -o -name "*.rst" -o -name "*.yml" -o -name "*.toml" \) \
+          -exec perl -ne 'print if /[^[:ascii:]]/ && !/latin/i' {} \;)
+          if [ -n "$output" ]; then
+            echo "Non-ASCII characters found in documentation."
+            exit 1
+          fi
+
+      - name: install packages not included in super-linter
+        run: |
+          pip install validate-pyproject
+
+      - name: pyproject.toml
+        run: |
+          validate-pyproject pyproject.toml
+
+      - name: Check whether the citation metadata from CITATION.cff is valid
+        uses: citation-file-format/cffconvert-github-action@2.0.0
+        with:
+          args: "--validate"
+
+      # Dependencies required to avoid errors
+      # reported by linters
+      - name: Install mamba dependencies
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+
+      - name: Python dependencies
+        run: |
+          pip install -e '.[tests,dev,doc]'
+          pip install pylint
+
+      - name: pylint
+        run: |
+          git ls-files 'src/simtools/*.py' | xargs pylint -v
+
+      - name: Pre-commit
+        run: |
+          pre-commit run --all-files
 
       - name: Lint Code Base
         uses: super-linter/super-linter@v7
@@ -33,14 +85,11 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_YAML: true
-          VALIDATE_PYTHON_ISORT: true
-          VALIDATE_PYTHON_FLAKE8: true
-          VALIDATE_PYTHON_BLACK: false
           VALIDATE_MARKDOWN: true
+          VALIDATE_NATURAL_LANGUAGE: true
           VALIDATE_DOCKERFILE_HADOLINT: true
+          VALIDATE_BASH: true
           LINTER_RULES_PATH: ./
-          PYTHON_BLACK_CONFIG_FILE: pyproject.toml
-          PYTHON_ISORT_CONFIG_FILE: pyproject.toml
 
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
