@@ -64,7 +64,6 @@ def get_unique_nights(start_mjd, stop_mjd):
 
 def main():
     """Extract list of observation nights."""
-    # Set up logging
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(levelname)s - %(message)s",
@@ -74,16 +73,13 @@ def main():
 
     args = _parse()
 
-    # Read run summary tree
     logger.info(f"Reading anasum file: {args.anasum_file}")
     tree = uproot.open(args.anasum_file)["total_1/stereo/tRunSummary"]
 
-    # Get run numbers and MJD start/stop times
     run_on = tree["runOn"].array()
     mjd_start = tree["MJDrunstart"].array()
     mjd_stop = tree["MJDrunstop"].array()
 
-    # Filter out invalid runs (runOn < 0)
     mask = run_on >= 0
     mjd_start = mjd_start[mask]
     mjd_stop = mjd_stop[mask]
@@ -91,19 +87,15 @@ def main():
     logger.info(f"Found {len(run_on)} total runs")
     logger.info(f"Found {ak.sum(mask)} valid runs (runOn >= 0)")
 
-    # Get unique nights
     nights = get_unique_nights(mjd_start, mjd_stop)
     logger.info(f"Found {len(nights)} unique observation nights")
 
-    # Create array with night start/end times
     night_bins = np.column_stack((nights, nights + 1))
 
-    # Write output with two columns
     output_path = Path(args.output_file)
     np.savetxt(output_path, night_bins, fmt='%d %d')
     logger.info(f"Written night list to {output_path}")
 
-    # Print summary
     logger.info(f"First night: MJD {nights[0]}-{nights[0]+1}")
     logger.info(f"Last night:  MJD {nights[-1]}-{nights[-1]+1}")
     logger.info(f"Time span:   {nights[-1] - nights[0]} days")
