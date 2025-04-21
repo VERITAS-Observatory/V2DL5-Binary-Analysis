@@ -56,9 +56,6 @@ include-package-data = true
 [tool.setuptools_scm]
 write_to = "v2dl5/_version.py"
 
-[tool.black]
-line-length = 100
-
 [tool.ruff]
 line-length = 100
 indent-width = 4
