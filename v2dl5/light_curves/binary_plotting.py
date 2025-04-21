@@ -83,7 +83,7 @@ class BinaryLightCurvePlotter:
         ax = axes if axes else plotting_utilities.paper_figures(None, None)
 
         for idx, (instrument, data) in enumerate(self.data.items()):
-            if not self.plot_this_instrument(instrument):
+            if not self.plot_this_instrument(self.config[idx], y_axis):
                 continue
             color, marker = self.get_marker_and_color(idx)
 
@@ -373,11 +373,12 @@ class BinaryLightCurvePlotter:
                     e.append(data[y_key_err][i])
         return x, y, e, x_ul, y_ul
 
-    def plot_this_instrument(self, instrument):
-        """Return if this instrument should be plotted."""
-        if "plot_instrument" in self.config:
-            return self.config["plot_instrument"]
-        return True
+    def plot_this_instrument(self, config, y_axis):
+        """Return if this instrument/axis should be plotted."""
+        plot_this = config.get("plot_instrument", True)
+        if y_axis not in config.get("plot_axis", []):
+            plot_this = False
+        return plot_this
 
     def get_marker_and_color(self, idx):
         """Return marker and color."""
