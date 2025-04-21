@@ -173,14 +173,14 @@ def write_time_bins(filename, data, groups):
         for group in groups:
             start_time = data['time_min'][group[0]]
             end_time = data['time_max'][group[-1]]
-            f.write(f"{start_time:.1f} {end_time:.1f}\n")
+            f.write(f"{int(start_time)} {int(np.ceil(end_time))}\n")
 
 
 def main():
     """Group light curve observations into broader time bins."""
     args = parse_args()
 
-    data = Table.read(args.light_curve_file, format='ascii.ecsv')
+    data = Table.read(filename=args.light_curve_file, format='ascii.ecsv')
 
     groups = find_groups(data)
 
@@ -190,10 +190,10 @@ def main():
     for i, group in enumerate(groups):
         times = data['time_min'][group]
         print(f"\nGroup {i+1}:")
-        print(f"Start MJD: {times[0]:.1f}")
-        print(f"End MJD: {data['time_max'][group[-1]]:.1f}")
+        print(f"Start MJD: {times[0]:.3f}")
+        print(f"End MJD: {data['time_max'][group[-1]]:.3f}")
         print(f"Number of observations: {len(group)}")
-        print(f"Timestamps: {', '.join(f'{t:.1f}' for t in times)}")
+        print(f"Timestamps: {', '.join(f'{t:.3f}' for t in times)}")
 
     print(f"\nTime bins written to: {args.time_bins_file}")
 
