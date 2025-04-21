@@ -25,7 +25,6 @@ class BinaryLightCurvePlotter:
     """
 
     def __init__(self, data, config, binary):
-
         self._logger = logging.getLogger(__name__)
 
         self.data = data
@@ -78,14 +77,12 @@ class BinaryLightCurvePlotter:
             Marker size for points.
         """
         self._logger.info(
-            f"Plotting {y_axis} vs {time_axis}"
-            f"(MJD {mjd_min}, {mjd_max}, orbit id {orbit_number})"
+            f"Plotting {y_axis} vs {time_axis}(MJD {mjd_min}, {mjd_max}, orbit id {orbit_number})"
         )
 
         ax = axes if axes else plotting_utilities.paper_figures(None, None)
 
         for idx, (instrument, data) in enumerate(self.data.items()):
-
             if not self.plot_this_instrument(instrument):
                 continue
             color, marker = self.get_marker_and_color(idx)
@@ -264,7 +261,10 @@ class BinaryLightCurvePlotter:
 
         plt.tight_layout()
         plotting_utilities.print_figure(
-            f"Light-Curve-Orbit-Number-{self.binary['name']}-{y_axis}-vs-{time_axis.replace(' ', '-')}",
+            (
+                f"Light-Curve-Orbit-Number-{self.binary['name']}-"
+                f"{y_axis}-vs-{time_axis.replace(' ', '-')}"
+            ),
             file_type=file_type,
             figure_dir=figure_dir,
         )
