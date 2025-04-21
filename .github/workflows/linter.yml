@@ -73,7 +73,7 @@ jobs:
 
       - name: pylint
         run: |
-          git ls-files 'src/simtools/*.py' | xargs pylint -v
+          git ls-files 'v2dl5/*.py' | xargs pylint -v
 
       - name: Pre-commit
         run: |
