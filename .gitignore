@@ -8,3 +8,5 @@ __pycache__/
 v2dl5.egg-info
 
 v2dl5/_version.py
+
+.vscode

@@ -46,16 +46,44 @@ map<string,double> read_config(string config_file) {
 }
 
 /*
+ read a list of runs from a text file
+*/
+vector< int > read_run_list(string run_list) {
+    vector< int > runs;
+    if( run_list.size() == 0 )
+    {
+        return runs;
+    }
+    ifstream fin(run_list.c_str());
+    if (!fin.is_open()) {
+        cerr << "Error opening run list file: " << run_list << endl;
+        exit( -1 );
+    }
+
+    string line;
+    while (getline(fin, line)) {
+        if (line.empty() || line[0] == '#') continue;
+
+        stringstream ss(line);
+        int run;
+        ss >> run;
+        runs.push_back(run);
+    }
+    return runs;
+}
+
+/*
  * spectral analysis
  *
- * Typical settings for energy binning are 0.2 or 0.3 (in equal interval on the log-energy axis)
 */
 void spectral_analysis(
     string anasumfile = "",
     string config_file = "spectral_plotting_config.txt",
-    string csv_output_file = "")
+    string output_file = "",
+    string run_list_file = "")
 {
     map<string,double> config = read_config(config_file);
+    vector< int > run_list = read_run_list(run_list_file);
 
     VEnergySpectrum a(anasumfile);
     a.setSignificanceParameters(1., 1., 0.95, 17, 4);
@@ -63,10 +91,14 @@ void spectral_analysis(
     a.setEnergyBinning(config["ENERGYBINNING"]);
     a.setPlottingYaxis(config["FLUX_MIN"], config["FLUX_MAX"]);
     a.setPlottingEnergyRangeLinear(config["ENERGY_MIN"], config["ENERGY_MAX"]);
+    if(run_list.size() > 0)
+    {
+        a.combineRuns(run_list);
+    }
     TCanvas *c = a.plot();
 
-    double iEMax_lin_TeV = a.getUpperEdgeofLastFilledEnergyBin( 0., 1. );
-    double iEMin_lin_TeV = a.getLowerEdgeofFirstFilledEnergyBin( 0., 1. );
+    double iEMax_lin_TeV = a.getUpperEdgeofLastFilledEnergyBin( config["EXCESS_EVENTS_FIT_MIN"], config["SIGNIFICANCE_FIT_MIN"] );
+    double iEMin_lin_TeV = a.getLowerEdgeofFirstFilledEnergyBin( config["EXCESS_EVENTS_FIT_MIN"], config["SIGNIFICANCE_FIT_MIN"] );
 
     a.setSpectralFitRangeLin(iEMin_lin_TeV, iEMax_lin_TeV);
     // power law fit
@@ -74,20 +106,50 @@ void spectral_analysis(
     TF1 *fFitFunction = a.fitEnergySpectrum();
 
     // plotting of spectra plus fit
-    a.setSignificanceParameters(1., 1., 0.95, 17, 4);
-//    a.setPlottingUpperLimits(false);
+    a.setSignificanceParameters(config["SIGNIFICANCE_PLOT_MIN"], config["EXCESS_EVENTS_PLOT_MIN"], 0.95, 17, 4);
+    a.setPlottingUpperLimits((int)config["PLOT_UPPER_LIMITS"]);
     c = a.plot();
+    if( (int)config["PLOT_EVENT_NUMBERS"])
+    {
+        a.plotEventNumbers();
+    }
     TGraphAsymmErrors* i_cl = a.getEnergySpectrumGraph();
     if (fFitFunction != 0)
     {
         fFitFunction->Draw("same");
     }
     a.plotFitValues();
+
+    // write fit results as yaml file
+    string yaml_file = output_file + ".yaml";
+    cout << "Writing fit results to: " << yaml_file << endl;
+    ofstream yaml_out(yaml_file.c_str());
+    if (!yaml_out.is_open()) {
+        cerr << "Error opening YAML output file: " << yaml_file << endl;
+        exit( -1 );
+    }
+    yaml_out << "fit_parameters:" << endl;
+    yaml_out << "  - name: " << fFitFunction->GetName() << endl;
+    yaml_out << "    type: \"" << fFitFunction->GetTitle() << "\"" << endl;
+    yaml_out << "    e0_TeV: " << config["DECORRELATIONENERGY_TEV"] << endl;
+    yaml_out << "    chi2: " << fFitFunction->GetChisquare() << endl;
+    yaml_out << "    ndf: " << fFitFunction->GetNDF() << endl;
+    yaml_out << "    significance: " << fFitFunction->GetProb() << endl;
+    yaml_out << "    min_TeV: " << iEMin_lin_TeV << endl;
+    yaml_out << "    max_TeV: " << iEMax_lin_TeV << endl;
+    yaml_out << "    parameters:" << endl;
+    for (int i = 0; i < fFitFunction->GetNpar(); ++i) {
+        yaml_out << "      - name: " << fFitFunction->GetParName(i) << endl;
+        yaml_out << "        value: " << fFitFunction->GetParameter(i) << endl;
+        yaml_out << "        error: " << fFitFunction->GetParError(i) << endl;
+    }
+    yaml_out.close();
+
     if (c)
     {
-        c->Print((csv_output_file + ".pdf").c_str());
+        c->Print((output_file + ".pdf").c_str());
     }
 
-    // write to spectral points
-    a.writeSpectralPointsToCSVFile((csv_output_file + ".ecsv").c_str());
+    // write spectral points
+    a.writeSpectralPointsToCSVFile((output_file + ".ecsv").c_str());
 }

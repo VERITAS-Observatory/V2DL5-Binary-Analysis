@@ -103,21 +103,26 @@ def main():
     plotter = v2dl5.light_curves.binary_plotting.BinaryLightCurvePlotter(
         data=data_reader.data_dict, config=data_reader.config, binary=binary
     )
-    plotter.plot_flux_vs_time(
-        "MJD", None, None, file_type=args.plot_type, figure_dir=args.figure_dir
-    )
-    plotter.plot_flux_vs_time(
-        "orbital phase", None, None, file_type=args.plot_type, figure_dir=args.figure_dir
-    )
-    plotter.plot_flux_vs_phase_for_individual_orbits(
-        instrument=args.instrument, file_type=args.plot_type, figure_dir=args.figure_dir
-    )
-    plotter.plot_flux_vs_orbit_number(
-        instrument=args.instrument,
-        phase_bins=args.orbital_bins,
-        file_type=args.plot_type,
-        figure_dir=args.figure_dir,
-    )
+    for y_key in ["flux", "index", "live_time"]:
+        plotter.plot_flux_vs_time(
+            "MJD", y_key, None, None, file_type=args.plot_type, figure_dir=args.figure_dir
+        )
+        plotter.plot_flux_vs_time(
+            "orbital phase", y_key, None, None, file_type=args.plot_type, figure_dir=args.figure_dir
+        )
+        plotter.plot_flux_vs_phase_for_individual_orbits(
+            instrument=args.instrument,
+            y_axis=y_key,
+            file_type=args.plot_type,
+            figure_dir=args.figure_dir,
+        )
+        plotter.plot_flux_vs_orbit_number(
+            instrument=args.instrument,
+            y_axis=y_key,
+            phase_bins=args.orbital_bins,
+            file_type=args.plot_type,
+            figure_dir=args.figure_dir,
+        )
 
 
 if __name__ == "__main__":
