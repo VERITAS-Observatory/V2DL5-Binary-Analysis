@@ -70,7 +70,11 @@ class LightCurveDataReader:
 
         if data_config["file_name"].endswith((".csv", ".ecsv")):
             self._logger.info("Reading data from %s", data_config["file_name"])
-            return self._read_fluxes_from_ecsv_file(data_config)
+            return self._read_fluxes_from_ecsv_file(
+                file_name=data_config["file_name"],
+                mjd_min=data_config.get("mjd_min", -1.0),
+                mjd_max=data_config.get("mjd_max", -1.0),
+            )
 
         return None
 
@@ -126,15 +130,15 @@ class LightCurveDataReader:
         return [v * f for v in self], [e * f for e in c_e]
 
     def _read_fluxes_from_ecsv_file(
-        self, data_config, time_min_max=True, mjd_min=-1.0, mjd_max=-1.0
+        self, file_name, time_min_max=True, mjd_min=-1.0, mjd_max=-1.0
     ):
         """
         Read gamma-ray fluxes from ecsv file (open gamma-ray format).
 
         Parameters
         ----------
-        data_config: dict
-            configuration dictionary
+        file_name: str, Path
+            Name of the file to read.
         time_min_max: bool
             flag to read time_min and time_max
         mjd_min: float
@@ -143,43 +147,41 @@ class LightCurveDataReader:
             MJD max value for MJD cut
 
         """
-        table = Table.read(data_config["file_name"])
+        table = Table.read(file_name)
         f = {}
-        try:
-            if not time_min_max:
-                table["time_min"] = table["time"].data
-                table["time_max"] = table["time"].data + 0.1
 
-            # MJD filter
-            condition = np.ones(len(table), dtype=bool)
-            if mjd_min > -1:
-                condition &= table["time_min"] > mjd_min
-            if mjd_max > -1:
-                condition &= table["time_max"] < mjd_max
-            table = table[condition]
+        if not time_min_max:
+            table["time_min"] = table["time"].data
+            table["time_max"] = table["time"].data + 0.1
 
-            f = {}
-            f["time_min"] = table["time_min"].data.tolist()
-            f["time_max"] = table["time_max"].data.tolist()
-            f["flux"] = table["flux"].data.flatten().tolist()
-            if "flux_err" in table.colnames:
-                f["flux_err"] = table["flux_err"].data.flatten().tolist()
-            else:
-                up = table["flux_up"].data.flatten().tolist()
-                down = table["flux_down"].data.flatten().tolist()
-                f["flux_err"] = [0.5 * abs(u - d) for u, d in zip(up, down)]
-            f["MJD"] = [0.5 * (a + b) for a, b in zip(f["time_min"], f["time_max"])]
-            f["MJD_err"] = [0.5 * (b - a) for a, b in zip(f["time_min"], f["time_max"])]
-            if "flux_ul" in table.colnames:
-                flux_ul = table["flux_ul"].data.flatten().tolist()
-                is_ul = table["is_ul"].data.flatten().tolist()
-                f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
-            else:
-                f["flux_ul"] = [-1.0 if fe > 0 else fl for fe, fl in zip(f["flux_err"], f["flux"])]
-            for column_name in ["significance", "index", "index_err", "live_time"]:
-                if column_name in table.colnames:
-                    f[column_name] = table[column_name].data.flatten().tolist()
-        except KeyError:
-            self._logger.error(f"Incomplete data file; key not found in {data_config['file_name']}")
-            raise KeyError
+        # MJD filter
+        condition = np.ones(len(table), dtype=bool)
+        if mjd_min > -1:
+            condition &= table["time_min"] > mjd_min
+        if mjd_max > -1:
+            condition &= table["time_max"] < mjd_max
+        table = table[condition]
+
+        f = {}
+        f["time_min"] = table["time_min"].data.tolist()
+        f["time_max"] = table["time_max"].data.tolist()
+        f["flux"] = table["flux"].data.flatten().tolist()
+        if "flux_err" in table.colnames:
+            f["flux_err"] = table["flux_err"].data.flatten().tolist()
+        else:
+            up = table["flux_up"].data.flatten().tolist()
+            down = table["flux_down"].data.flatten().tolist()
+            f["flux_err"] = [0.5 * abs(u - d) for u, d in zip(up, down)]
+        f["MJD"] = [0.5 * (a + b) for a, b in zip(f["time_min"], f["time_max"])]
+        f["MJD_err"] = [0.5 * (b - a) for a, b in zip(f["time_min"], f["time_max"])]
+        if "flux_ul" in table.colnames:
+            flux_ul = table["flux_ul"].data.flatten().tolist()
+            is_ul = table["is_ul"].data.flatten().tolist()
+            f["flux_ul"] = [flux if is_ul else -1.0 for flux, is_ul in zip(flux_ul, is_ul)]
+        else:
+            f["flux_ul"] = [-1.0 if fe > 0 else fl for fe, fl in zip(f["flux_err"], f["flux"])]
+        for column_name in ["significance", "index", "index_err", "live_time"]:
+            if column_name in table.colnames:
+                f[column_name] = table[column_name].data.flatten().tolist()
+
         return f

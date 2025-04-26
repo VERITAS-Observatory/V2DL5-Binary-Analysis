@@ -123,6 +123,25 @@ def main():
             file_type=args.plot_type,
             figure_dir=args.figure_dir,
         )
+        plotter.plot_distribution(
+            instrument=args.instrument,
+            y_axis=y_key,
+            file_type=args.plot_type,
+            figure_dir=args.figure_dir,
+        )
+
+    plotter.plot_index_vs_flux(
+        instrument=args.instrument,
+        file_type=args.plot_type,
+        figure_dir=args.figure_dir,
+    )
+
+    plotter.plot_live_time_vs_phase_bin(
+        instrument=args.instrument,
+        phase_bins=args.orbital_bins,
+        file_type=args.plot_type,
+        figure_dir=args.figure_dir,
+    )
 
 
 if __name__ == "__main__":
