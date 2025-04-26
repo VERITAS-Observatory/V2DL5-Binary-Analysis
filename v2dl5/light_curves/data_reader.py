@@ -118,7 +118,11 @@ class LightCurveDataReader:
         data["phase_err"] = [data["phase_err_low"], data["phase_err_hig"]]
 
         data["orbit_number"] = [
-            orbit.get_orbit_number(mjd=mjd, orbital_period=orbital_period, mjd_0=mjd_0)
+            orbit.get_orbit_number(
+                mjd=mjd,
+                orbital_period=orbital_period,
+                mjd_orbit_count=self.binary.get("mjd_orbit_count", "mjd_0")
+            )
             for mjd in data["MJD"]
         ]
 

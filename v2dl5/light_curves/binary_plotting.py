@@ -158,6 +158,9 @@ class BinaryLightCurvePlotter:
             n_columns = 4
             fig_size = (10, 8)
         if number > 16:
+            n_columns = 5
+            fig_size = (16, 10)
+        if number > 21:
             n_columns = 8
             fig_size = (16, 10)
         return n_columns, math.ceil(number / n_columns), fig_size
