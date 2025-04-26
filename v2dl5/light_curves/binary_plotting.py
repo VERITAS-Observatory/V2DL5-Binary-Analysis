@@ -341,6 +341,9 @@ class BinaryLightCurvePlotter:
             Light-curve data as lists.
         """
         x, y, e, x_ul, y_ul = [], [], [], [], []
+        if y_key not in data:
+            self._logger.warning(f"Y-axis {y_key} not found in data")
+            return x, y, e, x_ul, y_ul
         mjd = data["MJD"]
         for i, t in enumerate(mjd):
             if (
@@ -429,7 +432,6 @@ class BinaryLightCurvePlotter:
             bin_edges = np.linspace(0, 1, phase_bins + 1)
             bin_width = bin_edges[1] - bin_edges[0]
             bin_heights, _ = np.histogram(x, bins=bin_edges, weights=y)
-            bin_heights = bin_heights / bin_width
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
             plt.bar(
                 bin_centers,
@@ -476,7 +478,7 @@ class BinaryLightCurvePlotter:
             _, y, y_e, _, _ = self._get_light_curve_in_mjd_limits(
                 data, "index", "orbital phase",
             )
-            if len(x) == 0:
+            if len(x) == 0 or len(y) == 0:
                 continue
             x = np.array(x)
             y = np.array(y)
