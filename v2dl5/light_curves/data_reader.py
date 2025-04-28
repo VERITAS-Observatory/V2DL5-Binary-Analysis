@@ -121,7 +121,7 @@ class LightCurveDataReader:
             orbit.get_orbit_number(
                 mjd=mjd,
                 orbital_period=orbital_period,
-                mjd_orbit_count=self.binary.get("mjd_orbit_count", "mjd_0")
+                mjd_orbit_count=float(self.binary.get("mjd_orbit_count", self.binary.get("mjd_0")))
             )
             for mjd in data["MJD"]
         ]

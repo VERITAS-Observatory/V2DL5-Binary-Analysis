@@ -239,7 +239,7 @@ class BinaryLightCurvePlotter:
 
         for i in range(phase_bins):
             axes = plt.subplot(n_rows, n_columns, i + 1)
-            axes.set_xlim([min(orbits), max(orbits)])
+            axes.set_xlim([min(orbits)-1., max(orbits)+1.])
             axes.set_ylim([y_min, y_max])
 
             phase_min = i * (1.0 / phase_bins)
