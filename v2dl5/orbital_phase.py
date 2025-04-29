@@ -122,7 +122,7 @@ def get_orbital_phase_range(mjd_min, mjd_max, phase_mean, orbital_period, mjd_0,
     return ph_err
 
 
-def get_orbit_number(mjd, orbital_period, mjd_0):
+def get_orbit_number(mjd, orbital_period, mjd_orbit_count):
     """
     Return orbit number for a given MJD since MJD0.
 
@@ -132,15 +132,15 @@ def get_orbit_number(mjd, orbital_period, mjd_0):
         MJD
     orbital_period: float
         Orbital period (in units of days)
-    mjd_0: float
-        Reference MJD
+    mjd_orbit_count: float
+        Reference MJD for counting orbits
 
     Returns
     -------
     int
         Orbit number
     """
-    return math.ceil((mjd - mjd_0) / orbital_period)
+    return math.ceil((mjd - mjd_orbit_count) / orbital_period)
 
 
 # def getMJDOrbitZeroPhase(mjd, object="HESS J0632+057", orbital_period=317.3):

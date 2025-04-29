@@ -2,8 +2,8 @@
 # Light-curve analysis using Eventdisplay container and podman
 #
 
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <anasum_file> <time_interval_file>"
+if [ "$#" -ne 4 ]; then
+    echo "Usage: $0 <anasum_file> <time_interval_file> <energy threshold> <spectral index>"
     echo "  (use 'RUNWISE' for time interval file for run-wise analysis)"
     echo
     exit 1
@@ -22,9 +22,8 @@ light_curves()
 }
 
 echo "Running light-curve analysis..."
-ETRESH="0.3"
 MINSIG="-5."
 MINEVT="-10."
-MINSIG="2."
-MINEVT="2."
-light_curves "$1" "$2" "$ETRESH" "$MINSIG" "$MINEVT"
+# MINSIG="2."
+# MINEVT="2."
+light_curves "$1" "$2" "$3" "$4" "$MINSIG" "$MINEVT"

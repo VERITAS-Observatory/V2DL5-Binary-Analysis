@@ -158,6 +158,9 @@ class BinaryLightCurvePlotter:
             n_columns = 4
             fig_size = (10, 8)
         if number > 16:
+            n_columns = 5
+            fig_size = (16, 10)
+        if number > 21:
             n_columns = 8
             fig_size = (16, 10)
         return n_columns, math.ceil(number / n_columns), fig_size
@@ -236,7 +239,7 @@ class BinaryLightCurvePlotter:
 
         for i in range(phase_bins):
             axes = plt.subplot(n_rows, n_columns, i + 1)
-            axes.set_xlim([min(orbits), max(orbits)])
+            axes.set_xlim([min(orbits)-1., max(orbits)+1.])
             axes.set_ylim([y_min, y_max])
 
             phase_min = i * (1.0 / phase_bins)
@@ -304,11 +307,11 @@ class BinaryLightCurvePlotter:
         data,
         y_key,
         time_axis,
-        mjd_min,
-        mjd_max,
-        orbit_number,
-        phase_min,
-        phase_max,
+        mjd_min=None,
+        mjd_max=None,
+        orbit_number=None,
+        phase_min=None,
+        phase_max=None,
         min_significance=None,
     ):
         """
@@ -341,6 +344,9 @@ class BinaryLightCurvePlotter:
             Light-curve data as lists.
         """
         x, y, e, x_ul, y_ul = [], [], [], [], []
+        if y_key not in data:
+            self._logger.warning(f"Y-axis {y_key} not found in data")
+            return x, y, e, x_ul, y_ul
         mjd = data["MJD"]
         for i, t in enumerate(mjd):
             if (
@@ -400,6 +406,158 @@ class BinaryLightCurvePlotter:
             else self.config[idx]["marker_type"]
         )
         return color, marker
+
+    def plot_live_time_vs_phase_bin(
+        self,
+        instrument,
+        phase_bins=10,
+        file_type=".pdf",
+        figure_dir="./figures/",
+    ):
+        """Plot live time histogram vs phase bin."""
+        self._logger.info("Plotting live time histogram vs phase bin")
+
+        ax = plotting_utilities.paper_figures(None, None)
+        ax.set_xlim([0, 1])
+
+        for idx, (instrument, data) in enumerate(self.data.items()):
+            if self.config[idx].get("plot_live_time_histogram", False) is False:
+                continue
+            color, _ = self.get_marker_and_color(idx)
+
+            x, y, _, _, _ = self._get_light_curve_in_mjd_limits(
+                data, "live_time", "orbital phase",
+            )
+            if len(x) == 0:
+                continue
+            x = np.array(x)
+            y = np.array(y)
+            bin_edges = np.linspace(0, 1, phase_bins + 1)
+            bin_width = bin_edges[1] - bin_edges[0]
+            bin_heights, _ = np.histogram(x, bins=bin_edges, weights=y)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            plt.bar(
+                bin_centers,
+                bin_heights,
+                width=bin_width*0.9,
+                label=(
+                    instrument
+                    if self.config[idx].get("plot_label") is None
+                    else self.config[idx]["plot_label"]
+                ),
+                color=color,
+                alpha=0.7,
+            )
+
+        plt.xlabel("Phase")
+        plt.ylabel("Live Time (h)")
+
+        plt.legend()
+        plotting_utilities.print_figure(
+            f"Light-Curve-{self.binary['name']}-Live-Time-vs-Phase-Bin",
+            file_type=file_type,
+            figure_dir=figure_dir,
+        )
+
+    def plot_index_vs_flux(
+        self,
+        instrument,
+        file_type=".pdf",
+        figure_dir="./figures/",
+    ):
+        """Plot spectral index vs flux."""
+        self._logger.info("Plotting spectral index vs flux")
+
+        _ = plotting_utilities.paper_figures(None, None)
+
+        for idx, (instrument, data) in enumerate(self.data.items()):
+            if self.config[idx].get("plot_flux_vs_index", False) is False:
+                continue
+            color, _ = self.get_marker_and_color(idx)
+
+            _, x, x_e, _, _ = self._get_light_curve_in_mjd_limits(
+                data, "flux", "orbital phase",
+            )
+            _, y, y_e, _, _ = self._get_light_curve_in_mjd_limits(
+                data, "index", "orbital phase",
+            )
+            if len(x) == 0 or len(y) == 0:
+                continue
+            x = np.array(x)
+            y = np.array(y)
+            plt.errorbar(
+                x,
+                y,
+                xerr=x_e,
+                yerr=y_e,
+                label=(
+                    instrument
+                    if self.config[idx].get("plot_label") is None
+                    else self.config[idx]["plot_label"]
+                ),
+                color=color,
+                linestyle="none",
+                marker='o',
+                alpha=0.7,
+            )
+
+        plt.xlabel(self.config[0].get("flux_axis_label", ""))
+        plt.ylabel(self.config[0].get("index_axis_label", ""))
+
+        plt.legend()
+        plotting_utilities.print_figure(
+            f"Light-Curve-{self.binary['name']}-Flux-vs-Index",
+            file_type=file_type,
+            figure_dir=figure_dir,
+        )
+
+    def plot_distribution(
+        self,
+        instrument,
+        y_axis="flux",
+        file_type=".pdf",
+        figure_dir="./figures/",
+    ):
+        """Plot distribution of y-axis data."""
+        self._logger.info(f"Plotting {y_axis} distribution")
+
+        _ = plotting_utilities.paper_figures(None, None)
+
+        for idx, (instrument, data) in enumerate(self.data.items()):
+            if self.config[idx].get("plot_1d_distribution", False) is False:
+                continue
+            color, _ = self.get_marker_and_color(idx)
+
+            _, y, _, _, _ = self._get_light_curve_in_mjd_limits(
+                data, y_axis, "orbital phase",
+            )
+            if len(y) == 0:
+                continue
+            y = np.array(y)
+            plt.hist(
+                y,
+                bins=25,
+                label=(
+                    instrument
+                    if self.config[idx].get("plot_label") is None
+                    else self.config[idx]["plot_label"]
+                ),
+                color=color,
+                alpha=0.7,
+            )
+
+        plt.xlabel(self.config[0].get(y_axis + "_axis_label", ""))
+        plt.ylabel("Counts")
+
+        plt.legend()
+        plotting_utilities.print_figure(
+            f"Light-Curve-{self.binary['name']}-{y_axis}-Distribution",
+            file_type=file_type,
+            figure_dir=figure_dir,
+        )
+
+
+
 
 
 # Temporary stuff - probably not needed

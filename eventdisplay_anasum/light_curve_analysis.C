@@ -102,16 +102,12 @@ void light_curve_analysis(
      string iAnaSumFile = "anasum/anasum.combined.root",
      string iMJDIntervalFile = "HESSJ0632p057.MJD.v3.txt",
      double iEnergyThreshold = 0.35,
+     double iSpectralIndex = -2.5,
      double iSig_UL = -5., double iSig_minEvents = -10.)
 {
-     // energy threshold in TeV
-     double i_fixed_Emin = iEnergyThreshold;
-     // assumed spectral index:
-     double i_fixed_Index = -2.5;
-
      cout << "# Light curve generation ";
-     cout << "E_min > " << i_fixed_Emin << " TeV; ";
-     cout << "Spectral index " << i_fixed_Index << endl;
+     cout << "E_min > " << iEnergyThreshold << " TeV; ";
+     cout << "Spectral index " << iSpectralIndex << endl;
 
      vector<pair<double, double>> min_max;
      size_t n_intervals = 0;
@@ -138,8 +134,8 @@ void light_curve_analysis(
                min_max[i].second
           );
           a.setSignificanceParameters( iSig_UL, iSig_minEvents, 0.95 );
-          a.setSpectralParameters( i_fixed_Emin, 1., i_fixed_Index );
-          a.calculateIntegralFlux( i_fixed_Emin );
+          a.setSpectralParameters( iEnergyThreshold, 1., iSpectralIndex);
+          a.calculateIntegralFlux( iEnergyThreshold );
           a.printECSVLine();
      }
 }
