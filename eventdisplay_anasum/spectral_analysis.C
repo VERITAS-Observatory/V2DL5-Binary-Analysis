@@ -119,6 +119,17 @@ void spectral_analysis(
         fFitFunction->Draw("same");
     }
     a.plotFitValues();
+    if (c)
+    {
+        c->Print((output_file + ".pdf").c_str());
+    }
+
+    TCanvas *cCounting = a.plotCountingHistograms();
+    if (cCounting)
+    {
+        cCounting->Print((output_file + "_counting.pdf").c_str());
+    }
+
 
     // write fit results as yaml file
     string yaml_file = output_file + ".yaml";
@@ -144,11 +155,6 @@ void spectral_analysis(
         yaml_out << "        error: " << fFitFunction->GetParError(i) << endl;
     }
     yaml_out.close();
-
-    if (c)
-    {
-        c->Print((output_file + ".pdf").c_str());
-    }
 
     // write spectral points
     a.writeSpectralPointsToCSVFile((output_file + ".ecsv").c_str());
