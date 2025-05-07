@@ -8,6 +8,7 @@ import numpy as np
 import yaml
 from astropy.table import Table
 
+import v2dl5.binaries as binaries
 import v2dl5.orbital_phase as orbit
 
 
@@ -58,7 +59,7 @@ class LightCurveDataReader:
         """
         for data_config in self.config:
             self.data_dict[data_config["instrument"]] = self._read_fluxes_from_file(data_config)
-            self._add_orbital_parameters(self.data_dict[data_config["instrument"]])
+            self._add_orbital_parameters(self.data_dict[data_config["instrument"]], data_config)
 
     def _read_fluxes_from_file(self, data_config):
         """Read flux from file."""
@@ -78,18 +79,55 @@ class LightCurveDataReader:
 
         return None
 
-    def _add_orbital_parameters(self, data):
+    def _apply_phase_mask(self, data, data_config):
         """
-        Add orbital phase to light-curve data data.
+        Apply phase mask to data.
+
+        Requires 'phase_cut_binary' to be set in data_config.
+        """
+        if not data_config.get("phase_cut_binary"):
+            return data
+
+        try:
+            _binary = binaries.binary_properties()[data_config["phase_cut_binary"]]
+        except KeyError:
+            raise KeyError(f"Binary {data_config['phase_cut_binary']} not found in binaries.py")
+
+        phase_min = data_config.get("phase_min", 0.0)
+        phase_max = data_config.get("phase_max", 1.0)
+
+        phases = [
+            orbit.get_orbital_phase(
+                mjd,
+                orbital_period=_binary["orbital_period"],
+                mjd_0=_binary["mjd_0"],
+                phase_reduce=True
+            )
+            for mjd in data["MJD"]
+        ]
+        phase_mask = [
+            (p >= phase_min) & (p <= phase_max) for p in phases
+        ]
+        for key in data.keys():
+            data[key] = [val for val, mask in zip(data[key], phase_mask) if mask]
+
+        return data
+
+    def _add_orbital_parameters(self, data, data_config):
+        """
+        Add orbital phase to light-curve data and filter by phase range.
 
         Parameters
         ----------
         data: dict
             Data dictionary with light-curve data.
-
+        data_config: dict
+            Data configuration dictionary.
         """
         orbital_period = self.binary["orbital_period"]
         mjd_0 = self.binary["mjd_0"]
+
+        self._apply_phase_mask(data, data_config)
 
         data["phase"] = [
             orbit.get_orbital_phase(

@@ -111,38 +111,6 @@ def print_figure(print_name, file_type=".pdf", figure_dir="./figures/"):
         plt.savefig(figure_file)
 
 
-def get_orbital_phase_axis_string(orbital_period):
-    """Return a string for the orbital phase axis."""
-    # strOr = "orbital phase (%.1f d)" % orbital_period
-    return "orbital phase"
-
-
-def get_flux_axis_string(instrument, plot_variable=None, scale_factor=None, energy_flux=False):
-    """Flux axis string with the correct unit depending on the type of instrument."""
-    if not scale_factor:
-        scale_factor = ""
-
-    if "VERITAS" in instrument or "HESS" in instrument or "MAGIC" in instrument:
-        if energy_flux:
-            pAxisFluxSTR = "Flux E>350 GeV (" + scale_factor + "erg/(cm$^2$ s))"
-        else:
-            pAxisFluxSTR = "Flux E>350 GeV (" + scale_factor + "1/(cm$^2$s))"
-    elif instrument == "XRT":
-        pAxisFluxSTR = "Swift rate (0.3-10 keV) (counts/s)"
-    elif instrument.find("Optical") >= 0:
-        if plot_variable and len(plot_variable) == 1:
-            if plot_variable[0] == "ew":
-                pAxisFluxSTR = "EW ($\\AA$)"
-            elif plot_variable[0] == "vc":
-                pAxisFluxSTR = "v$_c$ (km/s)"
-            elif plot_variable[0] == "fwhm":
-                pAxisFluxSTR = "FWHM (km/s)"
-    else:
-        pAxisFluxSTR = "Flux 0.3-10 keV (" + scale_factor + "erg/(cm$^2$s))"
-
-    return pAxisFluxSTR
-
-
 def get_paper_figures_parameters(width=None, height=None, xtick_top=True, legend_font_size=8):
     """Return default paper figure parameters."""
     if width is None:
