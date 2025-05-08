@@ -53,7 +53,7 @@ Reflected region analysis using gammapy:
 ```console
 python v2dl5/scripts/reflected_region_analysis.py \
     --run_list my_output_dir/runlist.txt \
-    --config examples/reflected_region_analysis.yml \
+    --config examples/reflected_region.yml \
     --output_dir my_output_dir
 ```
 
