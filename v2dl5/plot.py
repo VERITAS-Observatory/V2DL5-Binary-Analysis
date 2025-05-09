@@ -44,7 +44,7 @@ class Plot:
         self.plot_regions(exclusion_mask=exclusion_mask)
         self.plot_theta2()
 
-    def plot_spectra(self, flux_points=None, model=None):
+    def plot_spectra(self, flux_points=None, model=None, y_min=None, y_max=None):
         """Spectrum related plots."""
         for dataset in self.data_set:
             self.plot_fit(dataset)
@@ -52,6 +52,7 @@ class Plot:
         self.plot_flux_points(flux_points)
         self.plot_sed(
             FluxPointsDataset(data=flux_points, models=model.copy()),
+            y_min=y_min, y_max=y_max,
         )
 
     def plot_light_curves(self, light_curves):
@@ -124,6 +125,7 @@ class Plot:
             ax_spectrum, _ = data_set.plot_fit()
         except ValueError:
             return
+        # TODO
         ax_spectrum.set_ylim(0.1, 40)
         data_set.plot_masks(ax=ax_spectrum)
         try:
@@ -141,11 +143,13 @@ class Plot:
         flux_point_dataset.plot_ts_profiles(ax=ax, sed_type="dnde")
         self._plot(plot_name="flux_points", output_dir=self.output_dir)
 
-    def plot_sed(self, flux_point_dataset):
+    def plot_sed(self, flux_point_dataset, y_min=None, y_max=None):
         """Plot spectral energy distribution."""
         kwargs_model = {"color": "grey", "ls": "--", "sed_type": "dnde"}
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
-        flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
+        ax = flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
+        if y_min and y_max:
+            ax.set_ylim(y_min, y_max)
         self._plot(plot_name="spectrum", output_dir=self.output_dir)
         try:
             flux_point_dataset.plot_residuals(method="diff/model")
