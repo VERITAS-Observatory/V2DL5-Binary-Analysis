@@ -34,7 +34,6 @@ datasets:
     background:
         method: reflected
 fit:
-    fit_range: {min: 0.1 TeV, max: 20 TeV}
     model: pl
     index: 2.5
     reference_energy: 1 TeV
