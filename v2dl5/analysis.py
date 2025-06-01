@@ -86,6 +86,8 @@ class Analysis:
             plotter.plot_spectra(
                 flux_points=self.flux_points,
                 model=self.spectral_model,
+                y_min=self.args_dict["flux_points"].get("flux", {}).get("min"),
+                y_max=self.args_dict["flux_points"].get("flux", {}).get("max"),
             )
         else:
             self._logger.warning("Skipping spectral plots because fit failed")

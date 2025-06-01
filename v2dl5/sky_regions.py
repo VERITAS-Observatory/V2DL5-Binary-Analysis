@@ -52,8 +52,7 @@ class SkyRegions:
 
         """
         target = None
-        lon = sky_coord.get("lon", None)
-        lat = sky_coord.get("lat", None)
+        lon, lat = sky_coord.get("lon", None), sky_coord.get("lat", None)
         if lon is not None and lat is not None:
             if sky_coord.get("frame", None) == "icrs":
                 target = SkyCoord(

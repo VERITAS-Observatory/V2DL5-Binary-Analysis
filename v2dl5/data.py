@@ -14,7 +14,7 @@ class Data:
     Data class holding data store and observations.
 
     Allows to select data from run list or based on
-    target coordinates (and observation cone).
+    target coordinates and observation cone.
 
     Parameters
     ----------
@@ -33,7 +33,7 @@ class Data:
         """
         Initialize Data object.
 
-        Uses run_list if not set to None, otherwise selects data
+        Uses 'run_list' from args_dict if not set to None, otherwise selects data
         according to target coordinates and observation cone.
 
         """
@@ -84,7 +84,7 @@ class Data:
 
     def _from_run_list(self, run_list):
         """
-        Read run_list from file and select data.
+        Read run list from file and select data.
 
         Parameters
         ----------
@@ -140,15 +140,15 @@ class Data:
         try:
             rad_max = {obs.rad_max.data[0][0] for obs in observations}
         except IndexError:
-            self._logger.error("Rad max not found in observations.")
+            self._logger.error("On region radius not found in observations.")
             raise
 
         if len(rad_max) > 1:
-            self._logger.error("Rad max is not the same for all observations.")
+            self._logger.error("On region radius not the same for all observations.")
             raise ValueError
 
         on_region = rad_max.pop() * u.deg
-        self._logger.info(f"On region size: {on_region}")
+        self._logger.info(f"On region radius: {on_region}")
 
         return on_region
 
@@ -166,7 +166,7 @@ class Data:
         Returns
         -------
         max_offset : astropy.units.Quantity
-            Maximum offset.
+            Maximum offset (radius of FoV).
 
         """
         woff = np.array(
