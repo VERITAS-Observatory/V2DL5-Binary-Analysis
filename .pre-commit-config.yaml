@@ -63,5 +63,5 @@ repos:
     rev: 24.8.0
     hooks:
       - id: towncrier-update
-        files: $docs/changes/
+        files: ^docs/changes/
         args: ['--keep']
