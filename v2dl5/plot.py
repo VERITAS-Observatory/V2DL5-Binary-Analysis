@@ -45,7 +45,22 @@ class Plot:
         self.plot_theta2()
 
     def plot_spectra(self, flux_points=None, model=None, y_min=None, y_max=None):
-        """Spectrum related plots."""
+        """
+        Spectrum related plots.
+
+        Parameters
+        ----------
+        flux_points : `~gammapy.datasets.FluxPointsDataset`
+            Flux points dataset to plot
+        model : `~gammapy.modeling.models.Model`
+            Model to plot
+        y_min : float, optional
+            Minimum y-axis value for the SED plot
+        y_max : float, optional
+            Maximum y-axis value for the SED plot
+
+
+        """
         for dataset in self.data_set:
             self.plot_fit(dataset)
 
