@@ -45,7 +45,22 @@ class Plot:
         self.plot_theta2()
 
     def plot_spectra(self, flux_points=None, model=None, y_min=None, y_max=None):
-        """Spectrum related plots."""
+        """
+        Spectrum related plots.
+
+        Parameters
+        ----------
+        flux_points : `~gammapy.datasets.FluxPointsDataset`
+            Flux points dataset to plot
+        model : `~gammapy.modeling.models.Model`
+            Model to plot
+        y_min : float, optional
+            Minimum y-axis value for the SED plot
+        y_max : float, optional
+            Maximum y-axis value for the SED plot
+
+
+        """
         for dataset in self.data_set:
             self.plot_fit(dataset)
 
@@ -125,7 +140,7 @@ class Plot:
             ax_spectrum, _ = data_set.plot_fit()
         except ValueError:
             return
-        # TODO
+        # TODO: Adjust axis limits and add any necessary labels or annotations to improve plot clarity.
         ax_spectrum.set_ylim(0.1, 40)
         data_set.plot_masks(ax=ax_spectrum)
         try:
@@ -148,7 +163,7 @@ class Plot:
         kwargs_model = {"color": "grey", "ls": "--", "sed_type": "dnde"}
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
         ax = flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
-        if y_min and y_max:
+        if y_min is not None and y_max is not None:
             ax.set_ylim(y_min, y_max)
         self._plot(plot_name="spectrum", output_dir=self.output_dir)
         try:
