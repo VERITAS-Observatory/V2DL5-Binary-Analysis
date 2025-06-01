@@ -148,7 +148,7 @@ class Plot:
         kwargs_model = {"color": "grey", "ls": "--", "sed_type": "dnde"}
         kwargs_fp = {"color": "black", "marker": "o", "sed_type": "dnde"}
         ax = flux_point_dataset.plot_spectrum(kwargs_fp=kwargs_fp, kwargs_model=kwargs_model)
-        if y_min and y_max:
+        if y_min is not None and y_max is not None:
             ax.set_ylim(y_min, y_max)
         self._plot(plot_name="spectrum", output_dir=self.output_dir)
         try:
