@@ -125,7 +125,7 @@ class Plot:
             ax_spectrum, _ = data_set.plot_fit()
         except ValueError:
             return
-        # TODO
+        # TODO: Adjust axis limits and add any necessary labels or annotations to improve plot clarity.
         ax_spectrum.set_ylim(0.1, 40)
         data_set.plot_masks(ax=ax_spectrum)
         try:
