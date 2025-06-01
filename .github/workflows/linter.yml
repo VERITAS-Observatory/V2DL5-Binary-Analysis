@@ -80,7 +80,6 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           VALIDATE_GITHUB_ACTIONS: true
           VALIDATE_YAML: true
-          VALIDATE_MARKDOWN: true
           VALIDATE_NATURAL_LANGUAGE: true
           VALIDATE_DOCKERFILE_HADOLINT: true
           VALIDATE_BASH: true

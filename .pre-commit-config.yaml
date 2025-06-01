@@ -6,9 +6,9 @@ repos:
     hooks:
       - id: isort
         args: ["--profile", "black", "--filter-files"]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
   # Ruff
-    rev: v0.11.4
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
     hooks:
       - id: ruff
         args: ["--fix"]
@@ -20,12 +20,6 @@ repos:
       - id: end-of-file-fixer
       - id: check-added-large-files
         args: ['--maxkb=500']
-  # https://github.com/HunterMcGushion/docstr_coverage
-#  - repo: https://github.com/HunterMcGushion/docstr_coverage
-#    rev: v2.3.2  # most recent docstr-coverage release or commit sha
-#    hooks:
-#      - id: docstr-coverage
-#        args: ["--verbose", "2", "--fail-under", "70.", "v2dl5"]
   # Github action
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.7
@@ -33,7 +27,7 @@ repos:
       - id: actionlint
   # https://pyproject-fmt.readthedocs.io/en/latest/
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "v2.5.1"
+    rev: "v2.6.0"
     hooks:
       - id: pyproject-fmt
   # codespell
@@ -41,3 +35,33 @@ repos:
     rev: v2.4.1
     hooks:
       - id: codespell
+  # markdownlint
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        args: ["--disable", "MD041"]
+  # yamllint
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args:
+          - "--strict"
+          - "-d"
+          - >
+            {
+              extends: default,
+              rules: {
+                line-length: {max: 300},
+                indentation: {spaces: 2, indent-sequences: consistent},
+                truthy: {allowed-values: ["true", "false", "on", "off"]}
+              }
+            }
+  # towncrier
+  - repo: https://github.com/twisted/towncrier
+    rev: 24.8.0
+    hooks:
+      - id: towncrier-update
+        files: $docs/changes/
+        args: ['--keep']

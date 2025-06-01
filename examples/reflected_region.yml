@@ -2,61 +2,61 @@
 # Configuration for a reflected region analysis
 
 observations:
-    datastore: ../../../VTS/DL3/v491/dl3_pointlike_moderate2tel/
-    # search for observations around the target direction
-    # within a maximum offset of obs_cone_radius
-    obs_cone_radius: 1.5 deg
-    required_irf: ['aeff', 'edisp']
+  datastore: ../../../VTS/DL3/v491/dl3_pointlike_moderate2tel/
+  # search for observations around the target direction
+  # within a maximum offset of obs_cone_radius
+  obs_cone_radius: 1.5 deg
+  required_irf: ['aeff', 'edisp']
 
 on_region:
-    target: "Crab"
-#    frame: icrs
-#    lon: 83.628700 deg
-#    lat: 22.014700 deg
+  target: "Crab"
+#  frame: icrs
+#  lon: 83.628700 deg
+#  lat: 22.014700 deg
 
 datasets:
-    type: 1d
-    stack: false
-    geom:
-        axes:
-            energy: {min: 0.1 TeV, max: 100 TeV, nbins: 30}
-            energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
-    exclusion_region:
-        on_radius: 0.5 deg
-        magnitude_B: 7
-        star_exclusion_radius: 0.30 deg
-        fov: 3.5 deg
-        star_file: hip_mag9.fits.gz
-    containment_correction: false
-    safe_mask:
-        methods: ['aeff-max']
-        parameters: {aeff_percent: 10.}
-    background:
-        method: reflected
+  type: 1d
+  stack: false
+  geom:
+    axes:
+    energy: {min: 0.1 TeV, max: 100 TeV, nbins: 30}
+    energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
+  exclusion_region:
+    on_radius: 0.5 deg
+    magnitude_B: 7
+    star_exclusion_radius: 0.30 deg
+    fov: 3.5 deg
+    star_file: hip_mag9.fits.gz
+  containment_correction: false
+  safe_mask:
+    methods: ['aeff-max']
+    parameters: {aeff_percent: 10.}
+  background:
+    method: reflected
 fit:
-    model: pl
-    index: 2.5
-    reference_energy: 1 TeV
+  model: pl
+  index: 2.5
+  reference_energy: 1 TeV
 
 flux_points:
-    energy: {min: 0.1 TeV, max: 20 TeV, nbins: 10}
-    flux: {min: 1.e-15, max: 1.e-9}
+  energy: {min: 0.1 TeV, max: 20 TeV, nbins: 10}
+  flux: {min: 1.e-15, max: 1.e-9}
 
 light_curve:
-    energy: {min: 1. TeV, max: 100 TeV}
-    time_zone: -7
-    n_jobs: 4
-      #    time_bin_files:
-      #        - ./light_curve_3days_timebins.ecsv
+  energy: {min: 1. TeV, max: 100 TeV}
+  time_zone: -7
+  n_jobs: 4
+  #    time_bin_files:
+  #        - ./light_curve_3days_timebins.ecsv
 
 # bad time intervals (time intervals removed from data)
 bti:
-    - run: 64080
-      bti_start: 600
-      bti_length: 360
-    - run: 69976
-      bti_start: 600
-      bti_length: 360
-    - run: 69976
-      bti_start: 1000
-      bti_length: 200
+  - run: 64080
+    bti_start: 600
+    bti_length: 360
+  - run: 69976
+    bti_start: 600
+    bti_length: 360
+  - run: 69976
+    bti_start: 1000
+    bti_length: 200
