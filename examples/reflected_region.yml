@@ -19,8 +19,8 @@ datasets:
   stack: false
   geom:
     axes:
-    energy: {min: 0.1 TeV, max: 100 TeV, nbins: 30}
-    energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
+      energy: {min: 0.1 TeV, max: 100 TeV, nbins: 30}
+      energy_true: {min: 0.05 TeV, max: 100 TeV, nbins: 40}
   exclusion_region:
     on_radius: 0.5 deg
     magnitude_B: 7

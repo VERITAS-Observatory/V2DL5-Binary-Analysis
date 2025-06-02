@@ -174,7 +174,8 @@ class SkyRegions:
             return _exclusion_regions
 
         self._logger.info(
-            "Reading bright star catalogue from %s", exclusion_region_dict["star_file"]
+            f"Reading bright star catalogue from {exclusion_region_dict['star_file']}"
+            f" (max wobble distance: {max_wobble_distance})"
         )
         star_file = files("v2dl5.data").joinpath("data/" + exclusion_region_dict["star_file"])
         hip = fits.open(star_file)
@@ -189,6 +190,7 @@ class SkyRegions:
         )
 
         catalogue = catalogue[catalogue["angular_separation"] < u.Quantity(max_wobble_distance)]
+        catalogue = catalogue[[row is not None for row in catalogue]]
 
         self._logger.info(
             "Number of stars in the catalogue passing cuts on magnitude and FOV: %d", len(catalogue)
