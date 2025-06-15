@@ -34,7 +34,7 @@ datasets:
   background:
     method: reflected
 fit:
-  model: pl
+  model: ecpl
   index: 2.5
   reference_energy: 1 TeV
 

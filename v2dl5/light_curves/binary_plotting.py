@@ -131,6 +131,7 @@ class BinaryLightCurvePlotter:
                     markersize=plotting_utilities.get_marker_size() * 0.5,
                 )
 
+        ax.set_ylim([self.config[0].get("flux_axis_min"), self.config[0].get("flux_axis_max")])
         ax.axhline(0, color="lightgray", linestyle="--")
         plt.xlabel(self._get_time_axis_label(time_axis), fontsize=fontsize)
         if mjd_min is not None and mjd_max is not None:

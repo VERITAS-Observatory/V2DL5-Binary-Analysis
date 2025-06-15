@@ -192,6 +192,10 @@ class LightCurveDataReader:
         table = Table.read(file_name)
         f = {}
 
+        if "time" not in table.colnames and "MJD" in table.colnames:
+            table.rename_column("MJD", "time")
+            time_min_max = False
+
         if not time_min_max:
             table["time_min"] = table["time"].data
             table["time_max"] = table["time"].data + 0.1
