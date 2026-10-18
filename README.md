@@ -57,39 +57,6 @@ python v2dl5/scripts/reflected_region_analysis.py \
     --output_dir my_output_dir
 ```
 
-### Reproducible point source checks
-
-Set the source in top-level `on_region`, preferably with frozen `frame: icrs`,
-`lon: ... deg` and `lat: ... deg`. Name-only configurations resolve at runtime;
-no default Crab coordinates are inherited. Empty, duplicate and annotated run
-lists are rejected. Point-like IRFs and a common constant RAD_MAX are required;
-split radius groups. Optional `datasets.exclusion_region.regions_file` supplies
-DS9 sky exclusions for neighbouring emission.
-
-`fit.fit_range` is applied alongside per-run safe masks. Geometry `nbins` retains
-its existing bins-per-decade meaning (`per_decade: false` selects total bins);
-flux-point `nbins` is a total count. The default effective-area threshold is
-10 percent. Disable expensive estimators with `flux_points.enabled: false` or
-`light_curve.enabled: false`.
-
-The separate `integral_flux` section defines a fixed-index normalization test
-(default PL index 2.5, requested 1–20 TeV), integral flux and one-sided 95% limit.
-Edges snap to the data grid; output reports the actual supported band. Failed
-spectral fits retain reduction and any successful fixed-index estimate.
-
-Outputs include immutable attempt status, resolved configuration, input/code
-checksums, versions, availability and selection tables, spectra, model/covariance
-and flux products. Numbers are saved before plots. Use `--no-plots` for numerical
-checks and `--resume` for unchanged completed results. Failed/partial/changed
-attempts require a new output directory. `datasets.cache_dir` optionally reuses
-identical per-observation reductions.
-
-Reload with `v2dl5.analysis.read_datasets("output/data/datasets.yaml")` to preserve
-fit masks: Gammapy 2.1's default `SpectrumDatasetOnOff.from_dict` clears them.
-Individual GADF FITS files retain masks and OFF geometry. Read `data/models.yaml`
-separately for the fitted model/covariance. For source campaigns use
-`release_tests/sources/source_checks.py` in the EventDisplay release-test repository.
-
 ### Binary light curve plotting
 
 Light-curve plotting is independent of the analysis code.
