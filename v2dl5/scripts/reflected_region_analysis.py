@@ -132,13 +132,10 @@ def main():
         if args.run_list:
             paths.append(Path(args.run_list))
         store = Path(args_dict["observations"]["datastore"])
-        from gammapy.data import DataStore
 
         stage = "missing_data"
-        index = DataStore.from_dir(store).hdu_table
-        selected_ids = None
-        if args.run_list:
-            selected_ids = v2dl5.data.Data._from_run_list(args.run_list)
+        index = data.get_data_store().hdu_table
+        selected_ids = set(data.runs) if args.run_list else None
         for row in index:
             if selected_ids is None or int(row["OBS_ID"]) in selected_ids:
                 paths.append(store / str(row["FILE_DIR"]) / str(row["FILE_NAME"]))
