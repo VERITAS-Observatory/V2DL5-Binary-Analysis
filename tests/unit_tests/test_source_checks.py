@@ -9,6 +9,7 @@ import pytest
 
 from v2dl5.configuration import configuration
 from v2dl5.data import Data
+from v2dl5.sky_regions import SkyRegions
 
 
 def test_name_only_target_does_not_inherit_crab(tmp_path):
@@ -128,3 +129,65 @@ def test_weak_source_has_finite_nonnegative_flux_limit():
     assert result["success"]
     assert 0 <= result["flux"] < result["flux_ul"]
     assert np.isfinite(result["flux_ul"])
+
+
+def test_exclusion_mask_has_legacy_width_without_wobble_distance():
+    args = {
+        "on_region": {
+            "frame": "icrs",
+            "lon": "0 deg",
+            "lat": "0 deg",
+            "radius": "0.5 deg",
+        },
+        "datasets": {
+            "exclusion_region": {
+                "on_radius": None,
+                "star_file": None,
+                "regions_file": None,
+            }
+        },
+    }
+    sky_regions = SkyRegions(args)
+
+    mask = sky_regions.get_exclusion_mask(args)
+
+    assert mask.geom.data_shape == (150, 150)
+
+
+def test_cache_inputs_include_datastore_indexes(tmp_path):
+    from v2dl5.analysis import _cache_inputs
+
+    observation = tmp_path / "events.fits.gz"
+    index = tmp_path / "obs-index.fits.gz"
+    source = tmp_path / "analysis.py"
+    unrelated = tmp_path / "other.fits.gz"
+    for path in (observation, index, source, unrelated):
+        path.touch()
+    inputs = {str(path.resolve()): path.name for path in (observation, index, source, unrelated)}
+
+    selected = _cache_inputs(inputs, tmp_path, {str(observation.resolve())})
+
+    assert set(selected) == {str(observation.resolve()), str(index.resolve()), str(source.resolve())}
+
+
+def test_fingerprint_includes_runtime_version(monkeypatch):
+    from v2dl5.scripts import reflected_region_analysis
+
+    monkeypatch.setattr(reflected_region_analysis, "version", lambda name: "1")
+    monkeypatch.setattr(reflected_region_analysis.platform, "python_version", lambda: "3.14.0")
+    first = reflected_region_analysis._fingerprint({}, {}, plots=True)
+    monkeypatch.setattr(reflected_region_analysis.platform, "python_version", lambda: "3.13.0")
+
+    second = reflected_region_analysis._fingerprint({}, {}, plots=True)
+
+    assert first != second
+
+
+def test_fingerprint_changes_when_input_hash_changes(monkeypatch):
+    from v2dl5.scripts import reflected_region_analysis
+
+    monkeypatch.setattr(reflected_region_analysis, "version", lambda name: "1")
+    first = reflected_region_analysis._fingerprint({"time_bins.ecsv": "before"}, {}, plots=True)
+    second = reflected_region_analysis._fingerprint({"time_bins.ecsv": "after"}, {}, plots=True)
+
+    assert first != second

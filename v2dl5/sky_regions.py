@@ -147,8 +147,13 @@ class SkyRegions:
             exclusion_regions.extend(Regions.read(region_file, format="ds9"))
 
         # exclusion mask
+        width = (
+            150 * 0.05 * u.deg
+            if max_wobble_distance is None
+            else 2 * u.Quantity(max_wobble_distance) + 1 * u.deg
+        )
         geom = WcsGeom.create(
-            width=2 * u.Quantity(max_wobble_distance) + 1 * u.deg,
+            width=width,
             binsz=0.05,
             skydir=self.target.icrs,
             proj="TAN",

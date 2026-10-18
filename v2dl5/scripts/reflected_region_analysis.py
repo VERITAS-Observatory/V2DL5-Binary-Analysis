@@ -29,6 +29,34 @@ import v2dl5.data
 import v2dl5.sky_regions
 
 
+def _fingerprint(inputs, config, plots):
+    """Create a stable fingerprint for the analysis inputs and runtime."""
+    versions = {
+        name: version(name)
+        for name in (
+            "gammapy",
+            "astropy",
+            "numpy",
+            "regions",
+            "scipy",
+            "iminuit",
+            "PyYAML",
+        )
+    }
+    versions["python"] = platform.python_version()
+    return hashlib.sha256(
+        json.dumps(
+            {
+                "inputs": inputs,
+                "config": config,
+                "plots": plots,
+                "versions": versions,
+            },
+            sort_keys=True,
+        ).encode()
+    ).hexdigest()
+
+
 def _parse():
     """
     Parse command line arguments.
@@ -127,30 +155,10 @@ def main():
         regions = args_dict["datasets"]["exclusion_region"].get("regions_file")
         if regions:
             paths.append(Path(regions))
+        paths.extend(Path(path) for path in args_dict["light_curve"].get("time_bin_files", []))
         for path in set(paths):
             inputs[str(path.resolve())] = hashlib.sha256(path.read_bytes()).hexdigest()
-        fingerprint = hashlib.sha256(
-            json.dumps(
-                {
-                    "inputs": inputs,
-                    "config": args_dict,
-                    "plots": not args.no_plots,
-                    "versions": {
-                        name: version(name)
-                        for name in (
-                            "gammapy",
-                            "astropy",
-                            "numpy",
-                            "regions",
-                            "scipy",
-                            "iminuit",
-                            "PyYAML",
-                        )
-                    },
-                },
-                sort_keys=True,
-            ).encode()
-        ).hexdigest()
+        fingerprint = _fingerprint(inputs, args_dict, plots=not args.no_plots)
         if previous is not None:
             if previous.get("fingerprint") == fingerprint and previous["status"] == "complete":
                 for product, checksum in previous.get("products", {}).items():

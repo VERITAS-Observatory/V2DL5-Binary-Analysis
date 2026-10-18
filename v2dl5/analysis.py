@@ -31,6 +31,16 @@ import v2dl5.plot as v2dl5_plot
 import v2dl5.time as v2dl5_time
 
 
+def _cache_inputs(provenance_inputs, datastore_path, observation_files):
+    """Select observation, datastore index, and source inputs for cache keys."""
+    index_files = {str(path.resolve()) for path in Path(datastore_path).glob("*-index.fits*")}
+    return {
+        key: value
+        for key, value in provenance_inputs.items()
+        if key in observation_files or key in index_files or key.endswith(".py")
+    }
+
+
 class Analysis:
     """
     Analysis class.
@@ -366,11 +376,7 @@ class Analysis:
             if key not in ("cache_dir", "stack")
         }
         payload = {
-            "inputs": {
-                key: value
-                for key, value in provenance["inputs"].items()
-                if key in files or key.endswith(".py")
-            },
+            "inputs": _cache_inputs(provenance["inputs"], base, files),
             "versions": provenance["versions"],
             "datasets": datasets,
             "on_region": self.args_dict["on_region"],
