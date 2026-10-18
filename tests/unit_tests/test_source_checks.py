@@ -141,7 +141,7 @@ def test_exclusion_mask_has_legacy_width_without_wobble_distance():
         },
         "datasets": {
             "exclusion_region": {
-                "on_radius": None,
+                "on_radius": "0.1 deg",
                 "star_file": None,
                 "regions_file": None,
             }
