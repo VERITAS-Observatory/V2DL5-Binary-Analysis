@@ -96,6 +96,22 @@ def _validate_config(config, generate_dqm_run_list=False):
             raise ValueError(f"Missing configuration keys in {section}: {', '.join(missing)}")
 
     if not generate_dqm_run_list:
+        if "on_region" in config["datasets"]:
+            raise ValueError("on_region must be a top-level section")
+        required_irf = config["observations"].get("required_irf", ["aeff", "edisp"])
+        if required_irf != "point-like" and set(required_irf) != {"aeff", "edisp"}:
+            raise ValueError("Point-like analysis requires aeff and edisp IRFs")
+        region = config["on_region"]
+        if (region.get("lon") is None) != (region.get("lat") is None):
+            raise ValueError("on_region requires both lon and lat")
+        if region.get("lon") is None and not region.get("target"):
+            raise ValueError("on_region requires coordinates or a target name")
+        if config["datasets"].get("type") != "1d":
+            raise ValueError("Only 1d datasets are supported")
+        if config["datasets"].get("containment_correction"):
+            raise ValueError("Point-like IRFs require containment_correction=false")
+        if config["datasets"].get("background", {}).get("method") != "reflected":
+            raise ValueError("Only reflected background is supported")
         for section, keys in {
             "datasets.geom": ("axes",),
             "datasets.safe_mask": ("methods", "parameters"),
@@ -180,8 +196,8 @@ def _default_config_analysis():
         "on_region": {
             "target": None,
             "frame": "icrs",
-            "lon": "83.633 deg",
-            "lat": "22.014 deg",
+            "lon": None,
+            "lat": None,
             "radius": "0.08944272 deg",
         },
         "datasets": {
@@ -203,11 +219,16 @@ def _default_config_analysis():
             "containment_correction": False,
             "safe_mask": {
                 "methods": ["aeff-default", "aeff-max"],
-                "parameters": {"aeff_percent": 0.1},
+                "parameters": {"aeff_percent": 10.0},
             },
             "background": {"method": "reflected"},
         },
         "fit": {"fit_range": {"min": "0.1 TeV", "max": "20 TeV"}, "model": "pl"},
+        "integral_flux": {
+            "energy": {"min": "1 TeV", "max": "20 TeV"},
+            "index": 2.5,
+            "n_sigma_ul": 1.6448536269514722,
+        },
         "flux_points": {"energy": {"min": "0.1 TeV", "max": "20 TeV", "nbins": 10}, "source": None},
         "light_curve": {
             "energy": {"min": "0.1 TeV", "max": "100 TeV"},
