@@ -225,7 +225,7 @@ def _default_config_analysis():
         },
         "fit": {"fit_range": {"min": "0.1 TeV", "max": "20 TeV"}, "model": "pl"},
         "integral_flux": {
-            "energy": {"min": "1 TeV", "max": "20 TeV"},
+            "energy": {"min": "0.3 TeV", "max": "20 TeV"},
             "index": 2.5,
             "n_sigma_ul": 1.6448536269514722,
         },

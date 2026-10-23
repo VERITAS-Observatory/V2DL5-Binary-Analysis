@@ -28,4 +28,4 @@ dependencies:
   - pip:
       - "gammapy>=2.1,<2.2"
       - "regions<0.12"
-      - "v2dl3"
+      - git+https://github.com/VERITAS-Observatory/V2DL3.git@feature/indexer-run-list

@@ -80,8 +80,17 @@ class Data:
                 in_gti = np.zeros(len(events.table), dtype=bool)
                 for low, high in obs.gti.time_intervals:
                     in_gti |= (events.time >= low) & (events.time < high)
-                if not np.all(in_gti):
-                    raise ValueError("Events outside GTIs; reconcile preprocessing and time cuts")
+                excluded_count = np.count_nonzero(~in_gti)
+                if excluded_count:
+                    obs = obs.copy(
+                        in_memory=True, events=events.select_row_subset(in_gti)
+                    )
+                    events = obs.events
+                    self._logger.info(
+                        "Observation %s: excluded %d event(s) outside GTIs",
+                        run,
+                        excluded_count,
+                    )
                 if np.any(events.energy <= 0 * u.TeV):
                     raise ValueError("Nonpositive event energy")
                 livetime = obs.observation_live_time_duration.to_value("s")
@@ -106,7 +115,8 @@ class Data:
                 if not np.all(np.isfinite(events.time.jd)):
                     raise ValueError("Nonfinite event times")
                 observations.append(obs)
-                rows.append((int(run), "available", "", livetime, offset))
+                reason = f"Excluded {excluded_count} event(s) outside GTIs" if excluded_count else ""
+                rows.append((int(run), "available", reason, livetime, offset))
             except (OSError, ValueError, KeyError, IndexError, TypeError) as exc:
                 rows.append((int(run), "missing_data", str(exc), 0.0, float("nan")))
         Table(rows=rows, names=("obs_id", "status", "reason", "livetime_s", "offset_deg")).write(

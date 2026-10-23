@@ -143,8 +143,35 @@ class Analysis:
             )
             self.integral_flux = estimator.run(datasets)
             table = self.integral_flux.to_table(sed_type="flux")
-            if not np.all(table["success"]) or not np.all(np.isfinite(table["flux_ul"])):
-                raise ValueError("Fixed-index flux/upper-limit estimation failed")
+            likelihood_table = self.integral_flux.to_table(sed_type="likelihood")
+            success = np.asarray(table["success"], dtype=bool)
+            finite_ul = np.isfinite(table["flux_ul"])
+            failed_rows = np.flatnonzero(~success | ~finite_ul)
+            if len(failed_rows):
+                for row_index in failed_rows:
+                    diagnostic = {
+                        name: str(likelihood_table[name][row_index])
+                        for name in likelihood_table.colnames
+                    }
+                    diagnostic["flux_ul"] = str(table["flux_ul"][row_index])
+                    self._logger.error(
+                        "Fixed-index flux/upper-limit result rejected for row %d "
+                        "(success=%s, finite_flux_ul=%s): %s",
+                        row_index,
+                        success[row_index],
+                        finite_ul[row_index],
+                        diagnostic,
+                    )
+                reasons = []
+                if not np.all(success):
+                    reasons.append("fit unsuccessful")
+                if not np.all(finite_ul):
+                    reasons.append("upper limit is non-finite")
+                raise ValueError(
+                    "Fixed-index flux/upper-limit estimation failed: "
+                    + ", ".join(reasons)
+                    + "; see v2dl5.log for estimator values"
+                )
         finally:
             datasets.models = previous
 
