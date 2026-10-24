@@ -28,6 +28,8 @@ import v2dl5.configuration
 import v2dl5.data
 import v2dl5.sky_regions
 
+logger = logging.getLogger(__name__)
+
 
 def _fingerprint(inputs, config, plots):
     """Create a stable fingerprint for the analysis inputs and runtime."""
@@ -114,7 +116,7 @@ def main():
         temporary.replace(status_file)
 
     lock = output / ".running"
-    lock.mkdir()  # An existing lock requires a new attempt directory after a crash.
+    lock.mkdir(exist_ok=args.resume)  # A crashed attempt is redone with --resume.
     try:
         args_dict = v2dl5.configuration.configuration(args=args)
         sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
@@ -125,8 +127,6 @@ def main():
         )
         stage = "missing_data"
         data = v2dl5.data.Data(args_dict=args_dict, target=sky_regions.target)
-        if previous is None:
-            data.preflight(output / "availability.ecsv")
         inputs = {}
         paths = [Path(args.config), Path(__file__)]
         if args.run_list:
@@ -156,13 +156,15 @@ def main():
         for path in set(paths):
             inputs[str(path.resolve())] = hashlib.sha256(path.read_bytes()).hexdigest()
         fingerprint = _fingerprint(inputs, args_dict, plots=not args.no_plots)
-        if previous is not None:
-            if previous.get("fingerprint") == fingerprint and previous["status"] == "complete":
-                for product, checksum in previous.get("products", {}).items():
-                    if hashlib.sha256((output / product).read_bytes()).hexdigest() != checksum:
-                        raise FileExistsError("Completed products changed; use a new output")
-                return
-            raise FileExistsError("Resume requires an exact completed attempt; use a new output")
+        if (
+            previous is not None
+            and previous.get("fingerprint") == fingerprint
+            and previous["status"] in ("complete", "partial")
+        ):
+            logger.info("Reusing completed result with identical inputs: %s", output)
+            return
+        # Unusable runs are skipped (and listed in availability.ecsv).
+        data.preflight(output / "availability.ecsv")
         status["fingerprint"] = fingerprint
         save_status()
         (output / "config.resolved.yaml").write_text(yaml.safe_dump(args_dict))
@@ -227,8 +229,6 @@ def main():
         if rejected:
             status["reason"] = "Some requested runs were rejected; see data/selection.ecsv"
         save_status()
-        if rejected:
-            raise ValueError(status["reason"])
     except FileExistsError:
         raise  # Preserve the original attempt, including its completion marker.
     except Exception as exc:
@@ -238,8 +238,7 @@ def main():
                 stage=stage,
                 reason=str(exc),
             )
-        if previous is None:
-            save_status()
+        save_status()
         raise
     finally:
         lock.rmdir()

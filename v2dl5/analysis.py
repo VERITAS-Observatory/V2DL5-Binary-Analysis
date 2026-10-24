@@ -26,6 +26,7 @@ from gammapy.modeling.models import (
     PowerLawSpectralModel,
     SkyModel,
 )
+from gammapy.stats import WStatCountsStatistic
 
 import v2dl5.plot as v2dl5_plot
 import v2dl5.time as v2dl5_time
@@ -72,12 +73,14 @@ class Analysis:
         self.flux_points = None
         self.light_curves = {}
         self.integral_flux = None
+        self.significance = None
         self.run_rows = []
 
     def run(self):
         """Run analysis."""
         self.stage = "reduction_failed"
         self._data_reduction()
+        self._significance()
         self.write()  # Preserve expensive reduction before inference or plots.
         data_sets = self.datasets
         if self.args_dict["datasets"]["stack"]:
@@ -100,8 +103,27 @@ class Analysis:
                 self.light_curves = self._analyse_light_curves(data_sets)
         self.write()
         if not fit_success:
-            self.stage = "fit_failed"
-            raise ValueError("Spectral fit failed; reduction and fixed-index flux retained")
+            # Expected for weak or non-detected sources; significance is still valid.
+            self._logger.warning("Spectral fit failed; reduction and significance retained")
+
+    def _significance(self):
+        """Li & Ma significance from all ON/OFF events (no energy range or safe-mask cut)."""
+        n_on = np.concatenate([d.counts.data.ravel() for d in self.datasets])
+        n_off = np.concatenate([d.counts_off.data.ravel() for d in self.datasets])
+        alpha = np.concatenate([d.alpha.data.ravel() for d in self.datasets])
+        stat = WStatCountsStatistic(n_on, n_off, np.nan_to_num(alpha)).sum()
+        ontime = sum(d.gti.time_sum.to_value("s") for d in self.datasets)
+        self.significance = {
+            "n_runs": len(self.datasets),
+            "ontime_s": float(ontime),
+            "n_on": int(stat.n_on),
+            "n_off": int(stat.n_off),
+            "alpha": float(stat.alpha),
+            "excess": float(stat.n_sig),
+            "ts": float(stat.ts),
+            "significance": float(stat.sqrt_ts),
+        }
+        self._logger.info("Significance (all events): %s", self.significance)
 
     def _integral_flux(self, datasets):
         """Estimate a fixed-index PL integral flux, TS and one-sided 95% limit."""
@@ -215,6 +237,8 @@ class Analysis:
         Table(rows=self.run_rows, names=("obs_id", "status", "reason")).write(
             data_dir / "selection.ecsv", format="ascii.ecsv", overwrite=True
         )
+        if self.significance is not None:
+            self._write_yaml(self.significance, "significance.yaml")
         if self.integral_flux is not None:
             table = self.integral_flux.to_table(sed_type="flux", format="gadf-sed")
             table.meta.update(
@@ -324,6 +348,7 @@ class Analysis:
             safe_mask_masker.aeff_percent,
         )
 
+        self.run_rows = list(getattr(self.v2dl5_data, "rejected", []))
         self.datasets = Datasets()
 
         for observation in self.v2dl5_data.get_observations():

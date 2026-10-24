@@ -41,6 +41,7 @@ class Data:
         """
         self._logger = logging.getLogger(__name__)
         self._observation_cache = {}
+        self.rejected = []
         self._bti = args_dict.get("bti")
 
         self._logger.info(
@@ -122,8 +123,10 @@ class Data:
         Table(rows=rows, names=("obs_id", "status", "reason", "livetime_s", "offset_deg")).write(
             output_file, format="ascii.ecsv", overwrite=True
         )
-        if len(observations) != len(self.runs):
-            raise ValueError("DL3 preflight failed; see availability.ecsv")
+        # Unusable runs are skipped and reported; only an empty selection is fatal.
+        self.rejected = [(row[0], row[1], row[2]) for row in rows if row[1] != "available"]
+        if not observations:
+            raise ValueError("No usable runs in DL3 preflight; see availability.ecsv")
         self._observation_cache[(True, False)] = observations
 
     def get_data_store(self):
