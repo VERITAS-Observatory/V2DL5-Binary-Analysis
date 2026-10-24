@@ -9,7 +9,7 @@ from astropy.coordinates import Angle, SkyCoord, name_resolve
 from astropy.io import fits
 from astropy.table import Table
 from gammapy.maps import WcsGeom
-from regions import CircleSkyRegion
+from regions import CircleSkyRegion, Regions
 
 
 class SkyRegions:
@@ -100,7 +100,7 @@ class SkyRegions:
 
         """
         self.on_region = CircleSkyRegion(
-            center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
+            center=self.target,
             radius=Angle(on_region_dict.get("radius", 0.5 * u.deg)),
         )
 
@@ -128,7 +128,7 @@ class SkyRegions:
         if on_region_dict is not None and on_region_exclusion_radius is not None:
             exclusion_regions.append(
                 CircleSkyRegion(
-                    center=self.get_target(sky_coord=on_region_dict, print_target_info=False),
+                    center=self.target,
                     radius=Angle(on_region_exclusion_radius),
                 )
             )
@@ -142,9 +142,22 @@ class SkyRegions:
             )
         )
 
+        region_file = args_dict["datasets"]["exclusion_region"].get("regions_file")
+        if region_file:
+            exclusion_regions.extend(Regions.read(region_file, format="ds9"))
+
         # exclusion mask
+        width = (
+            150 * 0.05 * u.deg
+            if max_wobble_distance is None
+            else 2 * u.Quantity(max_wobble_distance) + 1 * u.deg
+        )
         geom = WcsGeom.create(
-            npix=(150, 150), binsz=0.05, skydir=self.target.icrs, proj="TAN", frame="icrs"
+            width=width,
+            binsz=0.05,
+            skydir=self.target.icrs,
+            proj="TAN",
+            frame="icrs",
         )
 
         self._logger.info("Number of exclusion regions: %d", len(exclusion_regions))
@@ -226,4 +239,10 @@ class SkyRegions:
         args_dict["on_region"]["radius"] = on_region_radius
         self.define_on_region(on_region_dict=args_dict["on_region"])
 
+        args_dict["on_region"].update(
+            frame="icrs",
+            lon=f"{self.target.icrs.ra.deg} deg",
+            lat=f"{self.target.icrs.dec.deg} deg",
+            radius=f"{on_region_radius.to_value(u.deg)} deg",
+        )
         self.exclusion_mask = self.get_exclusion_mask(args_dict, max_wobble_distance)

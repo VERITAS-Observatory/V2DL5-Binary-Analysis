@@ -22,7 +22,7 @@ def test_merge_config_preserves_nested_defaults():
 def test_configuration_merges_partial_yaml(tmp_path):
     config_file = tmp_path / "config.yml"
     config_file.write_text(
-        "datasets:\n  safe_mask:\n    parameters:\n      aeff_percent: 5\n",
+        "on_region:\n  target: Crab\ndatasets:\n  safe_mask:\n    parameters:\n      aeff_percent: 5\n",
         encoding="utf-8",
     )
     args = Namespace(config=str(config_file), run_list=None, output_dir=str(tmp_path))
