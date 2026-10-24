@@ -31,6 +31,47 @@ import v2dl5.sky_regions
 logger = logging.getLogger(__name__)
 
 
+def _observation_inputs(data, store):
+    """Hash selected observation files, recording unavailable files for preflight."""
+    selected_ids = set(data.runs)
+    paths = {
+        store / str(row["FILE_DIR"]) / str(row["FILE_NAME"])
+        for row in data.get_data_store().hdu_table
+        if int(row["OBS_ID"]) in selected_ids
+    }
+    inputs = {}
+    for path in paths:
+        try:
+            checksum = hashlib.sha256(path.read_bytes()).hexdigest()
+        except OSError:
+            checksum = None
+        inputs[str(path.resolve())] = checksum
+    return inputs
+
+
+def _check_resume(previous, fingerprint, output):
+    """Require an identical completed attempt with intact saved products."""
+    if (
+        previous.get("fingerprint") != fingerprint
+        or previous.get("status") not in ("complete", "partial")
+    ):
+        raise FileExistsError(f"Attempt cannot be reused: {output}; use a new output directory")
+    products = previous.get("products")
+    if not products:
+        raise FileExistsError(f"Missing product manifest: {output}; use a new output directory")
+    for name, checksum in products.items():
+        path = output / name
+        try:
+            valid = (
+                path.resolve().is_relative_to(output.resolve())
+                and hashlib.sha256(path.read_bytes()).hexdigest() == checksum
+            )
+        except OSError:
+            valid = False
+        if not valid:
+            raise FileExistsError(f"Invalid saved product: {path}; use a new output directory")
+
+
 def _fingerprint(inputs, config, plots):
     """Create a stable fingerprint for the analysis inputs and runtime."""
     versions = {
@@ -136,11 +177,7 @@ def main():
         store = Path(args_dict["observations"]["datastore"])
 
         stage = "missing_data"
-        index = data.get_data_store().hdu_table
-        selected_ids = set(data.runs) if args.run_list else None
-        for row in index:
-            if selected_ids is None or int(row["OBS_ID"]) in selected_ids:
-                paths.append(store / str(row["FILE_DIR"]) / str(row["FILE_NAME"]))
+        inputs.update(_observation_inputs(data, store))
         paths.extend(store.glob("*-index.fits*"))
         paths.extend(Path(v2dl5.analysis.__file__).parent.rglob("*.py"))
         from importlib.resources import files
@@ -158,11 +195,8 @@ def main():
         for path in set(paths):
             inputs[str(path.resolve())] = hashlib.sha256(path.read_bytes()).hexdigest()
         fingerprint = _fingerprint(inputs, args_dict, plots=not args.no_plots)
-        if (
-            previous is not None
-            and previous.get("fingerprint") == fingerprint
-            and previous["status"] in ("complete", "partial")
-        ):
+        if previous is not None:
+            _check_resume(previous, fingerprint, output)
             logger.info("Reusing completed result with identical inputs: %s", output)
             return
         # Unusable runs are skipped (and listed in availability.ecsv).
