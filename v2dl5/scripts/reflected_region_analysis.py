@@ -116,7 +116,9 @@ def main():
         temporary.replace(status_file)
 
     lock = output / ".running"
-    lock.mkdir(exist_ok=args.resume)  # A crashed attempt is redone with --resume.
+    # mkdir is atomic, so only one process can own this output directory.
+    # Remove this directory manually before resuming after a crashed attempt.
+    lock.mkdir()
     try:
         args_dict = v2dl5.configuration.configuration(args=args)
         sky_regions = v2dl5.sky_regions.SkyRegions(args_dict=args_dict)
