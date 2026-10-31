@@ -1,9 +1,11 @@
 """Data class holding data store and observations."""
 
 import logging
+from pathlib import Path
 
 import numpy as np
 from astropy import units as u
+from astropy.table import Table
 from gammapy.data import DataStore
 
 import v2dl5.bti as BTI  # noqa: N812
@@ -39,6 +41,7 @@ class Data:
         """
         self._logger = logging.getLogger(__name__)
         self._observation_cache = {}
+        self.rejected = []
         self._bti = args_dict.get("bti")
 
         self._logger.info(
@@ -53,6 +56,78 @@ class Data:
         else:
             self.runs = self._from_run_list(args_dict.get("run_list"))
         self._update_gti(args_dict.get("bti", None))
+
+    def preflight(self, output_file):
+        """Read required HDUs and account for every requested run before reduction."""
+        rows = []
+        observations = []
+        for run in self.runs:
+            try:
+                if np.count_nonzero(self._data_store.obs_table["OBS_ID"] == run) != 1:
+                    raise ValueError("OBS_ID is missing or ambiguous in observation index")
+                obs = self._data_store.get_observations(
+                    [run], required_irf="point-like", skip_missing=False
+                )[0]
+                selected = [obs]
+                self._apply_bti(selected)
+                obs = selected[0]
+                events = obs.events
+                if obs.gti.time_sum <= 0 * u.s:
+                    raise ValueError("No usable GTI")
+                if np.any(obs.gti.time_stop <= obs.gti.time_start) or np.any(
+                    obs.gti.time_start[1:] < obs.gti.time_stop[:-1]
+                ):
+                    raise ValueError("Invalid or overlapping GTIs")
+                in_gti = np.zeros(len(events.table), dtype=bool)
+                for low, high in obs.gti.time_intervals:
+                    in_gti |= (events.time >= low) & (events.time < high)
+                excluded_count = np.count_nonzero(~in_gti)
+                if excluded_count:
+                    obs = obs.copy(
+                        in_memory=True, events=events.select_row_subset(in_gti)
+                    )
+                    events = obs.events
+                    self._logger.info(
+                        "Observation %s: excluded %d event(s) outside GTIs",
+                        run,
+                        excluded_count,
+                    )
+                if np.any(events.energy <= 0 * u.TeV):
+                    raise ValueError("Nonpositive event energy")
+                livetime = obs.observation_live_time_duration.to_value("s")
+                if not np.isfinite(livetime) or livetime <= 0:
+                    raise ValueError("Invalid livetime")
+                if not obs.aeff.is_pointlike or not obs.edisp.is_pointlike:
+                    raise ValueError("Point-like IRFs required")
+                for irf in (obs.aeff, obs.edisp):
+                    if not np.all(np.isfinite(irf.data)) or np.any(irf.data < 0):
+                        raise ValueError("Invalid IRF values")
+                if not np.any(obs.aeff.data > 0) or not np.any(obs.edisp.data > 0):
+                    raise ValueError("Empty IRF")
+                if obs.rad_max is None:
+                    raise ValueError("Missing RAD_MAX")
+                offset = self.target.separation(obs.pointing.get_icrs()).to_value("deg")
+                bounds = obs.aeff.axes["offset"].edges.to_value("deg")
+                if not np.isfinite(offset) or not bounds[0] <= offset <= bounds[-1]:
+                    raise ValueError("Target offset outside effective-area support")
+                for name in ("RA", "DEC", "ENERGY"):
+                    if not np.all(np.isfinite(events.table[name])):
+                        raise ValueError(f"Nonfinite events: {name}")
+                if not np.all(np.isfinite(events.time.jd)):
+                    raise ValueError("Nonfinite event times")
+                observations.append(obs)
+                reason = f"Excluded {excluded_count} event(s) outside GTIs" if excluded_count else ""
+                rows.append((int(run), "available", reason, livetime, offset))
+            except (OSError, ValueError, KeyError, IndexError, TypeError) as exc:
+                rows.append((int(run), "missing_data", str(exc), 0.0, float("nan")))
+        Table(rows=rows, names=("obs_id", "status", "reason", "livetime_s", "offset_deg")).write(
+            output_file, format="ascii.ecsv", overwrite=True
+        )
+        # Unusable runs are skipped and reported; only an empty selection is fatal.
+        self.rejected = [(row[0], row[1], row[2]) for row in rows if row[1] != "available"]
+        if not observations:
+            raise ValueError("No usable runs in DL3 preflight; see availability.ecsv")
+        self._observation_cache[(True, False)] = observations
 
     def get_data_store(self):
         """Return data store."""
@@ -86,7 +161,8 @@ class Data:
             self._apply_bti(self._observation_cache[cache_key])
         return self._observation_cache[cache_key]
 
-    def _from_run_list(self, run_list):
+    @staticmethod
+    def _from_run_list(run_list):
         """
         Read run list from file and select data.
 
@@ -99,19 +175,20 @@ class Data:
         if run_list is None:
             return None
 
-        try:
-            _runs = np.loadtxt(run_list, dtype=int, usecols=0)
-        except OSError:
-            self._logger.error("Run list %s not found.", run_list)
-            raise
-
-        _runs = [_runs] if _runs.ndim == 0 else np.ndarray.tolist(_runs)
-
-        self._logger.info("Reading run list with %d observations from %s", len(_runs), run_list)
-        if len(_runs) == 0:
-            self._logger.error("Run list is empty.")
-            raise ValueError
-        return _runs
+        runs = []
+        for number, line in enumerate(Path(run_list).read_text().splitlines(), 1):
+            value = line.split("#", 1)[0].strip()
+            if not value:
+                continue
+            if not value.isdecimal() or int(value) <= 0:
+                raise ValueError(f"Invalid run ID at {run_list}:{number}: {value}")
+            run = int(value)
+            if run in runs:
+                raise ValueError(f"Duplicate run {run} in {run_list}")
+            runs.append(run)
+        if not runs:
+            raise ValueError(f"Run list is empty: {run_list}")
+        return runs
 
     def _from_target(self, obs_cone_radius):
         """
@@ -144,21 +221,19 @@ class Data:
         Simplest case. Ignores possible energy and offset dependence.
 
         """
-        observations = self.get_observations()
-        try:
-            rad_max = {obs.rad_max.data[0][0] for obs in observations}
-        except IndexError:
-            self._logger.error("On region radius not found in observations.")
-            raise
-
-        if len(rad_max) > 1:
-            self._logger.error("On region radius not the same for all observations.")
-            raise ValueError
-
-        on_region = rad_max.pop() * u.deg
-        self._logger.info(f"On region radius: {on_region}")
-
-        return on_region
+        radii = []
+        for obs in self.get_observations():
+            if obs.rad_max is None:
+                raise ValueError("Missing RAD_MAX")
+            values = obs.rad_max.quantity.to_value(u.deg)
+            if not np.all(np.isfinite(values)) or np.any(values <= 0):
+                raise ValueError("Invalid RAD_MAX")
+            if not np.allclose(values, values.flat[0], rtol=1e-6, atol=0):
+                raise ValueError("Only constant RAD_MAX is supported")
+            radii.append(values.flat[0])
+        if not radii or not np.allclose(radii, radii[0], rtol=1e-6, atol=0):
+            raise ValueError("A common constant RAD_MAX is required; split radius groups")
+        return radii[0] * u.deg
 
     def get_max_wobble_distance(self, fov=3.5 * u.deg):
         """
@@ -183,7 +258,7 @@ class Data:
                 for obs in self.get_observations()
             ]
         )
-        return np.max(woff) * u.deg + fov / 2.0
+        return np.max(woff) * u.deg + u.Quantity(fov) / 2.0
 
     def _update_gti(self, bti):
         """
@@ -207,7 +282,7 @@ class Data:
         if self._bti is None:
             return
 
-        for obs in observations:
+        for index, obs in enumerate(observations):
             bti_pairs = [
                 (item["bti_start"], item["bti_start"] + item["bti_length"])
                 for item in self._bti
@@ -217,4 +292,14 @@ class Data:
                 self._logger.debug("No BTI found for %s", obs.obs_id)
                 continue
             self._logger.debug("Updating GTI for %s with %s", obs.obs_id, bti_pairs)
-            obs.gti = BTI.BTI(obs).update_gti(bti_pairs)
+            gti = BTI.BTI(obs).update_gti(bti_pairs)
+            events = getattr(obs, "events", None)
+            if events is None:
+                obs.gti = gti
+            else:
+                keep = np.zeros(len(events.table), dtype=bool)
+                for low, high in gti.time_intervals:
+                    keep |= (events.time >= low) & (events.time < high)
+                observations[index] = obs.copy(
+                    in_memory=True, gti=gti, events=events.select_row_subset(keep)
+                )

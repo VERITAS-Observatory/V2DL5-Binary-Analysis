@@ -118,7 +118,7 @@ class BTI:
             Start time in seconds since MET.
 
         """
-        self._logger.info(f'Seconds since MET {(self.tstart - self.gti.time_ref).to_value("sec")}')
+        self._logger.info(f"Seconds since MET {(self.tstart - self.gti.time_ref).to_value('sec')}")
 
         return (self.tstart - self.gti.time_ref).to_value("sec") * u.s
 
@@ -143,7 +143,21 @@ class BTI:
         if bti is None:
             return self.gti
 
-        on_time_s = self._create_on_time_list(bti)
-        gti_start, gti_end = self._extract_gti_start_stop(on_time_s)
-
-        return GTI.create(gti_start, gti_end, self.gti.time_ref)
+        intervals = list(zip(self.gti.time_start, self.gti.time_stop))
+        for start, stop in bti:
+            if not np.isfinite(start) or not np.isfinite(stop) or stop <= start:
+                raise ValueError("BTI must have finite start < stop")
+            bad_start, bad_stop = self.tstart + start * u.s, self.tstart + stop * u.s
+            kept = []
+            for low, high in intervals:
+                if bad_stop <= low or bad_start >= high:
+                    kept.append((low, high))
+                else:
+                    if low < bad_start:
+                        kept.append((low, bad_start))
+                    if bad_stop < high:
+                        kept.append((bad_stop, high))
+            intervals = kept
+        starts = [(low - self.gti.time_ref).to_value("s") for low, _ in intervals] * u.s
+        stops = [(high - self.gti.time_ref).to_value("s") for _, high in intervals] * u.s
+        return GTI.create(starts, stops, reference_time=self.gti.time_ref)

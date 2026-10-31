@@ -167,7 +167,7 @@ class TestUpdateGti:
 
         assert isinstance(updated_gti, GTI)
         assert len(updated_gti.table) == 3
-        assert np.allclose(updated_gti.time_delta.value, np.array([9.0, 8.0, 39.0]), rtol=1.0e-6)
+        assert np.allclose(updated_gti.time_delta.value, np.array([10.0, 10.0, 40.0]), rtol=1.0e-6)
 
     # Update GTI with no BTI object
     def test_none_bti(self, get_good_gti):

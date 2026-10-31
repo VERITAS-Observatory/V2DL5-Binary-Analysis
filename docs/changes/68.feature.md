@@ -1,0 +1,1 @@
+Add reproducible point source checks with strict target/run validation, DL3 preflight, fit masks, exact BTI/event selection, fixed-index flux limits, reduction reuse and structured status. Analysis configuration now requires a target or coordinates.

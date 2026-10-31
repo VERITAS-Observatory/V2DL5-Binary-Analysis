@@ -1,0 +1,1 @@
+Allow unavailable selected observation files to reach preflight, and exclude unselected observations from input hashing. Resume now verifies saved product checksums and requires a new output directory for changed inputs, incomplete attempts, or damaged products, preserving existing results.
